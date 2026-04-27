@@ -1,0 +1,3238 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Interpreting PT Research: A Visual Statistics Review</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #172026;
+      --muted: #5b6570;
+      --subtle: #eef1f4;
+      --line: #cfd7df;
+      --panel: #ffffff;
+      --teal: #1f7a78;
+      --teal-soft: #dcefee;
+      --coral: #bb4d45;
+      --coral-soft: #f6e2df;
+      --gold: #a66f00;
+      --gold-soft: #f7ebcf;
+      --violet: #6855a3;
+      --violet-soft: #e8e3f4;
+      --green: #2d7d46;
+      --green-soft: #dff0e4;
+      --blue: #2d64a3;
+      --blue-soft: #e0ebf7;
+      --shadow: 0 14px 40px rgba(23, 32, 38, 0.08);
+      --radius: 8px;
+      --focus: 0 0 0 3px rgba(31, 122, 120, 0.28);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: #f7f8f6;
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.45;
+      letter-spacing: 0;
+      overflow-x: hidden;
+    }
+
+    button,
+    input,
+    textarea,
+    select {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    button:focus-visible,
+    input:focus-visible,
+    textarea:focus-visible,
+    [tabindex]:focus-visible {
+      outline: none;
+      box-shadow: var(--focus);
+    }
+
+    .app-shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 280px minmax(0, 1fr);
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      background: #fcfcfa;
+      border-right: 1px solid var(--line);
+      padding: 22px 18px;
+    }
+
+    .brand {
+      display: grid;
+      gap: 8px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 1.22rem;
+      line-height: 1.16;
+      letter-spacing: 0;
+    }
+
+    .brand p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .case-pill {
+      display: inline-flex;
+      align-items: center;
+      width: fit-content;
+      gap: 8px;
+      border: 1px solid #b9d5d3;
+      background: var(--teal-soft);
+      color: #174d4c;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+
+    .stage-list {
+      list-style: none;
+      padding: 18px 0 0;
+      margin: 0;
+      display: grid;
+      gap: 8px;
+    }
+
+    .stage-tab {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 28px 1fr auto;
+      align-items: center;
+      gap: 9px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--ink);
+      text-align: left;
+      border-radius: var(--radius);
+      padding: 8px;
+    }
+
+    .stage-tab:hover {
+      background: #f1f4f2;
+    }
+
+    .stage-tab.active {
+      background: var(--panel);
+      border-color: var(--line);
+      box-shadow: var(--shadow);
+    }
+
+    .stage-number,
+    .stage-check {
+      width: 28px;
+      height: 28px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      font-weight: 800;
+      font-size: 0.76rem;
+      background: var(--subtle);
+      color: #3d4852;
+      border: 1px solid var(--line);
+    }
+
+    .stage-tab.active .stage-number {
+      background: var(--teal);
+      color: white;
+      border-color: var(--teal);
+    }
+
+    .stage-check {
+      background: var(--green-soft);
+      border-color: #9dc7aa;
+      color: var(--green);
+    }
+
+    .stage-name {
+      min-width: 0;
+      display: grid;
+      gap: 1px;
+    }
+
+    .stage-name strong {
+      font-size: 0.89rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .stage-name span {
+      color: var(--muted);
+      font-size: 0.76rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .sidebar-summary {
+      margin-top: 18px;
+      display: grid;
+      gap: 10px;
+      padding-top: 16px;
+      border-top: 1px solid var(--line);
+    }
+
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 0.83rem;
+      font-weight: 700;
+    }
+
+    .progress-track {
+      height: 10px;
+      border-radius: 999px;
+      background: var(--subtle);
+      overflow: hidden;
+      border: 1px solid var(--line);
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg, var(--teal), var(--green));
+      transition: width 220ms ease;
+    }
+
+    main {
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: rgba(247, 248, 246, 0.93);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--line);
+      padding: 12px 28px;
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .menu-button {
+      border: 1px solid var(--line);
+      background: white;
+      border-radius: var(--radius);
+      width: 42px;
+      height: 38px;
+      display: grid;
+      place-items: center;
+      color: var(--ink);
+    }
+
+    .content {
+      width: 100%;
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 30px;
+    }
+
+    .stage {
+      display: none;
+      animation: fadeIn 180ms ease;
+    }
+
+    .stage.active {
+      display: grid;
+      gap: 22px;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(5px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .stage-hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+      gap: 18px;
+      align-items: stretch;
+      padding: 22px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      max-width: 100%;
+    }
+
+    .hero-copy {
+      min-width: 0;
+      display: grid;
+      gap: 12px;
+      align-content: center;
+    }
+
+    .eyebrow {
+      margin: 0;
+      color: var(--teal);
+      font-size: 0.78rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: clamp(1.6rem, 2.4vw, 2.45rem);
+      line-height: 1.08;
+      letter-spacing: 0;
+      overflow-wrap: anywhere;
+    }
+
+    h3 {
+      margin: 0;
+      font-size: 1.1rem;
+      line-height: 1.18;
+      letter-spacing: 0;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    .lead {
+      max-width: 68ch;
+      color: #3f4b54;
+      font-size: 1.03rem;
+      overflow-wrap: anywhere;
+    }
+
+    .case-card {
+      min-width: 0;
+      display: grid;
+      gap: 14px;
+      align-content: start;
+      background: #f9fbfa;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 16px;
+    }
+
+    .case-title {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      font-weight: 800;
+      color: #184d4b;
+    }
+
+    .icon-box {
+      width: 34px;
+      height: 34px;
+      border-radius: var(--radius);
+      background: var(--teal-soft);
+      display: grid;
+      place-items: center;
+      color: var(--teal);
+      border: 1px solid #bad9d6;
+      flex: 0 0 auto;
+    }
+
+    .case-grid {
+      display: grid;
+      gap: 8px;
+      color: #3f4b54;
+      font-size: 0.92rem;
+    }
+
+    .case-grid div {
+      display: grid;
+      grid-template-columns: 92px minmax(0, 1fr);
+      gap: 8px;
+    }
+
+    .case-grid strong {
+      color: var(--ink);
+    }
+
+    .callout {
+      border-left: 4px solid var(--teal);
+      background: var(--teal-soft);
+      padding: 12px 14px;
+      color: #174d4c;
+      border-radius: 0 var(--radius) var(--radius) 0;
+      font-size: 0.95rem;
+      overflow-wrap: anywhere;
+    }
+
+    .grid-two {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .grid-three {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .module {
+      min-width: 0;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 18px;
+      display: grid;
+      gap: 16px;
+      align-content: start;
+      box-shadow: 0 8px 24px rgba(23, 32, 38, 0.05);
+    }
+
+    .module.compact {
+      gap: 12px;
+    }
+
+    .module-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .module-header p,
+    .muted {
+      color: var(--muted);
+      font-size: 0.94rem;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .button {
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--ink);
+      border-radius: var(--radius);
+      min-height: 38px;
+      padding: 8px 12px;
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 0.9rem;
+      white-space: normal;
+    }
+
+    .button:hover {
+      background: #f3f6f5;
+    }
+
+    .button.primary {
+      background: var(--teal);
+      color: white;
+      border-color: var(--teal);
+    }
+
+    .button.primary:hover {
+      background: #176967;
+    }
+
+    .button.ghost {
+      background: transparent;
+    }
+
+    .icon-button {
+      width: 40px;
+      padding: 0;
+      position: relative;
+    }
+
+    .icon-button[data-tip]::after {
+      content: attr(data-tip);
+      position: absolute;
+      left: 50%;
+      bottom: calc(100% + 8px);
+      transform: translateX(-50%);
+      padding: 6px 8px;
+      border-radius: 6px;
+      background: #172026;
+      color: white;
+      font-size: 0.76rem;
+      font-weight: 700;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 150ms ease;
+    }
+
+    .icon-button:hover::after,
+    .icon-button:focus-visible::after {
+      opacity: 1;
+    }
+
+    .segmented {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      padding: 4px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #f7f8f6;
+    }
+
+    .segmented button {
+      min-height: 34px;
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-weight: 800;
+    }
+
+    .segmented button.active {
+      background: white;
+      color: var(--teal);
+      box-shadow: 0 3px 12px rgba(23, 32, 38, 0.08);
+    }
+
+    .feedback {
+      border: 1px solid var(--line);
+      border-left-width: 4px;
+      border-radius: var(--radius);
+      padding: 12px 13px;
+      background: #fbfcfc;
+      display: grid;
+      gap: 4px;
+      min-height: 70px;
+    }
+
+    .feedback strong {
+      font-size: 0.93rem;
+    }
+
+    .feedback p {
+      color: #3f4b54;
+      font-size: 0.91rem;
+    }
+
+    .feedback.correct {
+      border-left-color: var(--green);
+      background: var(--green-soft);
+    }
+
+    .feedback.partial {
+      border-left-color: var(--gold);
+      background: var(--gold-soft);
+    }
+
+    .feedback.incorrect {
+      border-left-color: var(--coral);
+      background: var(--coral-soft);
+    }
+
+    .feedback.info {
+      border-left-color: var(--blue);
+      background: var(--blue-soft);
+    }
+
+    .mini-tag {
+      display: inline-flex;
+      width: fit-content;
+      align-items: center;
+      gap: 7px;
+      border-radius: 999px;
+      padding: 5px 9px;
+      background: var(--subtle);
+      color: #3d4852;
+      font-size: 0.78rem;
+      font-weight: 800;
+      border: 1px solid var(--line);
+    }
+
+    .mini-tag.good {
+      background: var(--green-soft);
+      color: var(--green);
+      border-color: #a8cfb3;
+    }
+
+    .mini-tag.warn {
+      background: var(--gold-soft);
+      color: var(--gold);
+      border-color: #e0c37f;
+    }
+
+    .mini-tag.risk {
+      background: var(--coral-soft);
+      color: var(--coral);
+      border-color: #dfaaa4;
+    }
+
+    .svg-wrap {
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      min-height: 180px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fcfcfb;
+      overflow: hidden;
+    }
+
+    svg {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .curve-label {
+      font-size: 12px;
+      fill: #3f4b54;
+      font-weight: 800;
+    }
+
+    .axis-label {
+      font-size: 11px;
+      fill: #5b6570;
+      font-weight: 700;
+    }
+
+    .worlds {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .world-panel {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 14px;
+      background: #fcfcfb;
+      display: grid;
+      gap: 10px;
+    }
+
+    .world-panel strong {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      color: var(--ink);
+    }
+
+    .notation {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 42px;
+      border-radius: 999px;
+      padding: 3px 8px;
+      background: var(--subtle);
+      border: 1px solid var(--line);
+      color: #30404a;
+      font-size: 0.78rem;
+      font-weight: 900;
+    }
+
+    .world-panel p {
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .drag-layout {
+      display: grid;
+      grid-template-columns: minmax(220px, 0.8fr) minmax(0, 1.2fr);
+      gap: 16px;
+      align-items: start;
+    }
+
+    .card-bank,
+    .drop-grid {
+      display: grid;
+      gap: 10px;
+    }
+
+    .drag-card {
+      border: 1px solid var(--line);
+      background: white;
+      border-radius: var(--radius);
+      padding: 11px 12px;
+      box-shadow: 0 4px 12px rgba(23, 32, 38, 0.05);
+      color: #26323b;
+      font-weight: 700;
+      user-select: none;
+    }
+
+    .drag-card[draggable="true"] {
+      cursor: grab;
+    }
+
+    .drag-card.dragging {
+      opacity: 0.56;
+    }
+
+    .drop-zone {
+      min-height: 116px;
+      border: 1px dashed #9eabb6;
+      background: #fbfcfc;
+      border-radius: var(--radius);
+      padding: 10px;
+      display: grid;
+      gap: 8px;
+      align-content: start;
+    }
+
+    .drop-zone.over {
+      background: var(--teal-soft);
+      border-color: var(--teal);
+    }
+
+    .drop-zone h4 {
+      margin: 0 0 2px;
+      color: #30404a;
+      font-size: 0.86rem;
+    }
+
+    .choice-list {
+      display: grid;
+      gap: 9px;
+    }
+
+    .choice {
+      width: 100%;
+      text-align: left;
+      border: 1px solid var(--line);
+      background: white;
+      color: #26323b;
+      border-radius: var(--radius);
+      padding: 12px 13px;
+      font-weight: 750;
+    }
+
+    .choice:hover {
+      background: #f5f7f7;
+    }
+
+    .choice.selected {
+      border-color: var(--teal);
+      box-shadow: var(--focus);
+    }
+
+    .choice.correct {
+      border-color: var(--green);
+      background: var(--green-soft);
+    }
+
+    .choice.incorrect {
+      border-color: var(--coral);
+      background: var(--coral-soft);
+    }
+
+    .range-row {
+      display: grid;
+      gap: 10px;
+    }
+
+    .range-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      font-weight: 800;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--teal);
+    }
+
+    .meter {
+      height: 14px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: #f1f3f5;
+      overflow: hidden;
+    }
+
+    .meter > span {
+      display: block;
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg, var(--coral), var(--gold), var(--green));
+      transition: width 180ms ease;
+    }
+
+    .test-selector {
+      display: grid;
+      gap: 14px;
+    }
+
+    .question-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 12px;
+      background: #fbfcfc;
+    }
+
+    .toggle {
+      width: 58px;
+      height: 32px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #e8ecef;
+      padding: 3px;
+      position: relative;
+      transition: background 150ms ease;
+    }
+
+    .toggle span {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: white;
+      display: block;
+      box-shadow: 0 2px 8px rgba(23, 32, 38, 0.18);
+      transition: transform 150ms ease;
+    }
+
+    .toggle.active {
+      background: var(--teal);
+      border-color: var(--teal);
+    }
+
+    .toggle.active span {
+      transform: translateX(25px);
+    }
+
+    .recommendation {
+      border-radius: var(--radius);
+      padding: 14px;
+      background: var(--blue-soft);
+      border: 1px solid #bfd4eb;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .recommendation strong {
+      color: var(--blue);
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      overflow: hidden;
+      border-radius: var(--radius);
+    }
+
+    .data-table th,
+    .data-table td {
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--line);
+      text-align: right;
+    }
+
+    .data-table th:first-child,
+    .data-table td:first-child {
+      text-align: left;
+    }
+
+    .data-table th {
+      background: #f2f5f5;
+      color: #35434d;
+    }
+
+    .data-table tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .gauge {
+      min-height: 210px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fcfcfb;
+      padding: 10px;
+    }
+
+    .gauge-readout {
+      display: grid;
+      text-align: center;
+      gap: 2px;
+      color: var(--muted);
+      font-weight: 800;
+    }
+
+    .gauge-readout strong {
+      color: var(--ink);
+      font-size: 1.55rem;
+    }
+
+    .ci-list,
+    .study-cards,
+    .dashboard-grid,
+    .summary-grid {
+      display: grid;
+      gap: 10px;
+    }
+
+    .ci-row {
+      display: grid;
+      grid-template-columns: 82px minmax(0, 1fr) 84px;
+      align-items: center;
+      gap: 10px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 10px;
+      background: #fcfcfb;
+    }
+
+    .ci-track {
+      position: relative;
+      height: 34px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #f8e5e1 0%, #f7f8f6 46%, #f7f8f6 54%, #e3f1e7 100%);
+      border: 1px solid var(--line);
+    }
+
+    .ci-zero {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      width: 2px;
+      background: #73808b;
+    }
+
+    .ci-bar {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      height: 4px;
+      background: var(--teal);
+      border-radius: 999px;
+    }
+
+    .ci-dot {
+      position: absolute;
+      top: 50%;
+      width: 14px;
+      height: 14px;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      background: white;
+      border: 4px solid var(--teal);
+    }
+
+    .ci-row button {
+      border: 1px solid var(--line);
+      background: white;
+      border-radius: var(--radius);
+      padding: 7px;
+      font-weight: 800;
+      color: var(--teal);
+    }
+
+    .sim-panels {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .sim-panel {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fcfcfb;
+      padding: 12px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .patient-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(20px, 1fr));
+      gap: 6px;
+      min-height: 62px;
+      align-content: start;
+    }
+
+    .patient {
+      width: 20px;
+      height: 24px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    .patient::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--teal);
+    }
+
+    .patient::after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 15px;
+      height: 14px;
+      border-radius: 7px 7px 3px 3px;
+      background: var(--teal-soft);
+      border: 1px solid #99c8c5;
+    }
+
+    .matrix {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .matrix-cell {
+      min-height: 144px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fcfcfb;
+      padding: 12px;
+      display: grid;
+      gap: 6px;
+      text-align: left;
+    }
+
+    .matrix-cell:hover {
+      border-color: var(--teal);
+    }
+
+    .matrix-cell strong {
+      font-size: 0.94rem;
+    }
+
+    .matrix-cell span {
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
+
+    .matrix-cell em {
+      color: var(--teal);
+      font-style: normal;
+      font-size: 0.84rem;
+      font-weight: 900;
+    }
+
+    .poster {
+      position: relative;
+      border: 2px solid #33414d;
+      border-radius: var(--radius);
+      min-height: 460px;
+      background:
+        linear-gradient(#fff 0 0) padding-box,
+        repeating-linear-gradient(0deg, transparent 0 27px, rgba(47, 62, 72, 0.05) 27px 28px);
+      padding: 18px;
+      overflow: hidden;
+    }
+
+    .poster-title {
+      display: grid;
+      gap: 2px;
+      border-bottom: 4px solid var(--teal);
+      padding-bottom: 12px;
+      margin-bottom: 14px;
+    }
+
+    .poster-title strong {
+      font-size: 1.25rem;
+    }
+
+    .poster-section {
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.78);
+      border-radius: var(--radius);
+      padding: 12px;
+      margin-bottom: 10px;
+      color: #3f4b54;
+    }
+
+    .flag {
+      border: 1px solid #b8c2ca;
+      border-bottom: 2px dotted #7e8b96;
+      background: rgba(255, 255, 255, 0.76);
+      color: #26323b;
+      border-radius: 6px;
+      min-height: 30px;
+      padding: 4px 7px;
+      font-weight: 800;
+      display: inline;
+      align-items: center;
+      gap: 6px;
+      margin: 2px;
+      text-align: left;
+    }
+
+    .flag:hover {
+      border-color: var(--teal);
+      background: var(--teal-soft);
+    }
+
+    .flag.found {
+      border-color: var(--green);
+      border-bottom-style: solid;
+      background: var(--green-soft);
+      color: var(--green);
+    }
+
+    .flag.decoy {
+      border-color: #d1d8df;
+      background: #f8faf9;
+      color: var(--muted);
+    }
+
+    .quality-row {
+      display: grid;
+      grid-template-columns: minmax(130px, 160px) minmax(120px, 1fr) minmax(112px, max-content);
+      gap: 10px;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 10px;
+      background: #fcfcfb;
+      font-size: 0.9rem;
+    }
+
+    .quality-row > span:last-child {
+      min-width: 0;
+      text-align: right;
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
+
+    .quality-meter {
+      height: 12px;
+      border-radius: 999px;
+      background: #edf0f2;
+      border: 1px solid var(--line);
+      overflow: hidden;
+    }
+
+    .quality-meter span {
+      display: block;
+      height: 100%;
+      width: 25%;
+      background: var(--coral);
+      transition: width 180ms ease, background 180ms ease;
+    }
+
+    .fix-area {
+      display: grid;
+      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+      gap: 12px;
+    }
+
+    .blueprint {
+      min-height: 210px;
+      border: 1px dashed #8da2b5;
+      border-radius: var(--radius);
+      background: var(--blue-soft);
+      padding: 12px;
+      display: grid;
+      gap: 9px;
+      align-content: start;
+    }
+
+    .study-card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fcfcfb;
+      padding: 12px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .study-card strong {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .study-meta {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
+
+    .decision-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .decision-card {
+      min-height: 84px;
+      text-align: left;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: white;
+      padding: 12px;
+      display: grid;
+      align-content: start;
+      gap: 4px;
+    }
+
+    .decision-card strong {
+      color: var(--ink);
+    }
+
+    .decision-card span {
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
+
+    .decision-card.selected {
+      border-color: var(--teal);
+      background: var(--teal-soft);
+      box-shadow: var(--focus);
+    }
+
+    .reflection-box {
+      width: 100%;
+      min-height: 138px;
+      resize: vertical;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 12px;
+      background: #fff;
+      color: var(--ink);
+    }
+
+    .summary-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 11px 12px;
+      background: #fcfcfb;
+    }
+
+    .evidence-packet {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .evidence-item {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fcfcfb;
+      padding: 11px 12px;
+      display: grid;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .evidence-item strong {
+      color: var(--ink);
+      font-size: 0.9rem;
+    }
+
+    .evidence-item span {
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    .model-answer {
+      border: 1px solid #bfd4eb;
+      border-left: 4px solid var(--blue);
+      border-radius: var(--radius);
+      background: var(--blue-soft);
+      padding: 13px 14px;
+      color: #24394e;
+      min-height: 116px;
+      display: grid;
+      align-content: center;
+      gap: 6px;
+    }
+
+    .model-answer strong {
+      color: var(--blue);
+    }
+
+    .stage-controls {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      padding: 16px 0 4px;
+    }
+
+    .stage-controls .button {
+      min-width: 138px;
+    }
+
+    .mobile-scrim {
+      display: none;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    @media (max-width: 980px) {
+      .app-shell {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: fixed;
+        z-index: 30;
+        width: min(320px, 88vw);
+        transform: translateX(-105%);
+        transition: transform 180ms ease;
+        box-shadow: var(--shadow);
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+      }
+
+      .mobile-scrim {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 20;
+        background: rgba(23, 32, 38, 0.28);
+      }
+
+      .mobile-scrim.open {
+        display: block;
+      }
+
+      .topbar {
+        display: flex;
+      }
+
+      .content {
+        padding: 20px;
+      }
+
+      .stage-hero,
+      .grid-two,
+      .grid-three,
+      .drag-layout,
+      .fix-area {
+        grid-template-columns: 1fr;
+      }
+
+      .stage-hero {
+        padding: 18px;
+      }
+    }
+
+    @media (max-width: 680px) {
+      .content {
+        padding: 14px;
+      }
+
+      .worlds,
+      .sim-panels,
+      .decision-grid,
+      .matrix {
+        grid-template-columns: 1fr;
+      }
+
+      .module {
+        padding: 14px;
+      }
+
+      .module-header,
+      .recommendation,
+      .stage-controls {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .stage-controls .button {
+        width: 100%;
+      }
+
+      .ci-row,
+      .quality-row,
+      .evidence-packet {
+        grid-template-columns: 1fr;
+      }
+
+      .quality-row > span:last-child {
+        text-align: left;
+      }
+
+      .case-grid div {
+        grid-template-columns: 1fr;
+        gap: 2px;
+      }
+
+      .study-meta {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar" aria-label="Stage navigation">
+      <div class="brand">
+        <span class="case-pill">Teaching case: 6-week balance training</span>
+        <h1>Interpreting PT Research</h1>
+        <p>A visual statistics review for second-semester DPT students.</p>
+      </div>
+
+      <ol class="stage-list" id="stageList"></ol>
+
+      <div class="sidebar-summary" aria-live="polite">
+        <div class="progress-label">
+          <span>Completion</span>
+          <span id="progressText">0 of 8</span>
+        </div>
+        <div class="progress-track" aria-hidden="true">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+      </div>
+    </aside>
+    <div class="mobile-scrim" id="scrim"></div>
+
+    <main>
+      <div class="topbar">
+        <button class="menu-button" id="menuButton" type="button" aria-label="Open stage navigation">
+          <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+          </svg>
+        </button>
+        <strong id="mobileTitle">Interpreting PT Research</strong>
+      </div>
+
+      <div class="content">
+        <section class="stage active" id="intro" data-title="Intro">
+          <div class="stage-hero">
+            <div class="hero-copy">
+              <p class="eyebrow">Visual review pathway</p>
+              <h2>Can this study change physical therapy practice?</h2>
+              <p class="lead">Work through one recurring study about a 6-week balance training program for older adults at increased fall risk. Each stage adds one piece of statistical reasoning, from hypotheses to a final clinical interpretation.</p>
+              <div class="callout">Teaching data are invented for visualization. Lower Timed Up and Go times indicate better performance.</div>
+              <div class="toolbar">
+                <button class="button primary" type="button" data-go-stage="1">Start stage 1</button>
+                <button class="button" type="button" data-go-stage="8">Jump to evidence board</button>
+              </div>
+            </div>
+            <div class="case-card" aria-label="Recurring case overview">
+              <div class="case-title">
+                <span class="icon-box" aria-hidden="true">
+                  <svg width="22" height="22" viewBox="0 0 24 24">
+                    <path d="M12 4a3 3 0 1 0 0 6 3 3 0 0 0 0-6Zm-5 17v-3a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                  </svg>
+                </span>
+                Balance training case
+              </div>
+              <div class="case-grid">
+                <div><strong>Population</strong><span>Older adults at increased fall risk</span></div>
+                <div><strong>Intervention</strong><span>6-week balance training program</span></div>
+                <div><strong>Comparison</strong><span>Usual care</span></div>
+                <div><strong>Outcome</strong><span>Timed Up and Go, measured in seconds</span></div>
+                <div><strong>Clinical lens</strong><span>Credibility, uncertainty, meaningfulness, and study quality</span></div>
+              </div>
+              <div class="svg-wrap">
+                <svg viewBox="0 0 520 220" role="img" aria-label="Older adult balance training study visual">
+                  <rect x="0" y="0" width="520" height="220" fill="#fcfcfb"></rect>
+                  <line x1="54" y1="172" x2="468" y2="172" stroke="#cfd7df" stroke-width="2"></line>
+                  <text x="54" y="194" class="axis-label">Better TUG time</text>
+                  <text x="362" y="194" class="axis-label">Slower TUG time</text>
+                  <g transform="translate(100 80)">
+                    <circle cx="0" cy="0" r="16" fill="#1f7a78"></circle>
+                    <path d="M0 20v48M-22 42h44M-14 88l14-20 14 20" fill="none" stroke="#1f7a78" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"></path>
+                    <path d="M-40 95c28-22 54-22 82 0" fill="none" stroke="#a66f00" stroke-width="5" stroke-linecap="round"></path>
+                  </g>
+                  <g transform="translate(235 54)">
+                    <rect x="-45" y="12" width="90" height="92" rx="8" fill="#dcefee" stroke="#9cc9c6"></rect>
+                    <path d="M-22 45h44M-22 65h44M-22 85h31" stroke="#1f7a78" stroke-width="6" stroke-linecap="round"></path>
+                    <text x="0" y="132" text-anchor="middle" class="curve-label">6 weeks</text>
+                  </g>
+                  <g transform="translate(390 80)">
+                    <circle cx="0" cy="0" r="16" fill="#2d7d46"></circle>
+                    <path d="M0 20v48M-22 42h44M-14 88l14-20 14 20" fill="none" stroke="#2d7d46" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"></path>
+                    <path d="M-42 94c21-14 42-17 64-8" fill="none" stroke="#2d7d46" stroke-width="5" stroke-linecap="round"></path>
+                  </g>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="stage" id="stage1" data-title="Hypotheses">
+          <div class="stage-hero">
+            <div class="hero-copy">
+              <p class="eyebrow">Stage 1: Statistical significance</p>
+              <h2>Hypotheses and signal versus noise</h2>
+              <p class="lead">Statistical significance starts with a comparison between the null world and the alternative world. The goal is to judge whether the observed result would be unusual if H0 were true.</p>
+            </div>
+            <div class="case-card">
+              <div class="case-title">
+                <span class="icon-box" aria-hidden="true">H0</span>
+                Section pairing
+              </div>
+              <p class="muted">Pairs with the guided learning section on null hypothesis, alternative hypothesis, and statistical significance.</p>
+              <div class="callout">Clinical relevance: a statistically surprising result is not automatically a clinically important result.</div>
+            </div>
+          </div>
+
+          <div class="grid-two">
+            <div class="module">
+              <div class="module-header">
+                <div>
+                  <h3>Two Competing Worlds</h3>
+                  <p>Move the slider to separate the outcome distributions.</p>
+                </div>
+                <span class="mini-tag" id="signalTag">More consistent with H0</span>
+              </div>
+              <div class="worlds">
+                <div class="world-panel">
+                  <strong>Null world <span class="notation">H0</span></strong>
+                  <p>Balance training and usual care have no meaningful difference. Observed differences may be noise.</p>
+                </div>
+                <div class="world-panel">
+                  <strong>Alternative world <span class="notation">H1</span></strong>
+                  <p>Balance training produces a real difference. Observed differences may reflect a true effect.</p>
+                </div>
+              </div>
+              <div class="svg-wrap">
+                <svg id="signalSvg" viewBox="0 0 560 250" role="img" aria-label="Overlapping outcome distributions">
+                  <rect width="560" height="250" fill="#fcfcfb"></rect>
+                  <line x1="50" y1="200" x2="510" y2="200" stroke="#cfd7df" stroke-width="2"></line>
+                  <text x="50" y="224" class="axis-label">Faster TUG</text>
+                  <text x="430" y="224" class="axis-label">Slower TUG</text>
+                  <path id="usualCurve" d="" fill="rgba(187,77,69,0.22)" stroke="#bb4d45" stroke-width="3"></path>
+                  <path id="trainingCurve" d="" fill="rgba(31,122,120,0.22)" stroke="#1f7a78" stroke-width="3"></path>
+                  <text x="116" y="40" class="curve-label" fill="#1f7a78">Balance training</text>
+                  <text x="342" y="40" class="curve-label" fill="#bb4d45">Usual care</text>
+                </svg>
+              </div>
+              <div class="range-row">
+                <div class="range-top"><span>No separation</span><span>Large separation</span></div>
+                <input id="signalSlider" type="range" min="0" max="100" value="15" aria-label="Signal versus noise separation">
+              </div>
+              <div class="feedback info" id="signalFeedback">
+                <strong>Move the slider.</strong>
+                <p>As the curves separate, the observed result becomes less consistent with H0. Statistical significance still does not prove clinical meaningfulness.</p>
+              </div>
+            </div>
+
+            <div class="module">
+              <div class="module-header">
+                <div>
+                  <h3>Sort the Claims</h3>
+                  <p>Drag each statement into the best category.</p>
+                </div>
+                <button class="button icon-button" type="button" id="resetHypotheses" data-tip="Reset" aria-label="Reset hypothesis sorting">
+                  <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M4 4v6h6M20 20v-6h-6M5 14a7 7 0 0 0 12 4M19 10A7 7 0 0 0 7 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                  </svg>
+                </button>
+              </div>
+              <div class="drag-layout">
+                <div>
+                  <span class="mini-tag">Claim cards</span>
+                  <div class="card-bank" id="hypothesisBank"></div>
+                </div>
+                <div class="drop-grid" id="hypothesisZones">
+                  <div class="drop-zone" data-zone="null"><h4>Null hypothesis</h4></div>
+                  <div class="drop-zone" data-zone="alternative"><h4>Alternative hypothesis</h4></div>
+                  <div class="drop-zone" data-zone="unsupported"><h4>Unsupported conclusion</h4></div>
+                </div>
+              </div>
+              <button class="button primary" type="button" id="checkHypotheses">Check sorting</button>
+              <div class="feedback info" id="hypothesisFeedback">
+                <strong>Ready when you are.</strong>
+                <p>Classify hypotheses as testable claims, and keep broad clinical claims separate from what the study can support.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="stage" id="stage2" data-title="t-tests">
+          <div class="stage-hero">
+            <div class="hero-copy">
+              <p class="eyebrow">Stage 2: The t-test</p>
+              <h2>Choose the test from the data structure</h2>
+              <p class="lead">The correct t-test depends on whether the data come from the same participants measured twice or from two separate groups.</p>
+            </div>
+            <div class="case-card">
+              <div class="case-title">
+                <span class="icon-box" aria-hidden="true">t</span>
+                Section pairing
+              </div>
+              <p class="muted">Pairs with the guided learning section on paired and independent t-tests in PT research.</p>
+              <div class="callout">Decision rule: paired means same participants measured twice; independent means different unrelated groups.</div>
+            </div>
+          </div>
+
+          <div class="grid-two">
+            <div class="module">
+              <div class="module-header">
+                <div>
+                  <h3>Same people or different people?</h3>
+                  <p>Toggle the design features to reveal the recommended test for the specific comparison being made.</p>
+                </div>
+              </div>
+              <div class="callout">In this case, a paired t-test fits a within-patient pre/post question, while an independent t-test fits a separate balance-training versus usual-care group comparison. A real study with both group and time may need a fuller model, but this review focuses on the basic design cue.</div>
+              <div class="test-selector">
+                <div class="question-row">
+                  <div>
+                    <strong>Are the same participants measured before and after treatment?</strong>
+                    <p class="muted">Example: each person has one pre score and one post score.</p>
+                  </div>
+                  <button class="toggle" type="button" id="samePeopleToggle" aria-pressed="false" aria-label="Same participants measured twice"><span></span></button>
+                </div>
+                <div class="question-row">
+                  <div>
+                    <strong>Are there two unrelated treatment groups?</strong>
+                    <p class="muted">Example: balance training group compared with usual care group.</p>
+                  </div>
+                  <button class="toggle active" type="button" id="twoGroupsToggle" aria-pressed="true" aria-label="Two unrelated groups"><span></span></button>
+                </div>
+                <div class="recommendation">
+                  <div>
+                    <strong id="testRecommendation">Independent t-test</strong>
+                    <p class="muted" id="testReason">Two unrelated groups are being compared.</p>
+                  </div>
+                  <span class="mini-tag good" id="testTag">Selected</span>
+                </div>
+                <button class="button primary" type="button" id="confirmTestChoice">Confirm test choice</button>
+              </div>
+              <div class="feedback info" id="testFeedback">
+                <strong>Use structure first.</strong>
+                <p>The number of measurements matters, but the relationship among observations matters more.</p>
+              </div>
+            </div>
+
+            <div class="module">
+              <div class="module-header">
+                <div>
+                  <h3>Teaching Data Views</h3>
+                  <p>Switch between paired change and independent group comparison.</p>
+                </div>
+                <div class="segmented" aria-label="Data view selector">
+                  <button class="active" type="button" data-data-view="paired">Paired</button>
+                  <button type="button" data-data-view="independent">Independent</button>
+                </div>
+              </div>
+              <div class="svg-wrap">
+                <svg id="tTestSvg" viewBox="0 0 640 330" role="img" aria-label="t-test data visualization"></svg>
+              </div>
+              <div id="tTestTableWrap"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="stage" id="stage3" data-title="p-values">
+          <div class="stage-hero">
+            <div class="hero-copy">
+              <p class="eyebrow">Stage 3: p-values</p>
+              <h2>How surprising is the result if H0 is true?</h2>
+              <p class="lead">A p-value is a probability under the null hypothesis. It is not the probability that H0 is true, and it is not the probability that the treatment worked.</p>
+            </div>
+            <div class="case-card">
+              <div class="case-title">
+                <span class="icon-box" aria-hidden="true">p</span>
+                Section pairing
+              </div>
+              <p class="muted">Pairs with the guided learning section on p-values and their role in statistical significance.</p>
+              <div class="callout">Clinical relevance: a small p-value can still describe an effect too small to matter to patients.</div>
+            </div>
+          </div>
+
+          <div class="grid-two">
+            <div class="module">
+              <div class="module-header">
+                <div>
+                  <h3>Chance-o-meter</h3>
+                  <p>Select a p-value and watch the gauge shift.</p>
+                </div>
+                <div class="segmented" aria-label="p-value selector">
+                  <button type="button" data-preset-p="0.50">0.50</button>
+                  <button type="button" data-preset-p="0.20">0.20</button>
+                  <button class="active" type="button" data-preset-p="0.04">0.04</button>
+                  <button type="button" data-preset-p="0.001">0.001</button>
+                </div>
+              </div>
+              <div class="gauge">
+                <svg id="pGaugeSvg" viewBox="0 0 320 190" role="img" aria-label="p-value surprise gauge"></svg>
+                <div class="gauge-readout">
+                  <strong id="pGaugeValue">p = 0.04</strong>
+                  <span id="pGaugeText">More surprising under H0</span>
+                </div>
+              </div>
+              <div class="feedback info" id="pGaugeFeedback">
+                <strong>Evidence against H0.</strong>
+                <p>Lower p-values indicate results that would be less common if the null hypothesis were true.</p>
+              </div>
+            </div>
+
+            <div class="module">
+              <div class="module-header">
+                <div>
+                  <h3>Tail Area Under H0</h3>
+                  <p>Drag the observed result farther from zero.</p>
+                </div>
+                <span class="mini-tag" id="tailTag">p changes</span>
+              </div>
+              <div class="svg-wrap">
+                <svg id="tailSvg" viewBox="0 0 620 300" role="img" aria-label="Bell curve with p-value tail area"></svg>
+              </div>
+              <div class="range-row">
+                <div class="range-top"><span>Near zero</span><span>Far from zero</span></div>
+                <input id="tailSlider" type="range" min="0" max="100" value="62" aria-label="Observed result distance from zero">
+              </div>
+              <div class="choice-list" id="pValueChoices">
+                <button class="choice" type="button" data-correct="false">There is a 4% chance that the null hypothesis is true.</button>
+                <button class="choice" type="button" data-correct="false">There is a 4% chance the treatment worked.</button>
+                <button class="choice" type="button" data-correct="true">If the null hypothesis were true, results this extreme would occur about 4% of the time.</button>
+                <button class="choice" type="button" data-correct="false">The treatment is clinically important.</button>
+              </div>
+              <div class="feedback info" id="pChoiceFeedback">
+                <strong>Misinterpretation check.</strong>
+                <p>Choose the best interpretation of p = 0.04.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="stage" id="stage4" data-title="Confidence intervals">
+          <div class="stage-hero">
+            <div class="hero-copy">
+              <p class="eyebrow">Stage 4: Confidence intervals</p>
+              <h2>Estimate plus uncertainty</h2>
+              <p class="lead">A confidence interval shows a range of plausible values for the treatment effect. The dot gives the estimate, and the bar shows uncertainty and precision.</p>
+            </div>
+            <div class="case-card">
+              <div class="case-title">
+                <span class="icon-box" aria-hidden="true">CI</span>
+                Section pairing
+              </div>
+              <p class="muted">Pairs with the guided learning section on confidence intervals as ranges of plausible values and indicators of precision.</p>
+              <div class="callout">Clinical relevance: an interval can include effects that are statistically unclear or too small to matter.</div>
+            </div>
+          </div>
+
+          <div class="grid-two">
+            <div class="module">
+              <div class="module-header">
+                <div>
+                  <h3>Dot-and-whisker results</h3>
+                  <p>Each interval estimates how many seconds faster TUG performance was after balance training compared with usual care.</p>
+                </div>
+                <span class="mini-tag">No effect = 0 sec</span>
+              </div>
+              <div class="ci-list" id="ciRows"></div>
+              <div class="feedback info" id="ciFeedback">
+                <strong>Select a study.</strong>
+                <p>Study intervals that cross zero include no difference in TUG improvement among the plausible values.</p>
+              </div>
+            </div>
+
+            <div class="module">
+              <div class="module-header">
+                <div>
+                  <h3>Same estimate, different precision</h3>
+                  <p>Both studies estimate a 4-second TUG benefit.</p>
+                </div>
+              </div>
+              <div class="svg-wrap">
+                <svg id="precisionSvg" viewBox="0 0 640 270" role="img" aria-label="Two confidence intervals with same estimate and different precision"></svg>
+              </div>
+              <div class="choice-list" id="precisionChoices">
+                <button class="choice" type="button" data-correct="true">Study A, because 3 to 5 seconds is narrower.</button>
+                <button class="choice" type="button" data-correct="false">Study B, because -1 to 9 seconds includes more possibilities.</button>
+                <button class="choice" type="button" data-correct="false">They are equally precise because the point estimate is the same.</button>
+              </div>
+              <div class="feedback info" id="precisionFeedback">
+                <strong>Precision check.</strong>
+                <p>Choose the interval that gives the more precise estimate.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="stage" id="stage5" data-title="Sample size">
+          <div class="stage-hero">
+            <div class="hero-copy">
+              <p class="eyebrow">Stage 5: Sample size</p>
+              <h2>Small studies wobble; larger studies stabilize</h2>
+              <p class="lead">Sample size influences power, confidence interval width, and the stability of conclusions. Variability also changes how hard the signal is to detect.</p>
+            </div>
+            <div class="case-card">
+              <div class="case-title">
+                <span class="icon-box" aria-hidden="true">n</span>
+                Section pairing
+              </div>
+              <p class="muted">Pairs with the guided learning section on sample size, power, Type II error risk, and precision.</p>
+              <div class="callout">Clinical relevance: an underpowered study can miss a treatment that would matter in practice.</div>
+            </div>
+          </div>
+
+          <div class="grid-two">
+            <div class="module">
+              <div class="module-header">
+                <div>
+                  <h3>Rerun the study</h3>
+                  <p>Compare small and larger samples across repeated simulated runs.</p>
+                </div>
+                <button class="button icon-button" type="button" id="rerunStudy" data-tip="Rerun" aria-label="Rerun sample size simulation">
+                  <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M4 4v6h6M20 20v-6h-6M5 14a7 7 0 0 0 12 4M19 10A7 7 0 0 0 7 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                  </svg>
+                </button>
+              </div>
+              <div class="sim-panels">
+                <div class="sim-panel">
+                  <strong>Small sample</strong>
+                  <div class="patient-grid" id="smallPatients" aria-hidden="true"></div>
+                  <div class="meter"><span id="smallCiMeter"></span></div>
+                  <p class="muted" id="smallSimText">Wide CI and variable estimate.</p>
+                </div>
+                <div class="sim-panel">
+                  <strong>Larger sample</strong>
+                  <div class="patient-grid" id="largePatients" aria-hidden="true"></div>
+                  <div class="meter"><span id="largeCiMeter"></span></div>
+                  <p class="muted" id="largeSimText">Narrower CI and steadier estimate.</p>
+                </div>
+              </div>
+              <div class="feedback info" id="sampleSimFeedback">
+                <strong>Simulation pattern.</strong>
+                <p>Small studies can swing more from run to run, especially when outcomes are variable.</p>
+              </div>
+            </div>
+
+            <div class="module">
+              <div class="module-header">
+                <div>
+                  <h3>Sample size and variability</h3>
+                  <p>Adjust n, then toggle variability.</p>
+                </div>
+                <div class="segmented" aria-label="Variability selector">
+                  <button class="active" type="button" data-variability="low">Low variability</button>
+                  <button type="button" data-variability="high">High variability</button>
+                </div>
+              </div>
+              <div class="range-row">
+                <div class="range-top"><span>n = <span id="sampleNText">24</span></span><span id="sampleRiskText">Moderate Type II error risk</span></div>
+                <input id="sampleSlider" type="range" min="8" max="120" step="4" value="24" aria-label="Sample size">
+              </div>
+              <div class="svg-wrap">
+                <svg id="sampleSvg" viewBox="0 0 640 310" role="img" aria-label="Sample size and confidence interval visualization"></svg>
+              </div>
+              <div class="dashboard-grid">
+                <div class="quality-row">
+                  <strong>Power</strong>
+                  <div class="quality-meter"><span id="powerMeter"></span></div>
+                  <span id="powerText">Moderate</span>
+                </div>
+                <div class="quality-row">
+                  <strong>CI width</strong>
+                  <div class="quality-meter"><span id="ciWidthMeter"></span></div>
+                  <span id="ciWidthText">Moderate</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="stage" id="stage6" data-title="Statistical errors">
+          <div class="stage-hero">
+            <div class="hero-copy">
+              <p class="eyebrow">Stage 6: Major statistical errors</p>
+              <h2>Reality versus study conclusion</h2>
+              <p class="lead">Type I and Type II errors describe what can go wrong when a study conclusion differs from reality.</p>
+            </div>
+            <div class="case-card">
+              <div class="case-title">
+                <span class="icon-box" aria-hidden="true">!</span>
+                Section pairing
+              </div>
+              <p class="muted">Pairs with the guided learning section on Type I and Type II errors.</p>
+              <div class="callout">Clinical relevance: false positives can waste care time; false negatives can delay useful treatment.</div>
+            </div>
+          </div>
+
+          <div class="grid-two">
+            <div class="module">
+              <div class="module-header">
+                <div>
+                  <h3>2 x 2 Error Matrix</h3>
+                  <p>Click a cell to reveal the PT-specific consequence.</p>
+                </div>
+              </div>
+              <div class="matrix" id="errorMatrix">
+                <button class="matrix-cell" type="button" data-error-cell="correctPositive">
+                  <strong>Study says treatment works</strong>
+                  <span>Reality: treatment works</span>
+                  <em>Reject H0 when H1 is true: power (1 - beta)</em>
+                </button>
+                <button class="matrix-cell" type="button" data-error-cell="typeI">
+                  <strong>Study says treatment works</strong>
+                  <span>Reality: treatment does not work</span>
+                  <em>Reject H0 when H0 is true: Type I error (alpha)</em>
+                </button>
+                <button class="matrix-cell" type="button" data-error-cell="typeII">
+                  <strong>Study says treatment does not work</strong>
+                  <span>Reality: treatment works</span>
+                  <em>Fail to reject H0 when H1 is true: Type II error (beta)</em>
+                </button>
+                <button class="matrix-cell" type="button" data-error-cell="correctNegative">
+                  <strong>Study says treatment does not work</strong>
+                  <span>Reality: treatment does not work</span>
+                  <em>Fail to reject H0 when H0 is true: specificity (1 - alpha)</em>
+                </button>
+              </div>
+              <div class="feedback info" id="errorFeedback">
+                <strong>Choose a cell.</strong>
+                <p>Type I is a false positive. Type II is a false negative.</p>
+              </div>
+            </div>
+
+            <div class="module">
+              <div class="module-header">
+                <div>
+                  <h3>Alpha tradeoff</h3>
+                  <p>Adjust alpha and watch false-positive and false-negative risk shift.</p>
+                </div>
+                <span class="mini-tag" id="alphaTag">alpha = 0.05</span>
+              </div>
+              <div class="range-row">
+                <div class="range-top"><span>0.01</span><span>0.05</span><span>0.10</span></div>
+                <input id="alphaSlider" type="range" min="1" max="10" value="5" aria-label="Alpha level">
+              </div>
+              <div class="svg-wrap">
+                <svg id="alphaSvg" viewBox="0 0 640 290" role="img" aria-label="Alpha tradeoff between false positives and false negatives"></svg>
+              </div>
+              <div class="feedback info" id="alphaFeedback">
+                <strong>Balance the risks.</strong>
+                <p>Lower alpha decreases false-positive risk, but can make false negatives more likely when power is limited.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="stage" id="stage7" data-title="Methodological flaws">
+          <div class="stage-hero">
+            <div class="hero-copy">
+              <p class="eyebrow">Stage 7: Methodological errors</p>
+              <h2>Research flaw detective</h2>
+              <p class="lead">A statistically significant result is only useful if the study design and analysis are trustworthy.</p>
+            </div>
+            <div class="case-card">
+              <div class="case-title">
+                <span class="icon-box" aria-hidden="true">?</span>
+                Section pairing
+              </div>
+              <p class="muted">Pairs with the guided learning material on small samples, lack of control groups, inappropriate tests, multiple testing, and p-hacking.</p>
+              <div class="callout">Clinical relevance: weak methods can make a treatment look better than it really is.</div>
+            </div>
+          </div>
+
+          <div class="grid-two">
+            <div class="module">
+              <div class="module-header">
+                <div>
+                  <h3>Clickable Research Poster</h3>
+                  <p>Click details that weaken trust in the finding. Some clickable details are not major flaws.</p>
+                </div>
+                <span class="mini-tag" id="flagsFound">0 of 5 found</span>
+              </div>
+              <div class="poster" aria-label="Mock study poster with methodological red flags">
+                <div class="poster-title">
+                  <strong>New Balance Program Study</strong>
+                  <span class="muted">Timed Up and Go outcomes after 6 weeks</span>
+                </div>
+                <div class="poster-section">
+                  <strong>Methods</strong>
+                  <p>Participants completed a <button class="flag" type="button" data-decoy="programLength">6-week balance program</button> at one clinic. The study enrolled <button class="flag" type="button" data-flag="smallSample">n = 8</button> older adults who were referred for fall-risk treatment.</p>
+                </div>
+                <div class="poster-section">
+                  <strong>Comparison</strong>
+                  <p>Change over time was compared only within the intervention group; <button class="flag" type="button" data-flag="noControl">no usual-care comparison group</button> was included.</p>
+                </div>
+                <div class="poster-section">
+                  <strong>Outcomes</strong>
+                  <p>The team tested TUG, gait speed, single-leg stance, confidence, falls, strength, pain, balance score, endurance, fear of falling, satisfaction, and attendance. The poster says <button class="flag" type="button" data-flag="multipleTesting">12 outcomes were tested</button>, and TUG was displayed most prominently.</p>
+                </div>
+                <div class="poster-section">
+                  <strong>Results</strong>
+                  <p>The results table lists <button class="flag" type="button" data-flag="selectiveReporting">only outcomes with p &lt; 0.05</button>. The authors also note that the analysis plan was changed after reviewing the data.</p>
+                </div>
+                <div class="poster-section">
+                  <strong>Transparency</strong>
+                  <p>The study reports institutional approval and informed consent, but <button class="flag" type="button" data-decoy="ethics">ethics approval</button> is not the main concern here. <button class="flag" type="button" data-flag="weakTransparency">No preregistered analysis plan</button> was available.</p>
+                </div>
+              </div>
+              <div class="feedback info" id="flagFeedback">
+                <strong>Start inspecting.</strong>
+                <p>Look for design, analysis, and reporting choices that would make the balance-training result less trustworthy.</p>
+              </div>
+            </div>
+
+            <div class="module">
+              <div class="module-header">
+                <div>
+                  <h3>Fix the study</h3>
+                  <p>Move corrective actions into the study blueprint.</p>
+                </div>
+                <span class="mini-tag" id="qualityTag">Quality improving</span>
+              </div>
+              <div class="dashboard-grid" id="qualityDashboard">
+                <div class="quality-row" data-quality-row="sample">
+                  <strong>Sample size</strong>
+                  <div class="quality-meter"><span></span></div>
+                  <span>Low</span>
+                </div>
+                <div class="quality-row" data-quality-row="control">
+                  <strong>Control group</strong>
+                  <div class="quality-meter"><span></span></div>
+                  <span>Absent</span>
+                </div>
+                <div class="quality-row" data-quality-row="test">
+                  <strong>Test selection</strong>
+                  <div class="quality-meter"><span></span></div>
+                  <span>Questionable</span>
+                </div>
+                <div class="quality-row" data-quality-row="reporting">
+                  <strong>Transparency</strong>
+                  <div class="quality-meter"><span></span></div>
+                  <span>Weak</span>
+                </div>
+                <div class="quality-row" data-quality-row="multiple">
+                  <strong>Comparisons</strong>
+                  <div class="quality-meter"><span></span></div>
+                  <span>Uncorrected</span>
+                </div>
+              </div>
+              <div class="fix-area">
+                <div>
+                  <span class="mini-tag">Actions</span>
+                  <div class="card-bank" id="fixBank"></div>
+                </div>
+                <div>
+                  <span class="mini-tag">Study blueprint</span>
+                  <div class="blueprint drop-zone" id="blueprintZone" data-zone="blueprint"></div>
+                </div>
+              </div>
+              <div class="feedback info" id="fixFeedback">
+                <strong>Improve the design.</strong>
+                <p>Each action strengthens one part of the study quality dashboard.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="stage" id="stage8" data-title="Clinical decision">
+          <div class="stage-hero">
+            <div class="hero-copy">
+              <p class="eyebrow">Stage 8: Replication and clinical decision</p>
+              <h2>Synthesize evidence for PT practice</h2>
+              <p class="lead">Now treat the balance-training result as a small body of evidence: the same 6-week program, older adults at increased fall risk, and Timed Up and Go improvement compared with usual care.</p>
+            </div>
+            <div class="case-card">
+              <div class="case-title">
+                <span class="icon-box" aria-hidden="true">E</span>
+                Section pairing
+              </div>
+              <p class="muted">Pairs with the guided learning themes of replication, generalizability, and clinical decision-making.</p>
+              <div class="callout">Clinical relevance: one p-value is not the same thing as practice-changing evidence.</div>
+            </div>
+          </div>
+
+          <div class="grid-two">
+            <div class="module">
+              <div class="module-header">
+                <div>
+                  <h3>Evidence Board</h3>
+                  <p>Each card is another study of the same balance-training question. Look for direction, precision, sample size, and design strength.</p>
+                </div>
+                <span class="mini-tag good">Overall pattern: cautious benefit</span>
+              </div>
+              <div class="study-cards" id="studyCards"></div>
+            </div>
+
+            <div class="module">
+              <div class="module-header">
+                <div>
+                  <h3>Forest Plot-lite</h3>
+                  <p>Effects are seconds faster on TUG for balance training versus usual care.</p>
+                </div>
+              </div>
+              <div class="svg-wrap">
+                <svg id="forestSvg" viewBox="0 0 640 360" role="img" aria-label="Simplified forest plot"></svg>
+              </div>
+              <div class="decision-grid" id="decisionCards">
+                <button class="decision-card" type="button" data-decision="adopt">
+                  <strong>Recommend adopting</strong>
+                  <span>Use as a broad change in practice now.</span>
+                </button>
+                <button class="decision-card" type="button" data-decision="caution">
+                  <strong>Use with caution</strong>
+                  <span>Reasonable in selected patients while monitoring outcomes.</span>
+                </button>
+                <button class="decision-card" type="button" data-decision="noChange">
+                  <strong>Do not change practice yet</strong>
+                  <span>The evidence does not support a change.</span>
+                </button>
+                <button class="decision-card" type="button" data-decision="moreResearch">
+                  <strong>More research needed</strong>
+                  <span>Promising, but uncertainty or study quality is limiting.</span>
+                </button>
+              </div>
+              <div class="feedback info" id="decisionFeedback">
+                <strong>Choose a decision.</strong>
+                <p>Use p-values, confidence intervals, sample size, error risk, design quality, and replication.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="stage" id="final" data-title="Final synthesis">
+          <div class="stage-hero">
+            <div class="hero-copy">
+              <p class="eyebrow">Final synthesis</p>
+              <h2>Review what a strong clinical answer includes</h2>
+              <p class="lead">Use the evidence packet and model answers to see how p-values, confidence intervals, sample size, limitations, and clinical caution fit together.</p>
+            </div>
+            <div class="case-card">
+              <div class="case-title">
+                <span class="icon-box" aria-hidden="true">OK</span>
+                Completion summary
+              </div>
+              <p class="muted">The dashboard shows which review components are complete and which would benefit from another pass.</p>
+              <div class="callout">Practical question: is the finding statistically credible, clinically meaningful, and useful for PT practice?</div>
+            </div>
+          </div>
+
+          <div class="grid-two">
+            <div class="module">
+              <div class="module-header">
+                <div>
+                  <h3>Evidence Interpretation Dashboard</h3>
+                  <p>Stage completion is based on interaction checks and decisions.</p>
+                </div>
+                <span class="mini-tag" id="finalProgressTag">0 of 8 complete</span>
+              </div>
+              <div class="summary-grid" id="summaryGrid"></div>
+            </div>
+
+            <div class="module">
+              <div class="module-header">
+                <div>
+                  <h3>Interactive Model Answer</h3>
+                  <p>Choose an evidence lens, then compare it with the full model answer.</p>
+                </div>
+              </div>
+              <div class="evidence-packet" aria-label="Evidence packet for final synthesis">
+                <div class="evidence-item">
+                  <strong>Study question</strong>
+                  <span>6-week balance training for older adults at increased fall risk versus usual care.</span>
+                </div>
+                <div class="evidence-item">
+                  <strong>Outcome</strong>
+                  <span>Timed Up and Go, in seconds. Lower scores mean better performance.</span>
+                </div>
+                <div class="evidence-item">
+                  <strong>Statistical signal</strong>
+                  <span>Several studies show benefit, including p = 0.01 and p = 0.003.</span>
+                </div>
+                <div class="evidence-item">
+                  <strong>Uncertainty</strong>
+                  <span>Stronger studies estimate about 3 seconds faster, with 95% CIs mostly on the benefit side.</span>
+                </div>
+                <div class="evidence-item">
+                  <strong>Sample size</strong>
+                  <span>Larger studies are more stable; the pilot study is small and less precise.</span>
+                </div>
+                <div class="evidence-item">
+                  <strong>Limitations</strong>
+                  <span>One unclear study, variable study quality, and no MCID supplied in this teaching example.</span>
+                </div>
+              </div>
+              <div class="segmented" aria-label="Model answer lens selector">
+                <button class="active" type="button" data-model-answer="full">Full answer</button>
+                <button type="button" data-model-answer="pvalue">p-value</button>
+                <button type="button" data-model-answer="ci">CI</button>
+                <button type="button" data-model-answer="sample">Sample size</button>
+                <button type="button" data-model-answer="limits">Limitations</button>
+              </div>
+              <div class="model-answer" id="modelAnswerBox" aria-live="polite"></div>
+              <div class="choice-list" id="modelAnswerCheck">
+                <button class="choice" type="button" data-correct="false">The program should be adopted for all older adults because p-values below 0.05 prove it works.</button>
+                <button class="choice" type="button" data-correct="true">The evidence suggests benefit, but the decision should consider CI precision, sample size, design quality, and whether the change is clinically meaningful.</button>
+                <button class="choice" type="button" data-correct="false">The unclear study means the entire evidence base should be ignored.</button>
+              </div>
+              <div class="feedback info" id="modelAnswerFeedback">
+                <strong>Check the reasoning.</strong>
+                <p>Select the sentence that best matches the evidence-based clinical interpretation.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div class="stage-controls">
+          <button class="button" type="button" id="prevStage">Previous stage</button>
+          <span class="mini-tag" id="currentStageTag">Intro</span>
+          <button class="button primary" type="button" id="nextStage">Next stage</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const stages = [
+      { id: "intro", label: "Intro", section: "Recurring case", counted: false },
+      { id: "stage1", label: "Hypotheses", section: "Statistical significance", counted: true },
+      { id: "stage2", label: "t-tests", section: "Paired vs independent", counted: true },
+      { id: "stage3", label: "p-values", section: "Probability under H0", counted: true },
+      { id: "stage4", label: "Confidence intervals", section: "Precision and uncertainty", counted: true },
+      { id: "stage5", label: "Sample size", section: "Power and stability", counted: true },
+      { id: "stage6", label: "Statistical errors", section: "Type I and Type II", counted: true },
+      { id: "stage7", label: "Methodological flaws", section: "Design and reporting", counted: true },
+      { id: "stage8", label: "Clinical decision", section: "Replication and practice", counted: true },
+      { id: "final", label: "Final synthesis", section: "Model answers", counted: false }
+    ];
+
+    const state = {
+      currentIndex: 0,
+      completed: {
+        stage1: false,
+        stage2: false,
+        stage3: false,
+        stage4: false,
+        stage5: false,
+        stage6: false,
+        stage7: false,
+        stage8: false
+      },
+      dataView: "paired",
+      variability: "low",
+      foundFlags: new Set(),
+      selectedDecision: "",
+      fixActions: new Set(),
+      pChoiceCorrect: false,
+      ciSelected: false,
+      precisionCorrect: false,
+      testSelectorTouched: false,
+      errorMatrixClicked: false,
+      modelAnswerChecked: false
+    };
+
+    const pairedData = [
+      { id: 1, pre: 14.2, post: 12.9 },
+      { id: 2, pre: 13.8, post: 12.7 },
+      { id: 3, pre: 15.1, post: 13.5 },
+      { id: 4, pre: 12.9, post: 12.1 },
+      { id: 5, pre: 16.0, post: 14.6 },
+      { id: 6, pre: 14.8, post: 13.2 }
+    ];
+
+    const independentData = [
+      { training: 12.9, care: 13.8 },
+      { training: 12.7, care: 14.1 },
+      { training: 13.5, care: 14.4 },
+      { training: 12.1, care: 13.5 },
+      { training: 14.6, care: 15.0 },
+      { training: 13.2, care: 14.2 }
+    ];
+
+    const hypothesisCards = [
+      { id: "h1", zone: "null", text: "The balance training group and usual care group improve by the same amount." },
+      { id: "h2", zone: "alternative", text: "The balance training group improves more than the usual care group." },
+      { id: "h3", zone: "unsupported", text: "Balance training is proven to work for all patients." },
+      { id: "h4", zone: "unsupported", text: "Any observed difference is due only to the intervention." }
+    ];
+
+    const fixActions = [
+      { id: "sample", text: "Calculate sample size before the study", quality: "sample" },
+      { id: "control", text: "Add a control group", quality: "control" },
+      { id: "test", text: "Choose the statistical test based on design", quality: "test" },
+      { id: "reporting", text: "Pre-register methods and outcomes", quality: "reporting" },
+      { id: "allOutcomes", text: "Report all outcomes", quality: "reporting" },
+      { id: "multiple", text: "Apply correction for multiple comparisons when appropriate", quality: "multiple" }
+    ];
+
+    const ciStudies = [
+      {
+        name: "Study A",
+        effect: 4,
+        low: 3,
+        high: 5,
+        n: 84,
+        p: "0.01",
+        context: "A larger balance-training trial compared with usual care.",
+        note: "TUG improved by an estimated 4 seconds more with balance training, and the 95% CI from 3 to 5 seconds stays on the benefit side. This is a precise estimate for this teaching case."
+      },
+      {
+        name: "Study B",
+        effect: 4,
+        low: -1,
+        high: 9,
+        n: 18,
+        p: "0.08",
+        context: "A smaller pilot study of the same 6-week program.",
+        note: "The point estimate is also 4 seconds, but the 95% CI ranges from 1 second worse to 9 seconds better. The same estimate is much less precise here."
+      },
+      {
+        name: "Study C",
+        effect: 1,
+        low: -4,
+        high: 6,
+        n: 30,
+        p: "0.28",
+        context: "A modest-sized replication with more variable TUG scores.",
+        note: "The estimated benefit is only 1 second and the 95% CI is wide, crossing no effect. This study does not give a clear answer for the balance-training case."
+      }
+    ];
+
+    const evidenceStudies = [
+      { name: "Pilot balance trial", short: "Pilot", n: 18, effect: 3.2, low: 0.2, high: 6.2, p: "0.04", strength: "Limited design; same 6-week program and TUG outcome", tag: "Small sample" },
+      { name: "Clinic RCT replication", short: "RCT 1", n: 84, effect: 2.8, low: 1.4, high: 4.2, p: "0.01", strength: "Stronger usual-care comparison; TUG at 6 weeks", tag: "Replicated benefit" },
+      { name: "Community site study", short: "Community", n: 30, effect: 0.8, low: -1.7, high: 3.3, p: "0.28", strength: "Moderate design; more variable TUG scores", tag: "No clear benefit" },
+      { name: "Multisite pragmatic trial", short: "Multisite", n: 110, effect: 3.4, low: 1.8, high: 5.0, p: "0.003", strength: "Strong design; usual-care comparator and TUG outcome", tag: "Precise benefit" }
+    ];
+
+    const stageList = document.getElementById("stageList");
+    const sidebar = document.getElementById("sidebar");
+    const scrim = document.getElementById("scrim");
+
+    function clamp(value, min, max) {
+      return Math.max(min, Math.min(max, value));
+    }
+
+    function normalY(x, mean, sd, scale, baseline) {
+      const exponent = -0.5 * Math.pow((x - mean) / sd, 2);
+      return baseline - Math.exp(exponent) * scale;
+    }
+
+    function curvePath(mean, sd, scale, baseline, start, end) {
+      const points = [];
+      for (let x = start; x <= end; x += 4) {
+        points.push([x, normalY(x, mean, sd, scale, baseline)]);
+      }
+      const top = points.map((point, index) => `${index === 0 ? "M" : "L"}${point[0].toFixed(1)} ${point[1].toFixed(1)}`).join(" ");
+      return `${top} L ${end} ${baseline} L ${start} ${baseline} Z`;
+    }
+
+    function setFeedback(id, tone, title, text) {
+      const node = document.getElementById(id);
+      node.className = `feedback ${tone}`;
+      node.innerHTML = `<strong>${title}</strong><p>${text}</p>`;
+    }
+
+    function markComplete(stageId, value = true) {
+      if (Object.prototype.hasOwnProperty.call(state.completed, stageId)) {
+        state.completed[stageId] = value;
+        renderNavigation();
+        renderSummary();
+      }
+    }
+
+    function completionCount() {
+      return Object.values(state.completed).filter(Boolean).length;
+    }
+
+    function renderNavigation() {
+      stageList.innerHTML = "";
+      stages.forEach((stage, index) => {
+        const item = document.createElement("li");
+        const button = document.createElement("button");
+        button.className = `stage-tab${index === state.currentIndex ? " active" : ""}`;
+        button.type = "button";
+        button.dataset.stageIndex = index;
+        const isComplete = stage.counted && state.completed[stage.id];
+        button.innerHTML = `
+          <span class="${isComplete ? "stage-check" : "stage-number"}">${isComplete ? "OK" : index === 0 ? "I" : index === stages.length - 1 ? "F" : index}</span>
+          <span class="stage-name"><strong>${stage.label}</strong><span>${stage.section}</span></span>
+          ${stage.counted ? `<span class="sr-only">${isComplete ? "complete" : "not complete"}</span>` : ""}
+        `;
+        button.addEventListener("click", () => goToStage(index));
+        item.appendChild(button);
+        stageList.appendChild(item);
+      });
+
+      const count = completionCount();
+      document.getElementById("progressText").textContent = `${count} of 8`;
+      document.getElementById("progressFill").style.width = `${(count / 8) * 100}%`;
+      document.getElementById("finalProgressTag").textContent = `${count} of 8 complete`;
+    }
+
+    function goToStage(index) {
+      state.currentIndex = clamp(index, 0, stages.length - 1);
+      document.querySelectorAll(".stage").forEach((stage) => stage.classList.remove("active"));
+      document.getElementById(stages[state.currentIndex].id).classList.add("active");
+      document.getElementById("currentStageTag").textContent = stages[state.currentIndex].label;
+      document.getElementById("mobileTitle").textContent = stages[state.currentIndex].label;
+      document.getElementById("prevStage").disabled = state.currentIndex === 0;
+      document.getElementById("nextStage").disabled = state.currentIndex === stages.length - 1;
+      renderNavigation();
+      closeMenu();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function openMenu() {
+      sidebar.classList.add("open");
+      scrim.classList.add("open");
+    }
+
+    function closeMenu() {
+      sidebar.classList.remove("open");
+      scrim.classList.remove("open");
+    }
+
+    function renderSignal() {
+      const slider = document.getElementById("signalSlider");
+      const value = Number(slider.value);
+      const separation = 8 + value * 1.45;
+      const baseline = 200;
+      const usualMean = 320;
+      const trainingMean = usualMean - separation;
+      document.getElementById("usualCurve").setAttribute("d", curvePath(usualMean, 58, 118, baseline, 60, 500));
+      document.getElementById("trainingCurve").setAttribute("d", curvePath(trainingMean, 58, 118, baseline, 60, 500));
+      const signalTag = document.getElementById("signalTag");
+      if (value < 34) {
+        signalTag.textContent = "More consistent with H0";
+        signalTag.className = "mini-tag";
+        setFeedback("signalFeedback", "info", "Heavy overlap.", "With little separation, the observed difference is easier to explain as noise under the null hypothesis.");
+      } else if (value < 68) {
+        signalTag.textContent = "Uncertain";
+        signalTag.className = "mini-tag warn";
+        setFeedback("signalFeedback", "partial", "Partial separation.", "The result is more suggestive, but uncertainty remains. Statistical significance is a decision rule, not proof.");
+      } else {
+        signalTag.textContent = "More consistent with H1";
+        signalTag.className = "mini-tag good";
+        setFeedback("signalFeedback", "correct", "Clearer signal.", "Large separation makes the result less consistent with H0, but clinical importance still depends on effect size and context.");
+      }
+    }
+
+    function makeDragCard(card) {
+      const node = document.createElement("div");
+      node.className = "drag-card";
+      node.draggable = true;
+      node.tabIndex = 0;
+      node.id = card.id;
+      node.dataset.correctZone = card.zone;
+      node.textContent = card.text;
+      node.addEventListener("dragstart", (event) => {
+        node.classList.add("dragging");
+        event.dataTransfer.setData("text/plain", node.id);
+      });
+      node.addEventListener("dragend", () => node.classList.remove("dragging"));
+      return node;
+    }
+
+    function setupDropZones() {
+      document.querySelectorAll(".drop-zone").forEach((zone) => {
+        zone.addEventListener("dragover", (event) => {
+          event.preventDefault();
+          zone.classList.add("over");
+        });
+        zone.addEventListener("dragleave", () => zone.classList.remove("over"));
+        zone.addEventListener("drop", (event) => {
+          event.preventDefault();
+          zone.classList.remove("over");
+          const id = event.dataTransfer.getData("text/plain");
+          const card = document.getElementById(id);
+          if (card) {
+            zone.appendChild(card);
+            if (zone.id === "blueprintZone") {
+              handleFixDrop(card);
+            }
+          }
+        });
+      });
+    }
+
+    function resetHypotheses() {
+      const bank = document.getElementById("hypothesisBank");
+      bank.innerHTML = "";
+      hypothesisCards.forEach((card) => bank.appendChild(makeDragCard(card)));
+      setFeedback("hypothesisFeedback", "info", "Ready when you are.", "Classify hypotheses as testable claims, and keep broad clinical claims separate from what the study can support.");
+      markComplete("stage1", false);
+    }
+
+    function checkHypotheses() {
+      let placed = 0;
+      let correct = 0;
+      document.querySelectorAll("#hypothesisZones .drop-zone").forEach((zone) => {
+        zone.querySelectorAll(".drag-card").forEach((card) => {
+          placed += 1;
+          if (card.dataset.correctZone === zone.dataset.zone) correct += 1;
+        });
+      });
+      if (placed < hypothesisCards.length) {
+        setFeedback("hypothesisFeedback", "partial", "Keep sorting.", "All four cards need a category before the stage can be checked.");
+      } else if (correct === hypothesisCards.length) {
+        setFeedback("hypothesisFeedback", "correct", "Correct.", "The null and alternative hypotheses are testable claims. Broad claims like proof for all patients go beyond what this study can support.");
+        markComplete("stage1", true);
+      } else {
+        setFeedback("hypothesisFeedback", "incorrect", "Some cards need another look.", "H0 states no meaningful difference. H1 states a real difference. Unsupported conclusions overclaim what statistical significance can tell us.");
+        markComplete("stage1", false);
+      }
+    }
+
+    function setupTestSelector() {
+      const same = document.getElementById("samePeopleToggle");
+      const groups = document.getElementById("twoGroupsToggle");
+      const toggle = (button) => {
+        state.testSelectorTouched = true;
+        button.classList.toggle("active");
+        button.setAttribute("aria-pressed", button.classList.contains("active") ? "true" : "false");
+        updateTestRecommendation();
+      };
+      same.addEventListener("click", () => toggle(same));
+      groups.addEventListener("click", () => toggle(groups));
+      document.getElementById("confirmTestChoice").addEventListener("click", () => {
+        state.testSelectorTouched = true;
+        updateTestRecommendation();
+      });
+      updateTestRecommendation();
+    }
+
+    function updateTestRecommendation() {
+      const same = document.getElementById("samePeopleToggle").classList.contains("active");
+      const groups = document.getElementById("twoGroupsToggle").classList.contains("active");
+      const rec = document.getElementById("testRecommendation");
+      const reason = document.getElementById("testReason");
+      const tag = document.getElementById("testTag");
+      if (same && !groups) {
+        rec.textContent = "Paired t-test";
+        reason.textContent = "The same participants are measured before and after treatment.";
+        tag.textContent = "Correct for before/after";
+        setFeedback("testFeedback", "correct", "Correct for paired data.", "Because the same participants are measured twice, the paired t-test evaluates change within each person. This is common in PT outcomes over time.");
+        markComplete("stage2", state.testSelectorTouched);
+      } else if (!same && groups) {
+        rec.textContent = "Independent t-test";
+        reason.textContent = "Two unrelated groups are being compared.";
+        tag.textContent = "Correct for separate groups";
+        setFeedback("testFeedback", "correct", "Correct for independent groups.", "Because the balance training and usual care groups are separate people, the independent t-test compares group means.");
+        markComplete("stage2", state.testSelectorTouched);
+      } else if (same && groups) {
+        rec.textContent = "Clarify the design";
+        reason.textContent = "This may be a mixed design: same participants over time and separate groups.";
+        tag.textContent = "More complex";
+        setFeedback("testFeedback", "partial", "This needs more than a simple t-test choice.", "A pre/post comparison across two groups often calls for a change score comparison or a model that handles group and time.");
+        markComplete("stage2", false);
+      } else {
+        rec.textContent = "Not enough information";
+        reason.textContent = "Choose at least one design feature.";
+        tag.textContent = "Incomplete";
+        setFeedback("testFeedback", "partial", "Identify the data structure.", "The test follows the design: same people measured twice or two unrelated groups.");
+        markComplete("stage2", false);
+      }
+    }
+
+    function mean(values) {
+      return values.reduce((sum, value) => sum + value, 0) / values.length;
+    }
+
+    function scaleValue(value, min, max, start, end) {
+      return start + ((value - min) / (max - min)) * (end - start);
+    }
+
+    function renderTTestView() {
+      const svg = document.getElementById("tTestSvg");
+      const tableWrap = document.getElementById("tTestTableWrap");
+      if (state.dataView === "paired") {
+        const values = pairedData.flatMap((row) => [row.pre, row.post]);
+        const min = Math.min(...values) - 0.5;
+        const max = Math.max(...values) + 0.5;
+        const y = (value) => scaleValue(value, min, max, 250, 70);
+        const lines = pairedData.map((row, index) => {
+          const color = row.post < row.pre ? "#1f7a78" : "#bb4d45";
+          return `
+            <line x1="180" y1="${y(row.pre)}" x2="440" y2="${y(row.post)}" stroke="${color}" stroke-width="3" opacity="0.82"></line>
+            <circle cx="180" cy="${y(row.pre)}" r="7" fill="white" stroke="${color}" stroke-width="3"></circle>
+            <circle cx="440" cy="${y(row.post)}" r="7" fill="${color}"></circle>
+            <text x="132" y="${y(row.pre) + 4}" class="axis-label">P${index + 1}</text>
+          `;
+        }).join("");
+        svg.innerHTML = `
+          <rect width="640" height="330" fill="#fcfcfb"></rect>
+          <line x1="180" y1="50" x2="180" y2="270" stroke="#cfd7df" stroke-width="2"></line>
+          <line x1="440" y1="50" x2="440" y2="270" stroke="#cfd7df" stroke-width="2"></line>
+          <text x="180" y="38" text-anchor="middle" class="curve-label">Pre</text>
+          <text x="440" y="38" text-anchor="middle" class="curve-label">Post</text>
+          <text x="310" y="306" text-anchor="middle" class="axis-label">Most connected lines move down, indicating faster TUG time after treatment.</text>
+          ${lines}
+        `;
+        tableWrap.innerHTML = `
+          <table class="data-table" aria-label="Paired teaching data">
+            <thead><tr><th>Participant</th><th>Pre</th><th>Post</th><th>Change</th></tr></thead>
+            <tbody>${pairedData.map((row) => `<tr><td>${row.id}</td><td>${row.pre.toFixed(1)}</td><td>${row.post.toFixed(1)}</td><td>${(row.post - row.pre).toFixed(1)}</td></tr>`).join("")}</tbody>
+          </table>
+        `;
+      } else {
+        const training = independentData.map((row) => row.training);
+        const care = independentData.map((row) => row.care);
+        const values = training.concat(care);
+        const min = Math.min(...values) - 0.5;
+        const max = Math.max(...values) + 0.5;
+        const y = (value) => scaleValue(value, min, max, 250, 70);
+        const dots = training.map((value, index) => `<circle cx="${190 + ((index % 2) * 18 - 9)}" cy="${y(value)}" r="8" fill="#1f7a78"></circle>`).join("") +
+          care.map((value, index) => `<circle cx="${450 + ((index % 2) * 18 - 9)}" cy="${y(value)}" r="8" fill="#bb4d45"></circle>`).join("");
+        const trainMean = y(mean(training));
+        const careMean = y(mean(care));
+        svg.innerHTML = `
+          <rect width="640" height="330" fill="#fcfcfb"></rect>
+          <line x1="80" y1="250" x2="560" y2="250" stroke="#cfd7df" stroke-width="2"></line>
+          <line x1="190" y1="55" x2="190" y2="265" stroke="#edf0f2" stroke-width="2"></line>
+          <line x1="450" y1="55" x2="450" y2="265" stroke="#edf0f2" stroke-width="2"></line>
+          ${dots}
+          <line x1="150" y1="${trainMean}" x2="230" y2="${trainMean}" stroke="#1f7a78" stroke-width="5" stroke-linecap="round"></line>
+          <line x1="410" y1="${careMean}" x2="490" y2="${careMean}" stroke="#bb4d45" stroke-width="5" stroke-linecap="round"></line>
+          <text x="190" y="38" text-anchor="middle" class="curve-label">Balance training</text>
+          <text x="450" y="38" text-anchor="middle" class="curve-label">Usual care</text>
+          <text x="310" y="306" text-anchor="middle" class="axis-label">Dots are separate participants. Horizontal bars are group means.</text>
+        `;
+        tableWrap.innerHTML = `
+          <table class="data-table" aria-label="Independent teaching data">
+            <thead><tr><th>Row</th><th>Balance training</th><th>Usual care</th></tr></thead>
+            <tbody>${independentData.map((row, index) => `<tr><td>${index + 1}</td><td>${row.training.toFixed(1)}</td><td>${row.care.toFixed(1)}</td></tr>`).join("")}</tbody>
+          </table>
+        `;
+      }
+    }
+
+    function renderGauge(p) {
+      const svg = document.getElementById("pGaugeSvg");
+      const surprise = p <= 0.001 ? 1 : p <= 0.04 ? 0.72 : p <= 0.2 ? 0.38 : 0.12;
+      const angle = -165 + surprise * 150;
+      const rad = (Math.PI / 180) * angle;
+      const x2 = 160 + Math.cos(rad) * 78;
+      const y2 = 145 + Math.sin(rad) * 78;
+      svg.innerHTML = `
+        <path d="M45 145 A115 115 0 0 1 275 145" fill="none" stroke="#edf0f2" stroke-width="24" stroke-linecap="round"></path>
+        <path d="M45 145 A115 115 0 0 1 106 47" fill="none" stroke="#2d7d46" stroke-width="24" stroke-linecap="round"></path>
+        <path d="M106 47 A115 115 0 0 1 214 47" fill="none" stroke="#a66f00" stroke-width="24"></path>
+        <path d="M214 47 A115 115 0 0 1 275 145" fill="none" stroke="#bb4d45" stroke-width="24" stroke-linecap="round"></path>
+        <line x1="160" y1="145" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="#172026" stroke-width="5" stroke-linecap="round"></line>
+        <circle cx="160" cy="145" r="10" fill="#172026"></circle>
+        <text x="58" y="175" class="axis-label">not surprising</text>
+        <text x="213" y="175" class="axis-label">very surprising</text>
+      `;
+      const readout = document.getElementById("pGaugeText");
+      if (p >= 0.45) readout.textContent = "Not surprising under H0";
+      else if (p >= 0.15) readout.textContent = "Mildly surprising under H0";
+      else if (p >= 0.01) readout.textContent = "More surprising under H0";
+      else readout.textContent = "Very surprising under H0";
+      document.getElementById("pGaugeValue").textContent = `p = ${p}`;
+    }
+
+    function approxPFromDistance(distance) {
+      const z = 0.2 + (distance / 100) * 3.1;
+      const p = Math.exp(-0.72 * z * z);
+      return clamp(p, 0.001, 0.82);
+    }
+
+    function renderTail() {
+      const value = Number(document.getElementById("tailSlider").value);
+      const p = approxPFromDistance(value);
+      const obsX = scaleValue(value, 0, 100, 320, 550);
+      const svg = document.getElementById("tailSvg");
+      const baseline = 232;
+      const curve = curvePath(310, 72, 145, baseline, 60, 560);
+      const shade = curvePath(310, 72, 145, baseline, obsX, 560);
+      svg.innerHTML = `
+        <rect width="620" height="300" fill="#fcfcfb"></rect>
+        <line x1="60" y1="${baseline}" x2="560" y2="${baseline}" stroke="#cfd7df" stroke-width="2"></line>
+        <path d="${shade}" fill="rgba(187,77,69,0.28)" stroke="none"></path>
+        <path d="${curve}" fill="rgba(31,122,120,0.12)" stroke="#1f7a78" stroke-width="3"></path>
+        <line x1="310" y1="52" x2="310" y2="${baseline}" stroke="#87929c" stroke-width="2" stroke-dasharray="5 5"></line>
+        <line x1="${obsX}" y1="48" x2="${obsX}" y2="${baseline}" stroke="#bb4d45" stroke-width="4"></line>
+        <text x="310" y="270" text-anchor="middle" class="axis-label">H0 center: no difference</text>
+        <text x="${obsX}" y="38" text-anchor="middle" class="curve-label" fill="#bb4d45">observed result</text>
+        <text x="480" y="112" class="curve-label" fill="#bb4d45">p approx ${p.toFixed(3)}</text>
+      `;
+      document.getElementById("tailTag").textContent = `p approx ${p.toFixed(3)}`;
+    }
+
+    function setupPValues() {
+      document.querySelectorAll("[data-preset-p]").forEach((button) => {
+        button.addEventListener("click", () => {
+          document.querySelectorAll("[data-preset-p]").forEach((item) => item.classList.remove("active"));
+          button.classList.add("active");
+          renderGauge(Number(button.dataset.presetP));
+        });
+      });
+      document.getElementById("tailSlider").addEventListener("input", renderTail);
+      document.querySelectorAll("#pValueChoices .choice").forEach((button) => {
+        button.addEventListener("click", () => {
+          document.querySelectorAll("#pValueChoices .choice").forEach((item) => item.classList.remove("selected", "correct", "incorrect"));
+          button.classList.add("selected");
+          const correct = button.dataset.correct === "true";
+          button.classList.add(correct ? "correct" : "incorrect");
+          state.pChoiceCorrect = correct;
+          if (correct) {
+            setFeedback("pChoiceFeedback", "correct", "Correct.", "A p-value describes how often results this extreme would occur if H0 were true. It does not tell us the probability that H0 is true.");
+          } else {
+            setFeedback("pChoiceFeedback", "incorrect", "Common misconception.", "The p-value is calculated assuming H0 is true. It is not the probability the null is true or that the treatment worked.");
+          }
+          updateStage3Completion();
+        });
+      });
+      renderGauge(0.04);
+      renderTail();
+    }
+
+    function updateStage3Completion() {
+      markComplete("stage3", state.pChoiceCorrect);
+    }
+
+    function percentOnCiScale(value) {
+      return clamp(((value + 5) / 15) * 100, 0, 100);
+    }
+
+    function renderCiRows() {
+      const root = document.getElementById("ciRows");
+      root.innerHTML = "";
+      ciStudies.forEach((study) => {
+        const row = document.createElement("div");
+        row.className = "ci-row";
+        const left = percentOnCiScale(study.low);
+        const right = percentOnCiScale(study.high);
+        const dot = percentOnCiScale(study.effect);
+        row.innerHTML = `
+          <strong>${study.name}<br><span class="muted">n = ${study.n}</span></strong>
+          <div class="ci-track" aria-hidden="true">
+            <span class="ci-zero"></span>
+            <span class="ci-bar" style="left:${left}%; width:${right - left}%"></span>
+            <span class="ci-dot" style="left:${dot}%"></span>
+          </div>
+          <button type="button">Inspect</button>
+        `;
+        row.querySelector("button").addEventListener("click", () => {
+          state.ciSelected = true;
+          const crosses = study.low <= 0 && study.high >= 0;
+          setFeedback("ciFeedback", crosses ? "partial" : "correct", `${study.name}: ${study.context}`, `${study.note} p = ${study.p}. In the guided learning language, the CI is the range of plausible TUG effects for balance training versus usual care.`);
+          updateStage4Completion();
+        });
+        root.appendChild(row);
+      });
+    }
+
+    function renderPrecisionSvg() {
+      const svg = document.getElementById("precisionSvg");
+      const axisY = 186;
+      const x = (value) => scaleValue(value, -2, 10, 80, 570);
+      const rows = [
+        { label: "Study A", low: 3, high: 5, effect: 4, y: 92, color: "#1f7a78" },
+        { label: "Study B", low: -1, high: 9, effect: 4, y: 145, color: "#bb4d45" }
+      ].map((row) => `
+        <text x="72" y="${row.y + 4}" text-anchor="end" class="curve-label">${row.label}</text>
+        <line x1="${x(row.low)}" y1="${row.y}" x2="${x(row.high)}" y2="${row.y}" stroke="${row.color}" stroke-width="5" stroke-linecap="round"></line>
+        <circle cx="${x(row.effect)}" cy="${row.y}" r="9" fill="white" stroke="${row.color}" stroke-width="5"></circle>
+        <text x="${x(row.high) + 10}" y="${row.y + 4}" class="axis-label">${row.low} to ${row.high}</text>
+      `).join("");
+      svg.innerHTML = `
+        <rect width="640" height="270" fill="#fcfcfb"></rect>
+        <line x1="80" y1="${axisY}" x2="570" y2="${axisY}" stroke="#cfd7df" stroke-width="2"></line>
+        <line x1="${x(0)}" y1="54" x2="${x(0)}" y2="${axisY + 18}" stroke="#73808b" stroke-width="2" stroke-dasharray="5 5"></line>
+        <text x="${x(0)}" y="${axisY + 28}" text-anchor="middle" class="axis-label">No effect</text>
+        <text x="82" y="${axisY + 50}" class="axis-label">Harm or no clear benefit</text>
+        <text x="500" y="${axisY + 50}" class="axis-label">Benefit</text>
+        ${rows}
+      `;
+    }
+
+    function setupConfidenceIntervals() {
+      renderCiRows();
+      renderPrecisionSvg();
+      document.querySelectorAll("#precisionChoices .choice").forEach((button) => {
+        button.addEventListener("click", () => {
+          document.querySelectorAll("#precisionChoices .choice").forEach((item) => item.classList.remove("selected", "correct", "incorrect"));
+          const correct = button.dataset.correct === "true";
+          button.classList.add("selected", correct ? "correct" : "incorrect");
+          state.precisionCorrect = correct;
+          if (correct) {
+            setFeedback("precisionFeedback", "correct", "Correct.", "Study A gives the more precise TUG estimate because the confidence interval is narrower around the same 4-second effect.");
+          } else {
+            setFeedback("precisionFeedback", "incorrect", "Try the width test.", "When point estimates are equal, the narrower confidence interval is more precise.");
+          }
+          updateStage4Completion();
+        });
+      });
+    }
+
+    function updateStage4Completion() {
+      markComplete("stage4", state.ciSelected && state.precisionCorrect);
+    }
+
+    function seededNoise(seed) {
+      const x = Math.sin(seed * 999) * 10000;
+      return x - Math.floor(x);
+    }
+
+    function renderPatients(containerId, n) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = "";
+      for (let i = 0; i < n; i += 1) {
+        const patient = document.createElement("span");
+        patient.className = "patient";
+        container.appendChild(patient);
+      }
+    }
+
+    function rerunSimulation(shouldComplete = true) {
+      const seed = Date.now() % 100000;
+      const smallEffect = 2.8 + (seededNoise(seed) - 0.5) * 4.4;
+      const largeEffect = 2.8 + (seededNoise(seed + 44) - 0.5) * 1.2;
+      const smallHalfWidth = 3.6 + seededNoise(seed + 7) * 1.2;
+      const largeHalfWidth = 0.8 + seededNoise(seed + 17) * 0.5;
+      const smallLow = smallEffect - smallHalfWidth;
+      const smallHigh = smallEffect + smallHalfWidth;
+      const largeLow = largeEffect - largeHalfWidth;
+      const largeHigh = largeEffect + largeHalfWidth;
+      renderPatients("smallPatients", 8);
+      renderPatients("largePatients", 48);
+      document.getElementById("smallCiMeter").style.width = `${clamp(88 - smallEffect * 6, 24, 96)}%`;
+      document.getElementById("largeCiMeter").style.width = `${clamp(48 - largeEffect * 3, 20, 58)}%`;
+      document.getElementById("smallSimText").textContent = `Estimate: ${smallEffect.toFixed(1)} sec benefit; 95% CI ${smallLow.toFixed(1)} to ${smallHigh.toFixed(1)} sec.`;
+      document.getElementById("largeSimText").textContent = `Estimate: ${largeEffect.toFixed(1)} sec benefit; 95% CI ${largeLow.toFixed(1)} to ${largeHigh.toFixed(1)} sec.`;
+      if (shouldComplete) {
+        setFeedback("sampleSimFeedback", "correct", "Rerun complete.", "The small sample estimate shifts more because fewer observations make the result less stable.");
+        markComplete("stage5", true);
+      }
+    }
+
+    function renderSampleSvg() {
+      const n = Number(document.getElementById("sampleSlider").value);
+      const high = state.variability === "high";
+      const svg = document.getElementById("sampleSvg");
+      const count = Math.min(Math.round(n / 2), 60);
+      const dots = [];
+      for (let i = 0; i < count; i += 1) {
+        const noise = (seededNoise(i * 11 + n) - 0.5) * (high ? 150 : 72);
+        const groupShift = i % 2 === 0 ? -38 : 38;
+        const x = 320 + groupShift + noise;
+        const y = 70 + (i % 10) * 18 + Math.floor(i / 10) * 3;
+        const color = i % 2 === 0 ? "#1f7a78" : "#bb4d45";
+        dots.push(`<circle cx="${clamp(x, 70, 570).toFixed(1)}" cy="${y}" r="5.5" fill="${color}" opacity="0.78"></circle>`);
+      }
+      const ciWidth = high ? 1700 / Math.sqrt(n) : 960 / Math.sqrt(n);
+      const power = clamp((n - (high ? 22 : 8)) / (high ? 100 : 70), 0.06, 1);
+      const ciScore = clamp(1 - ciWidth / 230, 0.08, 1);
+      document.getElementById("sampleNText").textContent = n;
+      document.getElementById("powerMeter").style.width = `${power * 100}%`;
+      document.getElementById("powerMeter").style.background = power > 0.68 ? "#2d7d46" : power > 0.38 ? "#a66f00" : "#bb4d45";
+      document.getElementById("powerText").textContent = power > 0.68 ? "Higher" : power > 0.38 ? "Moderate" : "Low";
+      document.getElementById("ciWidthMeter").style.width = `${ciScore * 100}%`;
+      document.getElementById("ciWidthMeter").style.background = ciScore > 0.68 ? "#2d7d46" : ciScore > 0.38 ? "#a66f00" : "#bb4d45";
+      document.getElementById("ciWidthText").textContent = ciScore > 0.68 ? "Narrower" : ciScore > 0.38 ? "Moderate" : "Wide";
+      document.getElementById("sampleRiskText").textContent = power > 0.68 ? "Lower Type II error risk" : power > 0.38 ? "Moderate Type II error risk" : "Higher Type II error risk";
+      svg.innerHTML = `
+        <rect width="640" height="310" fill="#fcfcfb"></rect>
+        <line x1="70" y1="236" x2="570" y2="236" stroke="#cfd7df" stroke-width="2"></line>
+        <line x1="320" y1="40" x2="320" y2="252" stroke="#87929c" stroke-width="2" stroke-dasharray="5 5"></line>
+        <text x="320" y="274" text-anchor="middle" class="axis-label">Outcome noise around the treatment signal</text>
+        <text x="120" y="30" class="curve-label" fill="#1f7a78">Balance training</text>
+        <text x="414" y="30" class="curve-label" fill="#bb4d45">Usual care</text>
+        ${dots.join("")}
+        <line x1="${320 - ciWidth / 2}" y1="216" x2="${320 + ciWidth / 2}" y2="216" stroke="#1f7a78" stroke-width="6" stroke-linecap="round"></line>
+        <circle cx="320" cy="216" r="9" fill="white" stroke="#1f7a78" stroke-width="5"></circle>
+        <rect x="192" y="183" width="256" height="23" rx="7" fill="#fcfcfb" opacity="0.94"></rect>
+        <text x="320" y="198" text-anchor="middle" class="axis-label">Confidence interval narrows as n increases</text>
+      `;
+    }
+
+    function setupSampleSize() {
+      document.getElementById("rerunStudy").addEventListener("click", () => rerunSimulation(true));
+      document.getElementById("sampleSlider").addEventListener("input", () => {
+        renderSampleSvg();
+        setFeedback("sampleSimFeedback", "correct", "Sample size adjusted.", "As n increases, power generally improves and the confidence interval narrows.");
+        markComplete("stage5", true);
+      });
+      document.querySelectorAll("[data-variability]").forEach((button) => {
+        button.addEventListener("click", () => {
+          document.querySelectorAll("[data-variability]").forEach((item) => item.classList.remove("active"));
+          button.classList.add("active");
+          state.variability = button.dataset.variability;
+          renderSampleSvg();
+          setFeedback("sampleSimFeedback", "correct", "Variability changed.", "Higher variability makes the treatment signal harder to detect, even with the same sample size.");
+          markComplete("stage5", true);
+        });
+      });
+      rerunSimulation(false);
+      renderSampleSvg();
+    }
+
+    function setupErrors() {
+      const messages = {
+        correctPositive: ["Correct positive.", "Rejecting H0 when H1 is true is power (1 - beta). The study detects a treatment that truly works.", "correct"],
+        typeI: ["Type I error.", "Rejecting H0 when H0 is true is alpha error. A clinic may adopt an ineffective intervention because of a false positive.", "incorrect"],
+        typeII: ["Type II error.", "Failing to reject H0 when H1 is true is beta error. A useful treatment may be dismissed because the study missed a true effect.", "partial"],
+        correctNegative: ["Correct negative.", "Failing to reject H0 when H0 is true avoids a false positive and helps prevent ineffective care.", "correct"]
+      };
+      document.querySelectorAll("[data-error-cell]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const [title, text, tone] = messages[button.dataset.errorCell];
+          setFeedback("errorFeedback", tone, title, text);
+          state.errorMatrixClicked = true;
+          markComplete("stage6", true);
+        });
+      });
+      document.getElementById("alphaSlider").addEventListener("input", renderAlpha);
+      renderAlpha();
+    }
+
+    function renderAlpha() {
+      const raw = Number(document.getElementById("alphaSlider").value);
+      const alpha = raw / 100;
+      const falsePositive = scaleValue(raw, 1, 10, 10, 88);
+      const falseNegative = scaleValue(raw, 1, 10, 86, 22);
+      document.getElementById("alphaTag").textContent = `alpha = ${alpha.toFixed(2)}`;
+      const svg = document.getElementById("alphaSvg");
+      svg.innerHTML = `
+        <rect width="640" height="290" fill="#fcfcfb"></rect>
+        <text x="86" y="58" class="curve-label">False-positive risk</text>
+        <rect x="86" y="78" width="220" height="28" rx="14" fill="#edf0f2" stroke="#cfd7df"></rect>
+        <rect x="86" y="78" width="${falsePositive * 2.2}" height="28" rx="14" fill="#bb4d45"></rect>
+        <text x="324" y="98" class="axis-label">${falsePositive.toFixed(0)}%</text>
+        <text x="86" y="162" class="curve-label">False-negative risk when power is limited</text>
+        <rect x="86" y="182" width="220" height="28" rx="14" fill="#edf0f2" stroke="#cfd7df"></rect>
+        <rect x="86" y="182" width="${falseNegative * 2.2}" height="28" rx="14" fill="#a66f00"></rect>
+        <text x="324" y="202" class="axis-label">${falseNegative.toFixed(0)}%</text>
+        <g transform="translate(450 74)">
+          <rect x="-46" y="-18" width="92" height="150" rx="8" fill="#f9fbfa" stroke="#cfd7df"></rect>
+          <text x="0" y="10" text-anchor="middle" class="curve-label">Tradeoff</text>
+          <path d="M-28 54h56M-12 38l-16 16 16 16M12 38l16 16-16 16" fill="none" stroke="#1f7a78" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></path>
+          <text x="0" y="108" text-anchor="middle" class="axis-label">context matters</text>
+        </g>
+      `;
+    }
+
+    function setupMethodology() {
+      const flagMessages = {
+        smallSample: "Small sample size increases imprecision and Type II error risk.",
+        noControl: "Without a control group, improvement could reflect time, attention, or selection effects.",
+        multipleTesting: "Testing many outcomes increases false-positive risk unless handled carefully.",
+        selectiveReporting: "Reporting only significant outcomes is a p-hacking and transparency concern.",
+        weakTransparency: "No preregistered analysis makes it harder to know whether methods changed after seeing results."
+      };
+      document.querySelectorAll("[data-flag]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const flag = button.dataset.flag;
+          state.foundFlags.add(flag);
+          button.classList.add("found");
+          document.getElementById("flagsFound").textContent = `${state.foundFlags.size} of 5 found`;
+          setFeedback("flagFeedback", "correct", "Methodological flag found.", flagMessages[flag]);
+          updateStage7Completion();
+        });
+      });
+      const decoyMessages = {
+        programLength: "A 6-week duration is part of the intervention description. By itself, it is not the main threat to the statistical conclusion.",
+        ethics: "Ethics approval is expected and helpful, but it does not fix the design and analysis concerns in this poster."
+      };
+      document.querySelectorAll("[data-decoy]").forEach((button) => {
+        button.addEventListener("click", () => {
+          button.classList.add("decoy");
+          setFeedback("flagFeedback", "partial", "Not the main issue.", decoyMessages[button.dataset.decoy]);
+        });
+      });
+      const bank = document.getElementById("fixBank");
+      fixActions.forEach((action) => {
+        const card = makeDragCard({ id: `fix-${action.id}`, zone: "blueprint", text: action.text });
+        card.dataset.quality = action.quality;
+        bank.appendChild(card);
+      });
+      renderQuality();
+    }
+
+    function handleFixDrop(card) {
+      if (!card.id.startsWith("fix-")) return;
+      state.fixActions.add(card.id);
+      renderQuality();
+      setFeedback("fixFeedback", "correct", "Study strengthened.", "That action improves the study blueprint and makes the eventual statistical result more trustworthy.");
+      updateStage7Completion();
+    }
+
+    function renderQuality() {
+      const qualities = getQualityStatus();
+      const labels = {
+        sample: ["Low", "Adequate"],
+        control: ["Absent", "Present"],
+        test: ["Questionable", "Appropriate"],
+        reporting: ["Weak", "Stronger"],
+        multiple: ["Uncorrected", "Addressed"]
+      };
+      Object.keys(qualities).forEach((key) => {
+        const row = document.querySelector(`[data-quality-row="${key}"]`);
+        const bar = row.querySelector(".quality-meter span");
+        const label = row.querySelector(":scope > span:last-child");
+        const improved = qualities[key];
+        bar.style.width = improved ? "92%" : "24%";
+        bar.style.background = improved ? "#2d7d46" : "#bb4d45";
+        label.textContent = labels[key][improved ? 1 : 0];
+      });
+      const improvedCount = Object.values(qualities).filter(Boolean).length;
+      document.getElementById("qualityTag").textContent = `${improvedCount} of 5 improved`;
+    }
+
+    function getQualityStatus() {
+      return {
+        sample: state.fixActions.has("fix-sample"),
+        control: state.fixActions.has("fix-control"),
+        test: state.fixActions.has("fix-test"),
+        reporting: state.fixActions.has("fix-reporting") || state.fixActions.has("fix-allOutcomes"),
+        multiple: state.fixActions.has("fix-multiple")
+      };
+    }
+
+    function updateStage7Completion() {
+      const allQualityAreasImproved = Object.values(getQualityStatus()).every(Boolean);
+      markComplete("stage7", state.foundFlags.size >= 5 && allQualityAreasImproved);
+    }
+
+    function renderEvidenceBoard() {
+      const root = document.getElementById("studyCards");
+      root.innerHTML = "";
+      evidenceStudies.forEach((study) => {
+        const card = document.createElement("div");
+        card.className = "study-card";
+        const tagClass = study.low > 0 ? "good" : "warn";
+        card.innerHTML = `
+          <strong>${study.name}<span class="mini-tag ${tagClass}">${study.tag}</span></strong>
+          <div class="study-meta">
+            <span>n = ${study.n}</span>
+            <span>p = ${study.p}</span>
+            <span>TUG effect: ${study.effect.toFixed(1)} sec faster</span>
+            <span>95% CI: ${study.low.toFixed(1)} to ${study.high.toFixed(1)}</span>
+          </div>
+          <p class="muted">${study.strength}</p>
+        `;
+        root.appendChild(card);
+      });
+    }
+
+    function renderForest() {
+      const svg = document.getElementById("forestSvg");
+      const x = (value) => scaleValue(value, -2, 7, 92, 578);
+      const rows = evidenceStudies.map((study, index) => {
+        const y = 82 + index * 52;
+        return `
+          <text x="78" y="${y + 4}" text-anchor="end" class="curve-label">${study.short}</text>
+          <line x1="${x(study.low)}" y1="${y}" x2="${x(study.high)}" y2="${y}" stroke="#1f7a78" stroke-width="5" stroke-linecap="round"></line>
+          <circle cx="${x(study.effect)}" cy="${y}" r="8" fill="white" stroke="#1f7a78" stroke-width="5"></circle>
+        `;
+      }).join("");
+      const overall = { effect: 2.8, low: 1.4, high: 4.2 };
+      const oy = 306;
+      svg.innerHTML = `
+        <rect width="640" height="360" fill="#fcfcfb"></rect>
+        <line x1="92" y1="275" x2="578" y2="275" stroke="#cfd7df" stroke-width="2"></line>
+        <line x1="${x(0)}" y1="42" x2="${x(0)}" y2="292" stroke="#73808b" stroke-width="2" stroke-dasharray="5 5"></line>
+        <text x="${x(0)}" y="30" text-anchor="middle" class="axis-label">No effect</text>
+        <text x="92" y="332" class="axis-label">No clear TUG benefit</text>
+        <text x="456" y="332" class="axis-label">Seconds faster on TUG</text>
+        ${rows}
+        <text x="78" y="${oy + 4}" text-anchor="end" class="curve-label">Overall</text>
+        <line x1="${x(overall.low)}" y1="${oy}" x2="${x(overall.high)}" y2="${oy}" stroke="#6855a3" stroke-width="6" stroke-linecap="round"></line>
+        <path d="M${x(overall.effect)} ${oy - 12} L${x(overall.effect) + 12} ${oy} L${x(overall.effect)} ${oy + 12} L${x(overall.effect) - 12} ${oy} Z" fill="#6855a3"></path>
+      `;
+    }
+
+    function setupDecision() {
+      renderEvidenceBoard();
+      renderForest();
+      document.querySelectorAll("[data-decision]").forEach((button) => {
+        button.addEventListener("click", () => {
+          document.querySelectorAll("[data-decision]").forEach((item) => item.classList.remove("selected"));
+          button.classList.add("selected");
+          state.selectedDecision = button.dataset.decision;
+          if (state.selectedDecision === "caution" || state.selectedDecision === "moreResearch") {
+            setFeedback("decisionFeedback", "correct", "Well justified.", "The replicated pattern suggests benefit, but mixed precision, one unclear study, and design quality support a cautious clinical decision.");
+            markComplete("stage8", true);
+          } else if (state.selectedDecision === "adopt") {
+            setFeedback("decisionFeedback", "partial", "Probably too strong.", "Several findings support benefit, but clinical adoption should still consider limitations, replication quality, patient fit, and meaningful change.");
+            markComplete("stage8", false);
+          } else {
+            setFeedback("decisionFeedback", "partial", "Probably too conservative.", "The evidence is not perfect, but multiple studies point in the same beneficial direction with some stronger designs.");
+            markComplete("stage8", false);
+          }
+        });
+      });
+    }
+
+    function renderSummary() {
+      const root = document.getElementById("summaryGrid");
+      const rows = [
+        ["Hypotheses correctly identified", "stage1"],
+        ["Correct t-test selected", "stage2"],
+        ["p-value interpreted correctly", "stage3"],
+        ["CI interpreted correctly", "stage4"],
+        ["Sample size and power understood", "stage5"],
+        ["Type I / Type II errors identified", "stage6"],
+        ["Methodological flaws recognized", "stage7"],
+        ["Clinical decision justified", "stage8"]
+      ];
+      root.innerHTML = rows.map(([label, key]) => `
+        <div class="summary-row">
+          <strong>${label}</strong>
+          <span class="mini-tag ${state.completed[key] ? "good" : "warn"}">${state.completed[key] ? "Complete" : "Needs review"}</span>
+        </div>
+      `).join("");
+    }
+
+    const modelAnswers = {
+      full: {
+        title: "Full model answer",
+        text: "Across the balance-training studies, the evidence suggests a likely improvement in Timed Up and Go performance compared with usual care. Several p-values are low, including p = 0.01 and p = 0.003, and the stronger studies estimate about a 3-second TUG benefit with confidence intervals mostly on the benefit side of no effect. Larger samples make those estimates more stable, but the small pilot study, one unclear replication, variable design quality, and the lack of an MCID in this teaching example limit certainty. A reasonable clinical decision would be to consider using the program with appropriate patients while monitoring outcomes rather than treating the result as proven for everyone."
+      },
+      pvalue: {
+        title: "How to use the p-value",
+        text: "The p-values tell us that some observed TUG differences would be unlikely if balance training and usual care truly had no difference. They do not prove the program works, and they do not tell us whether the change is clinically meaningful."
+      },
+      ci: {
+        title: "How to use the confidence interval",
+        text: "The confidence intervals show the estimated size and precision of the TUG benefit. A narrow interval like 1.8 to 5.0 seconds supports a more precise benefit estimate, while intervals that cross zero leave no effect among the plausible values."
+      },
+      sample: {
+        title: "How to use sample size",
+        text: "The larger studies should carry more weight because their estimates are more stable and their confidence intervals are narrower. The small pilot can be useful as early evidence, but it should not drive practice by itself."
+      },
+      limits: {
+        title: "How to include limitations",
+        text: "A strong answer names at least one limitation: one study did not show a clear benefit, the pilot was small, study quality varies, and this teaching set does not provide an MCID for judging whether the TUG change is large enough to matter clinically."
+      }
+    };
+
+    function renderModelAnswer(key = "full") {
+      const answer = modelAnswers[key];
+      document.getElementById("modelAnswerBox").innerHTML = `<strong>${answer.title}</strong><p>${answer.text}</p>`;
+    }
+
+    function setupModelAnswer() {
+      document.querySelectorAll("[data-model-answer]").forEach((button) => {
+        button.addEventListener("click", () => {
+          document.querySelectorAll("[data-model-answer]").forEach((item) => item.classList.remove("active"));
+          button.classList.add("active");
+          renderModelAnswer(button.dataset.modelAnswer);
+        });
+      });
+      document.querySelectorAll("#modelAnswerCheck .choice").forEach((button) => {
+        button.addEventListener("click", () => {
+          document.querySelectorAll("#modelAnswerCheck .choice").forEach((item) => item.classList.remove("selected", "correct", "incorrect"));
+          const correct = button.dataset.correct === "true";
+          button.classList.add("selected", correct ? "correct" : "incorrect");
+          if (correct) {
+            state.modelAnswerChecked = true;
+            setFeedback("modelAnswerFeedback", "correct", "Correct reasoning.", "This answer uses the statistics without overclaiming and connects the finding back to clinical decision-making.");
+          } else {
+            setFeedback("modelAnswerFeedback", "incorrect", "Overstated or too dismissive.", "A strong synthesis avoids proof language and avoids throwing away the whole evidence pattern because one study is unclear.");
+          }
+        });
+      });
+      renderModelAnswer("full");
+    }
+
+    function init() {
+      renderNavigation();
+      setupDropZones();
+      resetHypotheses();
+      document.getElementById("signalSlider").addEventListener("input", renderSignal);
+      document.getElementById("resetHypotheses").addEventListener("click", resetHypotheses);
+      document.getElementById("checkHypotheses").addEventListener("click", checkHypotheses);
+      renderSignal();
+
+      setupTestSelector();
+      document.querySelectorAll("[data-data-view]").forEach((button) => {
+        button.addEventListener("click", () => {
+          document.querySelectorAll("[data-data-view]").forEach((item) => item.classList.remove("active"));
+          button.classList.add("active");
+          state.dataView = button.dataset.dataView;
+          renderTTestView();
+        });
+      });
+      renderTTestView();
+
+      setupPValues();
+      setupConfidenceIntervals();
+      setupSampleSize();
+      setupErrors();
+      setupMethodology();
+      setupDecision();
+      setupModelAnswer();
+      renderSummary();
+
+      document.getElementById("prevStage").addEventListener("click", () => goToStage(state.currentIndex - 1));
+      document.getElementById("nextStage").addEventListener("click", () => goToStage(state.currentIndex + 1));
+      document.querySelectorAll("[data-go-stage]").forEach((button) => {
+        button.addEventListener("click", () => goToStage(Number(button.dataset.goStage)));
+      });
+      document.getElementById("menuButton").addEventListener("click", openMenu);
+      scrim.addEventListener("click", closeMenu);
+      goToStage(0);
+    }
+
+    init();
+  </script>
+</body>
+</html>
