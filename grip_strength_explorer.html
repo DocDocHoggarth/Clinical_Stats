@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grip Strength Explorer</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,sans-serif;background:#f7f7f9;min-height:100vh;padding:24px 16px}
+h1{font-size:22px;font-weight:500;color:#1a1a1a;line-height:1.2}
+button{font-family:inherit;cursor:pointer}
+input[type=range]{cursor:pointer}
+.toggle-wrap{display:flex;align-items:center;gap:8px;font-size:13px;color:#555;user-select:none;cursor:pointer}
+.track{width:36px;height:20px;border-radius:10px;position:relative;transition:background .2s;flex-shrink:0}
+.thumb{position:absolute;top:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.slider-row{display:flex;align-items:center;gap:8px}
+.slider-label{font-size:13px;color:#555;min-width:94px}
+.slider-val{font-size:13px;color:#888;min-width:38px;text-align:right}
+.stat-chip{background:#f0effe;border-radius:8px;padding:6px 12px;min-width:58px;text-align:center;flex-shrink:0}
+.stat-chip .sl{font-size:11px;color:#888;margin-bottom:2px}
+.stat-chip .sv{font-size:15px;font-weight:500}
+.panel{background:#fff;border-radius:12px;border:1px solid #e8e8e8;padding:14px 18px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.ctrl-head{font-size:11px;font-weight:500;color:#aaa;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
+.card{background:#fff;border-radius:14px;border:1px solid #e8e8e8;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+canvas{display:block;max-width:100%}
+.reg-row{margin-top:6px;font-size:12px;color:#888;display:flex;gap:16px;flex-wrap:wrap}
+@media(max-width:600px){body{padding:12px 8px}h1{font-size:18px}}
+</style>
+</head>
+<body>
+<div style="max-width:680px;margin:0 auto">
+  <div style="margin-bottom:22px">
+    <div style="font-size:11px;font-weight:500;letter-spacing:.08em;color:#aaa;text-transform:uppercase;margin-bottom:4px">Grip strength explorer</div>
+    <h1>Forearm circumference &amp; peak grip strength</h1>
+    <p style="margin-top:5px;font-size:13px;color:#aaa">n = 40 participants &middot; hover points for values &middot; use controls to explore</p>
+  </div>
+  <div id="tabs" style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap"></div>
+  <div class="panel" style="padding:10px 16px;margin-bottom:14px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+    <span style="font-size:13px;color:#888;flex-shrink:0">Color theme:</span>
+    <div id="swatches" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+    <span id="color-name" style="font-size:12px;color:#ccc;margin-left:auto"></span>
+  </div>
+  <div class="card" style="margin-bottom:14px">
+    <div id="stats-bar" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px"></div>
+    <div id="chart-area"></div>
+    <div id="reg-info" style="display:none" class="reg-row"></div>
+  </div>
+  <div class="panel" id="controls-panel"></div>
+  <div style="margin-top:14px;font-size:11px;color:#ccc;text-align:center">Grip Strength Explorer &middot; 40 participants &middot; built with Claude</div>
+</div>
+<script>
+const RAW=[[24,80],[29,135],[21,65],[23,71.5],[24,63.3],[22,52],[23,60],[24,75.5],[28,105],[28,65],[28,100],[29,91],[29,110],[25,77],[25,73],[26,70],[24,79],[25,60],[24,33],[32,142],[27,78],[25,70.6],[28,110],[30,83.34],[25,65],[25,77.5],[24,75],[23,65],[28,117],[29,140],[31,119.5],[23,65],[25,65],[29,80],[27,65],[22,65],[25,65],[28,85],[27.7,105],[30,185]];
+const FORE=RAW.map(d=>d[0]),GRIP=RAW.map(d=>d[1]);
+const PRESETS=[
+  {name:"Violet",box:"#534AB7",fill:"#EEEDFE",accent:"#1D9E75"},
+  {name:"Teal",box:"#0F6E56",fill:"#E1F5EE",accent:"#534AB7"},
+  {name:"Coral",box:"#993C1D",fill:"#FAECE7",accent:"#185FA5"},
+  {name:"Navy",box:"#185FA5",fill:"#E6F1FB",accent:"#D85A30"},
+  {name:"Pink",box:"#993556",fill:"#FBEAF0",accent:"#3B6D11"},
+];
+let tab=0,color=PRESETS[0];
+let scOpts={showReg:true,showGrid:true,ptSize:6,opacity:.75};
+let hiOpts={showGrid:true,binSize:15,showMean:true,showMedian:false};
+let bxOpts={showGrid:true,showPts:true,showOut:true,jitter:28};
+
+function quantile(arr,p){const s=[...arr].sort((a,b)=>a-b);const i=p*(s.length-1);const lo=Math.floor(i),hi=Math.ceil(i);return s[lo]+(s[hi]-s[lo])*(i-lo);}
+function linReg(xs,ys){const n=xs.length,mx=xs.reduce((a,b)=>a+b)/n,my=ys.reduce((a,b)=>a+b)/n;const sxy=xs.reduce((s,x,i)=>s+(x-mx)*(ys[i]-my),0),sxx=xs.reduce((s,x)=>s+(x-mx)**2,0),syy=ys.reduce((s,y)=>s+(y-my)**2,0);const sl=sxy/sxx,ic=my-sl*mx,r=sxy/Math.sqrt(sxx*syy);return{slope:sl,intercept:ic,r,r2:r*r};}
+function jit(i,range){const x=Math.sin(i*127.1+42)*43758.5453;return(x-Math.floor(x)-.5)*range;}
+function chartWidth(){return Math.min(document.getElementById("chart-area").offsetWidth||560,620);}
+
+const TABS=["Scatter plot","Histogram","Box plot"];
+function renderTabs(){
+  const el=document.getElementById("tabs");el.innerHTML="";
+  TABS.forEach((t,i)=>{
+    const b=document.createElement("button");b.textContent=t;
+    Object.assign(b.style,{padding:"7px 18px",borderRadius:"20px",border:"1.5px solid",fontSize:"13px",fontWeight:"500",background:tab===i?color.box:"transparent",borderColor:tab===i?color.box:"#ddd",color:tab===i?"#fff":"#555",transition:"all .15s"});
+    b.onclick=()=>{tab=i;render();};el.appendChild(b);
+  });
+}
+function renderSwatches(){
+  const el=document.getElementById("swatches");el.innerHTML="";
+  PRESETS.forEach(c=>{
+    const b=document.createElement("button");
+    Object.assign(b.style,{width:"28px",height:"28px",borderRadius:"50%",background:c.box,border:color.name===c.name?"3px solid #222":"2px solid transparent",cursor:"pointer",outline:"none",transition:"border .15s"});
+    b.title=c.name;b.onclick=()=>{color=c;render();};el.appendChild(b);
+  });
+  document.getElementById("color-name").textContent=color.name;
+}
+function renderStats(data){
+  const el=document.getElementById("stats-bar");el.innerHTML="";
+  const s=[...data].sort((a,b)=>a-b),n=s.length;
+  const mean=data.reduce((a,b)=>a+b)/n,med=quantile(s,.5),sd=Math.sqrt(data.reduce((v,x)=>v+(x-mean)**2,0)/(n-1));
+  [["n",n,v=>v],["min",s[0],v=>v.toFixed(1)],["Q1",quantile(s,.25),v=>v.toFixed(1)],["median",med,v=>v.toFixed(1)],["Q3",quantile(s,.75),v=>v.toFixed(1)],["max",s[n-1],v=>v.toFixed(1)],["mean",mean,v=>v.toFixed(1)],["SD",sd,v=>v.toFixed(2)]].forEach(([l,v,f])=>{
+    const d=document.createElement("div");d.className="stat-chip";
+    d.innerHTML='<div class="sl">'+l+'</div><div class="sv" style="color:'+color.box+'">'+f(v)+'</div>';
+    el.appendChild(d);
+  });
+}
+function makeCanvas(w,h){
+  const c=document.createElement("canvas"),dpr=window.devicePixelRatio||1;
+  c.width=w*dpr;c.height=h*dpr;c.style.width=w+"px";c.style.height=h+"px";
+  const ctx=c.getContext("2d");ctx.scale(dpr,dpr);return{c,ctx};
+}
+
+let scHov=null;
+function drawScatter(){
+  const W=chartWidth(),H=340,ml=52,mr=20,mt=20,mb=44,pw=W-ml-mr,ph=H-mt-mb;
+  const xs=v=>ml+(v-19)/(34-19)*pw,ys=v=>mt+ph-(v/200)*ph;
+  const reg=linReg(FORE,GRIP);
+  const{c,ctx}=makeCanvas(W,H);
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    if(scOpts.showGrid){
+      ctx.strokeStyle="rgba(128,128,128,.1)";ctx.lineWidth=.5;
+      [20,22,24,26,28,30,32,34].forEach(x=>{ctx.beginPath();ctx.moveTo(xs(x),mt);ctx.lineTo(xs(x),mt+ph);ctx.stroke();});
+      [0,50,100,150,200].forEach(y=>{ctx.beginPath();ctx.moveTo(ml,ys(y));ctx.lineTo(ml+pw,ys(y));ctx.stroke();});
+    }
+    ctx.strokeStyle="rgba(128,128,128,.25)";ctx.lineWidth=.5;
+    ctx.beginPath();ctx.moveTo(ml,mt);ctx.lineTo(ml,mt+ph);ctx.lineTo(ml+pw,mt+ph);ctx.stroke();
+    ctx.fillStyle="rgba(100,100,100,.55)";ctx.font="11px system-ui";
+    ctx.textAlign="center";[20,22,24,26,28,30,32,34].forEach(x=>ctx.fillText(x,xs(x),mt+ph+14));
+    ctx.textAlign="right";[0,50,100,150,200].forEach(y=>ctx.fillText(y,ml-5,ys(y)+4));
+    ctx.save();ctx.translate(14,mt+ph/2);ctx.rotate(-Math.PI/2);ctx.textAlign="center";ctx.fillStyle="rgba(100,100,100,.7)";ctx.font="12px system-ui";ctx.fillText("Peak grip strength (lbs)",0,0);ctx.restore();
+    ctx.textAlign="center";ctx.fillStyle="rgba(100,100,100,.7)";ctx.font="12px system-ui";ctx.fillText("Forearm circumference (cm)",ml+pw/2,H-4);
+    if(scOpts.showReg){
+      ctx.strokeStyle=color.accent;ctx.lineWidth=2;ctx.setLineDash([6,4]);
+      ctx.beginPath();ctx.moveTo(xs(19),ys(reg.slope*19+reg.intercept));ctx.lineTo(xs(34),ys(reg.slope*34+reg.intercept));ctx.stroke();ctx.setLineDash([]);
+    }
+    RAW.forEach(([x,y],i)=>{
+      const isH=scHov===i,r=scOpts.ptSize;
+      ctx.beginPath();ctx.arc(xs(x),ys(y),isH?r+3:r,0,Math.PI*2);
+      ctx.fillStyle=color.box+Math.round(scOpts.opacity*255).toString(16).padStart(2,"0");
+      ctx.strokeStyle=color.box;ctx.lineWidth=isH?2:1;ctx.fill();ctx.stroke();
+    });
+    if(scHov!==null){
+      const[x,y]=RAW[scHov],px=xs(x),py=ys(y),txt="Forearm: "+x+" cm  ·  Grip: "+y+" lbs";
+      ctx.font="12px system-ui";ctx.textAlign="left";
+      const tw=ctx.measureText(txt).width+18;let tx=px+10,ty=py-14;
+      if(tx+tw>W-8)tx=px-tw-10;if(ty<10)ty=py+24;
+      ctx.fillStyle="rgba(255,255,255,.97)";ctx.strokeStyle="rgba(0,0,0,.1)";ctx.lineWidth=.5;
+      ctx.beginPath();ctx.roundRect(tx,ty-16,tw,24,4);ctx.fill();ctx.stroke();
+      ctx.fillStyle="#333";ctx.fillText(txt,tx+9,ty);
+    }
+  }
+  draw();c.style.cursor="crosshair";
+  c.addEventListener("mousemove",e=>{
+    const r=c.getBoundingClientRect(),sc=W/c.offsetWidth,mx=(e.clientX-r.left)*sc,my=(e.clientY-r.top)*sc;
+    let best=null,bd=Infinity;
+    RAW.forEach(([x,y],i)=>{const d=Math.hypot(xs(x)-mx,ys(y)-my);if(d<bd){bd=d;best=i;}});
+    scHov=bd<18?best:null;draw();
+  });
+  c.addEventListener("mouseleave",()=>{scHov=null;draw();});
+  const ri=document.getElementById("reg-info");
+  if(scOpts.showReg){ri.style.display="flex";ri.style.paddingLeft=ml+"px";ri.innerHTML="<span>r = "+reg.r.toFixed(3)+"</span><span>r\xb2 = "+reg.r2.toFixed(3)+"</span><span>y = "+reg.slope.toFixed(2)+"x "+(reg.intercept>=0?"+":"")+reg.intercept.toFixed(1)+"</span>";}
+  else ri.style.display="none";
+  return c;
+}
+
+let hiHov=null;
+function drawHist(){
+  const W=chartWidth(),H=320,ml=46,mr=20,mt=20,mb=52,pw=W-ml-mr,ph=H-mt-mb;
+  const bs=hiOpts.binSize,start=30;
+  const bins=[];for(let lo=start;lo<190;lo+=bs)bins.push({lo,hi:lo+bs,vals:[]});
+  GRIP.forEach(v=>{const idx=Math.min(Math.floor((v-start)/bs),bins.length-1);if(idx>=0)bins[idx].vals.push(v);});
+  const maxC=Math.max(...bins.map(b=>b.vals.length));
+  const xs=v=>ml+(v-30)/(190-30)*pw,ys=v=>mt+ph-(v/Math.ceil(maxC+1))*ph,bw=(bs/(190-30)*pw)-2;
+  const mean=GRIP.reduce((a,b)=>a+b)/GRIP.length,med=quantile(GRIP,.5);
+  const{c,ctx}=makeCanvas(W,H);
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    if(hiOpts.showGrid){ctx.strokeStyle="rgba(128,128,128,.1)";ctx.lineWidth=.5;for(let y=0;y<=Math.ceil(maxC+1);y++){ctx.beginPath();ctx.moveTo(ml,ys(y));ctx.lineTo(ml+pw,ys(y));ctx.stroke();}}
+    ctx.strokeStyle="rgba(128,128,128,.25)";ctx.lineWidth=.5;ctx.beginPath();ctx.moveTo(ml,mt);ctx.lineTo(ml,mt+ph);ctx.lineTo(ml+pw,mt+ph);ctx.stroke();
+    bins.forEach((b,i)=>{
+      if(!b.vals.length)return;
+      const x=xs(b.lo)+1,y=ys(b.vals.length),h=mt+ph-y;
+      ctx.fillStyle=hiHov===i?color.box:color.fill;ctx.strokeStyle=color.box;ctx.lineWidth=1.5;
+      ctx.beginPath();ctx.roundRect(x,y,bw,h,2);ctx.fill();ctx.stroke();
+      ctx.fillStyle=hiHov===i?"#fff":color.box;ctx.font="11px system-ui";ctx.textAlign="center";ctx.fillText(b.vals.length,x+bw/2,y-4);
+    });
+    ctx.fillStyle="rgba(100,100,100,.55)";ctx.font="11px system-ui";ctx.textAlign="center";
+    bins.forEach(b=>{if(xs(b.lo)+bw/2<ml+pw)ctx.fillText(b.lo,xs(b.lo)+bw/2,mt+ph+14);});
+    ctx.textAlign="right";for(let y=0;y<=Math.ceil(maxC);y+=2)ctx.fillText(y,ml-5,ys(y)+4);
+    ctx.save();ctx.translate(14,mt+ph/2);ctx.rotate(-Math.PI/2);ctx.textAlign="center";ctx.fillStyle="rgba(100,100,100,.7)";ctx.font="12px system-ui";ctx.fillText("Frequency",0,0);ctx.restore();
+    ctx.textAlign="center";ctx.fillStyle="rgba(100,100,100,.7)";ctx.font="12px system-ui";ctx.fillText("Peak grip strength (lbs)",ml+pw/2,H-4);
+    if(hiOpts.showMean){const mx=xs(mean);ctx.strokeStyle=color.accent;ctx.lineWidth=2;ctx.setLineDash([5,4]);ctx.beginPath();ctx.moveTo(mx,mt);ctx.lineTo(mx,mt+ph);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle=color.accent;ctx.font="11px system-ui";ctx.textAlign="left";ctx.fillText("Mean: "+mean.toFixed(1),mx+4,mt+14);}
+    if(hiOpts.showMedian){const mx=xs(med);ctx.strokeStyle="#D85A30";ctx.lineWidth=2;ctx.setLineDash([3,3]);ctx.beginPath();ctx.moveTo(mx,mt);ctx.lineTo(mx,mt+ph);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle="#D85A30";ctx.font="11px system-ui";ctx.textAlign="left";ctx.fillText("Median: "+med.toFixed(1),mx+4,mt+28);}
+    if(hiHov!==null&&bins[hiHov]){
+      const b=bins[hiHov],tx2=xs(b.lo)+bw/2,ty2=ys(b.vals.length)-10,txt=b.lo+"\u2013"+b.hi+" lbs: "+b.vals.length+" participants";
+      ctx.font="12px system-ui";ctx.textAlign="center";
+      const tw=ctx.measureText(txt).width+18;let lx=tx2-tw/2;if(lx<4)lx=4;if(lx+tw>W-4)lx=W-tw-4;
+      ctx.fillStyle="rgba(255,255,255,.97)";ctx.strokeStyle="rgba(0,0,0,.1)";ctx.lineWidth=.5;ctx.beginPath();ctx.roundRect(lx,ty2-18,tw,24,4);ctx.fill();ctx.stroke();
+      ctx.fillStyle="#333";ctx.fillText(txt,lx+tw/2,ty2);
+    }
+  }
+  draw();
+  c.addEventListener("mousemove",e=>{
+    const r=c.getBoundingClientRect(),sc=W/c.offsetWidth,mx=(e.clientX-r.left)*sc;
+    let best=null;bins.forEach((b,i)=>{const bx=xs(b.lo)+1;if(mx>=bx&&mx<=bx+bw)best=i;});
+    hiHov=best;draw();
+  });
+  c.addEventListener("mouseleave",()=>{hiHov=null;draw();});
+  document.getElementById("reg-info").style.display="none";
+  return c;
+}
+
+let bxHov=null;
+function drawBox(){
+  const W=chartWidth(),H=320,ml=52,mr=80,mt=30,mb=24,ph=H-mt-mb;
+  const cx=(W-ml-mr)/2+ml,bw=Math.min(90,(W-ml-mr)*0.35);
+  const ys=v=>mt+ph-(v-18)/(34-18)*ph;
+  const s=[...FORE].sort((a,b)=>a-b);
+  const q1=quantile(s,.25),med=quantile(s,.5),q3=quantile(s,.75),iqr=q3-q1;
+  const wlo=Math.max(s[0],q1-1.5*iqr),whi=Math.min(s[s.length-1],q3+1.5*iqr);
+  const{c,ctx}=makeCanvas(W,H);
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    const ticks=[18,20,22,24,26,28,30,32,34];
+    if(bxOpts.showGrid){ctx.strokeStyle="rgba(128,128,128,.1)";ctx.lineWidth=.5;ticks.forEach(t=>{ctx.beginPath();ctx.moveTo(ml,ys(t));ctx.lineTo(W-mr,ys(t));ctx.stroke();});}
+    ctx.strokeStyle="rgba(128,128,128,.25)";ctx.lineWidth=.5;ctx.beginPath();ctx.moveTo(ml,mt);ctx.lineTo(ml,mt+ph);ctx.stroke();
+    ctx.fillStyle="rgba(100,100,100,.55)";ctx.font="11px system-ui";ctx.textAlign="right";ticks.forEach(t=>ctx.fillText(t+" cm",ml-5,ys(t)+4));
+    ctx.save();ctx.translate(14,mt+ph/2);ctx.rotate(-Math.PI/2);ctx.textAlign="center";ctx.fillStyle="rgba(100,100,100,.7)";ctx.font="12px system-ui";ctx.fillText("Forearm circumference (cm)",0,0);ctx.restore();
+    ctx.strokeStyle=color.box;ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(cx,ys(wlo));ctx.lineTo(cx,ys(q1));ctx.stroke();
+    ctx.beginPath();ctx.moveTo(cx,ys(q3));ctx.lineTo(cx,ys(whi));ctx.stroke();
+    [wlo,whi].forEach(w=>{ctx.beginPath();ctx.moveTo(cx-20,ys(w));ctx.lineTo(cx+20,ys(w));ctx.stroke();});
+    ctx.fillStyle=color.fill;ctx.strokeStyle=color.box;ctx.lineWidth=2;
+    ctx.beginPath();ctx.roundRect(cx-bw/2,ys(q3),bw,ys(q1)-ys(q3),4);ctx.fill();ctx.stroke();
+    ctx.strokeStyle=color.box;ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(cx-bw/2,ys(med));ctx.lineTo(cx+bw/2,ys(med));ctx.stroke();
+    const addLbl=(l,v,side)=>{ctx.font="11px system-ui";ctx.fillStyle="rgba(110,110,110,.85)";ctx.textAlign=side==="r"?"left":"right";ctx.fillText(l+": "+v.toFixed(1),side==="r"?cx+bw/2+8:cx-bw/2-8,ys(v)+4);};
+    addLbl("Q3",q3,"r");addLbl("Q1",q1,"r");addLbl("Med",med,"l");addLbl("Max",whi,"r");addLbl("Min",wlo,"r");
+    if(bxOpts.showPts){
+      FORE.forEach((v,i)=>{
+        const isOut=v<wlo||v>whi;if(isOut&&!bxOpts.showOut)return;
+        const jx=cx+jit(i,bxOpts.jitter),py=ys(v),isH=bxHov===i;
+        ctx.beginPath();ctx.arc(jx,py,isH?7:5,0,Math.PI*2);
+        ctx.fillStyle=isOut?"#D85A30":color.box+(isH?"ff":"99");ctx.strokeStyle=isOut?"#D85A30":color.box;ctx.lineWidth=isH?2:1;ctx.fill();ctx.stroke();
+      });
+    }
+    if(bxHov!==null){
+      const v=FORE[bxHov],isOut=v<wlo||v>whi,jx=cx+jit(bxHov,bxOpts.jitter),py=ys(v),txt=v+" cm"+(isOut?" (outlier)":"");
+      ctx.font="12px system-ui";ctx.textAlign="left";
+      const tw=ctx.measureText(txt).width+18;let tx=jx+10,ty=py-14;if(tx+tw>W-8)tx=jx-tw-10;if(ty<10)ty=py+24;
+      ctx.fillStyle="rgba(255,255,255,.97)";ctx.strokeStyle="rgba(0,0,0,.1)";ctx.lineWidth=.5;ctx.beginPath();ctx.roundRect(tx,ty-16,tw,24,4);ctx.fill();ctx.stroke();
+      ctx.fillStyle=isOut?"#D85A30":"#333";ctx.fillText(txt,tx+9,ty);
+    }
+  }
+  draw();c.style.cursor="crosshair";
+  c.addEventListener("mousemove",e=>{
+    if(!bxOpts.showPts){bxHov=null;return;}
+    const r=c.getBoundingClientRect(),sc=W/c.offsetWidth,mx=(e.clientX-r.left)*sc,my=(e.clientY-r.top)*sc;
+    let best=null,bd=Infinity;
+    FORE.forEach((v,i)=>{const d=Math.hypot(cx+jit(i,bxOpts.jitter)-mx,ys(v)-my);if(d<bd){bd=d;best=i;}});
+    bxHov=bd<16?best:null;draw();
+  });
+  c.addEventListener("mouseleave",()=>{bxHov=null;draw();});
+  document.getElementById("reg-info").style.display="none";
+  return c;
+}
+
+function mkToggle(label,checked,onChange){
+  const wrap=document.createElement("label");wrap.className="toggle-wrap";
+  const track=document.createElement("div");track.className="track";track.style.background=checked?color.box:"#ccc";
+  const thumb=document.createElement("div");thumb.className="thumb";thumb.style.left=checked?"18px":"2px";
+  track.appendChild(thumb);
+  const span=document.createElement("span");span.textContent=label;wrap.appendChild(track);wrap.appendChild(span);
+  wrap.onclick=()=>{const nv=!checked;checked=nv;track.style.background=nv?color.box:"#ccc";thumb.style.left=nv?"18px":"2px";onChange(nv);};
+  return wrap;
+}
+function mkSlider(label,min,max,step,value,unit,onChange){
+  const row=document.createElement("div");row.className="slider-row";
+  const lbl=document.createElement("span");lbl.className="slider-label";lbl.textContent=label;
+  const inp=document.createElement("input");inp.type="range";inp.min=min;inp.max=max;inp.step=step;inp.value=value;
+  inp.style.cssText="flex:1;accent-color:"+color.box;
+  const val=document.createElement("span");val.className="slider-val";val.textContent=value+unit;
+  inp.oninput=()=>{val.textContent=inp.value+unit;onChange(Number(inp.value));};
+  row.appendChild(lbl);row.appendChild(inp);row.appendChild(val);return row;
+}
+function buildControls(){
+  const p=document.getElementById("controls-panel");p.innerHTML="";
+  const head=document.createElement("div");head.className="ctrl-head";head.textContent="Controls";p.appendChild(head);
+  const col=document.createElement("div");col.style.cssText="display:flex;flex-direction:column;gap:10px";p.appendChild(col);
+  if(tab===0){
+    col.appendChild(mkToggle("Show regression line",scOpts.showReg,v=>{scOpts.showReg=v;render();}));
+    col.appendChild(mkToggle("Show grid",scOpts.showGrid,v=>{scOpts.showGrid=v;render();}));
+    col.appendChild(mkSlider("Point size",3,12,1,scOpts.ptSize,"px",v=>{scOpts.ptSize=v;render();}));
+    col.appendChild(mkSlider("Opacity",.1,1,.05,scOpts.opacity,"",v=>{scOpts.opacity=v;render();}));
+  } else if(tab===1){
+    col.appendChild(mkToggle("Show grid",hiOpts.showGrid,v=>{hiOpts.showGrid=v;render();}));
+    col.appendChild(mkToggle("Show mean",hiOpts.showMean,v=>{hiOpts.showMean=v;render();}));
+    col.appendChild(mkToggle("Show median",hiOpts.showMedian,v=>{hiOpts.showMedian=v;render();}));
+    col.appendChild(mkSlider("Bin width",5,30,5,hiOpts.binSize," lbs",v=>{hiOpts.binSize=v;render();}));
+  } else {
+    col.appendChild(mkToggle("Show grid",bxOpts.showGrid,v=>{bxOpts.showGrid=v;render();}));
+    col.appendChild(mkToggle("Show data points",bxOpts.showPts,v=>{bxOpts.showPts=v;render();}));
+    col.appendChild(mkToggle("Show outliers",bxOpts.showOut,v=>{bxOpts.showOut=v;render();}));
+    if(bxOpts.showPts)col.appendChild(mkSlider("Jitter width",0,60,4,bxOpts.jitter,"px",v=>{bxOpts.jitter=v;render();}));
+  }
+}
+function render(){
+  renderTabs();renderSwatches();
+  renderStats(tab===2?FORE:GRIP);
+  const area=document.getElementById("chart-area");area.innerHTML="";
+  area.appendChild(tab===0?drawScatter():tab===1?drawHist():drawBox());
+  buildControls();
+}
+window.addEventListener("resize",()=>render());
+render();
+</script>
+</body>
+</html>
