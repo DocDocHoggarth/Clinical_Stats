@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clinical Statistics Review — DPTD 712</title>
+<style>
+  :root {
+    --navy: #1a1a1a;
+    --navy-dark: #000000;
+    --teal: #b60016;
+    --teal-light: #fbe7ea;
+    --bg: #f4f6f8;
+    --card: #ffffff;
+    --text: #1f2933;
+    --muted: #5b6b79;
+    --good: #1f9d55;
+    --good-bg: #e8f8ef;
+    --bad: #c0392b;
+    --bad-bg: #fdecea;
+    --border: #d9e2ea;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.55;
+  }
+  header.site-header {
+    background: linear-gradient(135deg, var(--navy) 0%, var(--navy-dark) 100%);
+    color: #fff;
+    padding: 24px 20px 20px;
+    text-align: left;
+  }
+  .header-brand {
+    display: flex; align-items: center; justify-content: flex-start; gap: 16px; flex-wrap: wrap;
+    max-width: 880px; margin: 0 auto;
+  }
+  .header-brand img.ncc-logo { height: 72px; width: auto; display: block; }
+  .header-text { display: flex; flex-direction: column; justify-content: center; text-align: left; }
+  .ncc-badge {
+    height: 72px; width: 72px; border-radius: 10px;
+    background: var(--teal);
+    border: 2px solid #fff;
+    color: #fff; font-weight: 800; font-size: 1.3rem;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  header.site-header h1 { margin: 0 0 4px; font-size: 1.7rem; }
+  header.site-header p { margin: 0; color: #e3c9cd; font-size: 0.95rem; }
+
+  nav.tabs {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+    background: var(--navy-dark);
+    padding: 10px 12px;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+  nav.tabs button {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.25);
+    color: #e6edf3;
+    padding: 9px 16px;
+    border-radius: 999px;
+    cursor: pointer;
+    font-size: 0.88rem;
+    transition: background 0.15s, color 0.15s;
+  }
+  nav.tabs button:hover { background: rgba(255,255,255,0.12); }
+  nav.tabs button.active {
+    background: var(--teal);
+    border-color: var(--teal);
+    color: #fff;
+    font-weight: 600;
+  }
+
+  main {
+    max-width: 880px;
+    margin: 28px auto 60px;
+    padding: 0 18px;
+  }
+  section.view { display: none; }
+  section.view.active { display: block; }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px 24px;
+    margin-bottom: 18px;
+    box-shadow: 0 1px 2px rgba(20,40,60,0.04);
+  }
+  h2 { color: var(--navy); margin-top: 0; }
+  h3 { color: var(--navy); }
+  .muted { color: var(--muted); }
+  .pill {
+    display: inline-block;
+    background: var(--teal-light);
+    color: var(--teal);
+    border-radius: 999px;
+    padding: 3px 12px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+
+  .home-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+    margin-top: 18px;
+  }
+  @media (max-width: 600px) { .home-grid { grid-template-columns: 1fr; } }
+  .home-card {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    cursor: pointer;
+    background: #fbfcfd;
+    transition: transform 0.12s, box-shadow 0.12s;
+  }
+  .home-card:hover { transform: translateY(-2px); box-shadow: 0 4px 14px rgba(20,40,60,0.08); }
+  .home-card h3 { margin: 0 0 6px; font-size: 1.05rem; }
+  .home-card p { margin: 0; font-size: 0.88rem; color: var(--muted); }
+
+  table.def-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.92rem; }
+  table.def-table th, table.def-table td { border: 1px solid var(--border); padding: 8px 10px; text-align: left; vertical-align: top; }
+  table.def-table th { background: var(--teal-light); color: var(--navy); }
+
+  /* Calculator */
+  .calc-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin: 14px 0;
+  }
+  @media (max-width: 600px) { .calc-grid { grid-template-columns: repeat(2, 1fr); } }
+  .calc-input label { display: block; font-size: 0.82rem; color: var(--muted); margin-bottom: 4px; font-weight: 600; }
+  .calc-input input {
+    width: 100%;
+    padding: 9px 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 1rem;
+  }
+  .results-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-top: 16px;
+  }
+  @media (max-width: 600px) { .results-grid { grid-template-columns: 1fr; } }
+  .result-box {
+    background: var(--teal-light);
+    border-radius: 8px;
+    padding: 10px 14px;
+  }
+  .result-box .label { font-size: 0.78rem; color: var(--navy); font-weight: 700; }
+  .result-box .formula { font-size: 0.74rem; color: var(--muted); }
+  .result-box .value { font-size: 1.3rem; font-weight: 700; color: var(--navy); }
+  .table2x2 { border-collapse: collapse; margin-top: 12px; }
+  .table2x2 td, .table2x2 th { border: 1px solid var(--border); padding: 8px 14px; text-align: center; font-size: 0.85rem; }
+  .table2x2 th { background: var(--teal-light); color: var(--navy); }
+
+  /* Quiz */
+  .progress-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 0.85rem; color: var(--muted); }
+  .progress-bar { height: 6px; background: var(--border); border-radius: 4px; overflow: hidden; margin-bottom: 18px; }
+  .progress-bar-fill { height: 100%; background: var(--teal); transition: width 0.2s; }
+  .q-prompt { font-size: 1.02rem; margin-bottom: 14px; }
+  .q-hint { font-size: 0.85rem; color: var(--muted); margin-bottom: 14px; }
+  .answer-row { display: flex; gap: 10px; align-items: center; margin-bottom: 14px; flex-wrap: wrap; }
+  .answer-row input[type="text"] {
+    padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 1rem; width: 160px;
+  }
+  .choice-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+  .choice-btn {
+    text-align: left;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: #fff;
+    cursor: pointer;
+    font-size: 0.95rem;
+  }
+  .choice-btn:hover { border-color: var(--teal); }
+  .choice-btn.selected { border-color: var(--teal); background: var(--teal-light); }
+  .choice-btn.correct { border-color: var(--good); background: var(--good-bg); }
+  .choice-btn.incorrect { border-color: var(--bad); background: var(--bad-bg); }
+  .choice-btn:disabled { cursor: default; }
+
+  button.primary {
+    background: var(--teal);
+    color: #fff;
+    border: none;
+    padding: 11px 20px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  button.primary:hover { background: #176f6f; }
+  button.primary:disabled { background: #9fc7c7; cursor: not-allowed; }
+  button.secondary {
+    background: transparent;
+    color: var(--navy);
+    border: 1px solid var(--border);
+    padding: 10px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+  }
+  .feedback-box {
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 14px;
+    font-size: 0.92rem;
+  }
+  .feedback-box.correct { background: var(--good-bg); color: #14532d; border: 1px solid #b6e3c6; }
+  .feedback-box.incorrect { background: var(--bad-bg); color: #7a241c; border: 1px solid #f1c3bd; }
+  .feedback-box strong { display: block; margin-bottom: 4px; }
+
+  .summary-score { font-size: 2.2rem; font-weight: 800; color: var(--navy); }
+  .review-item { border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; }
+  .review-item.miss { border-left: 4px solid var(--bad); }
+  .review-item.hit { border-left: 4px solid var(--good); }
+  .review-item .qtext { font-weight: 600; margin-bottom: 4px; }
+  .review-item .meta { font-size: 0.85rem; color: var(--muted); margin-bottom: 4px; }
+
+  /* Matching game */
+  .match-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 24px; margin-top: 14px; }
+  @media (max-width: 600px) { .match-grid { grid-template-columns: 1fr; } }
+  .match-btn {
+    text-align: left;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: #fff;
+    cursor: pointer;
+    font-size: 0.9rem;
+    width: 100%;
+  }
+  .match-btn.selected { border-color: var(--teal); background: var(--teal-light); }
+  .match-btn.solved { border-color: var(--good); background: var(--good-bg); cursor: default; color: #14532d; }
+  .match-btn.shake { border-color: var(--bad); background: var(--bad-bg); }
+  .match-stats { display: flex; gap: 24px; margin: 10px 0 6px; font-size: 0.88rem; color: var(--muted); }
+  .match-stats strong { color: var(--navy); }
+
+  footer { text-align: center; padding: 24px; color: var(--muted); font-size: 0.8rem; }
+
+  /* Drag-and-drop calculator helper */
+  .calc-helper { margin: 4px 0 16px; padding: 14px 16px; background: #f7fafc; border: 1px dashed var(--teal); border-radius: 10px; }
+  .calc-helper-label { font-size: 0.8rem; font-weight: 700; color: var(--teal); margin-bottom: 10px; }
+  .calc-tokens { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+  .calc-token {
+    background: #fff; border: 1px solid var(--border); border-radius: 6px;
+    padding: 7px 12px; font-size: 0.85rem; cursor: grab; color: var(--text);
+  }
+  .calc-token.selected { border-color: var(--teal); background: var(--teal-light); }
+  .calc-token:active { cursor: grabbing; }
+  .calc-formula { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; font-size: 1.05rem; font-family: "SF Mono", Consolas, monospace; }
+  .calc-text { color: var(--navy); }
+  .calc-slot {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 56px; height: 34px; padding: 0 8px;
+    border: 2px dashed var(--border); border-radius: 6px; background: #fff;
+    cursor: pointer; font-weight: 600; color: var(--navy);
+  }
+  .calc-slot.filled { border-style: solid; border-color: var(--teal); background: var(--teal-light); }
+  .calc-slot.dragover { border-color: var(--teal); background: var(--teal-light); }
+  .calc-eq { margin: 0 6px; font-weight: 700; color: var(--navy); }
+  .calc-result { font-weight: 800; font-size: 1.15rem; color: var(--navy); min-width: 70px; }
+  .calc-clear-btn {
+    margin-top: 12px; background: transparent; border: 1px solid var(--border);
+    border-radius: 6px; padding: 6px 12px; font-size: 0.8rem; cursor: pointer; color: var(--muted);
+  }
+  .calc-clear-btn:hover { border-color: var(--teal); color: var(--teal); }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-brand">
+    <img src="ncc-logo.png" alt="North Central College" class="ncc-logo" onerror="this.style.display='none'; document.getElementById('nccBadgeFallback').style.display='flex';">
+    <div class="ncc-badge" id="nccBadgeFallback" style="display:none;">NC</div>
+    <div class="header-text">
+      <h1>Clinical Statistics Review</h1>
+      <p>DPTD 712 — Sensitivity, Specificity, Predictive Values, Likelihood Ratios &amp; More</p>
+    </div>
+  </div>
+</header>
+
+<nav class="tabs" id="tabs">
+  <button data-view="home" class="active">Home</button>
+  <button data-view="calculator">2×2 Calculator</button>
+  <button data-view="practice">Calculation Practice</button>
+  <button data-view="scenarios">Clinical Scenarios</button>
+  <button data-view="matching">Matching Game</button>
+</nav>
+
+<main>
+
+  <!-- HOME -->
+  <section class="view active" id="view-home">
+    <div class="card">
+      <span class="pill">Welcome</span>
+      <h2>Review the core concepts before you practice</h2>
+      <p>This site accompanies the Clinical Statistics handout. Use the four activities below to review diagnostic
+      test outcomes, sensitivity/specificity, predictive values, likelihood ratios, odds ratios, risk ratios,
+      prevalence, and incidence. Work through them in any order — each one gives you a score and a review of any
+      questions you missed.</p>
+
+      <table class="def-table">
+        <tr><th>Term</th><th>Formula</th><th>Mnemonic</th></tr>
+        <tr><td>Sensitivity</td><td>TP / (TP + FN)</td><td>Sensitivity Sees the Sick</td></tr>
+        <tr><td>Specificity</td><td>TN / (TN + FP)</td><td>Specificity Spots the Healthy</td></tr>
+        <tr><td>Positive Predictive Value (PPV)</td><td>TP / (TP + FP)</td><td>—</td></tr>
+        <tr><td>Negative Predictive Value (NPV)</td><td>TN / (TN + FN)</td><td>—</td></tr>
+        <tr><td>Odds Ratio (OR)</td><td>(TP/FN) / (FP/TN)</td><td>—</td></tr>
+        <tr><td>Likelihood Ratio + (LR+)</td><td>Sensitivity / (1 − Specificity)</td><td>—</td></tr>
+        <tr><td>Likelihood Ratio − (LR−)</td><td>(1 − Sensitivity) / Specificity</td><td>—</td></tr>
+        <tr><td>Prevalence</td><td>Existing cases / Total population</td><td>Prevalence Paints the Population Picture</td></tr>
+        <tr><td>Incidence</td><td>New cases / Population at risk (over time)</td><td>Incidence Indicates Incoming Issues</td></tr>
+        <tr><td>Risk Ratio (RR)</td><td>Incidence (exposed) / Incidence (unexposed)</td><td>—</td></tr>
+      </table>
+    </div>
+
+    <div class="home-grid">
+      <div class="home-card" data-go="calculator">
+        <h3>🧮 2×2 Calculator</h3>
+        <p>Enter TP, FP, TN, FN and watch every statistic update live. Best for building intuition.</p>
+      </div>
+      <div class="home-card" data-go="practice">
+        <h3>✏️ Calculation Practice</h3>
+        <p>10 worked clinical problems. Calculate the requested statistic and check your work.</p>
+      </div>
+      <div class="home-card" data-go="scenarios">
+        <h3>🩺 Clinical Scenarios</h3>
+        <p>10 multiple-choice questions on interpreting and applying these measures at the bedside.</p>
+      </div>
+      <div class="home-card" data-go="matching">
+        <h3>🔗 Matching Game</h3>
+        <p>Match each term to its correct formula. Track your accuracy as you go.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CALCULATOR -->
+  <section class="view" id="view-calculator">
+    <div class="card">
+      <span class="pill">Tool</span>
+      <h2>Interactive 2×2 Calculator</h2>
+      <p class="muted">Enter the four diagnostic test outcomes below. All statistics update automatically. Try
+      keeping sensitivity and specificity fixed while changing the underlying prevalence (by changing how many
+      people actually have the condition) to see how PPV and NPV shift.</p>
+
+      <table class="table2x2">
+        <tr><th></th><th>Disease +</th><th>Disease −</th></tr>
+        <tr><th>Test +</th><td id="cellTP">TP</td><td id="cellFP">FP</td></tr>
+        <tr><th>Test −</th><td id="cellFN">FN</td><td id="cellTN">TN</td></tr>
+      </table>
+
+      <div class="calc-grid">
+        <div class="calc-input">
+          <label for="inTP">True Positives (TP)</label>
+          <input type="number" id="inTP" min="0" value="40">
+        </div>
+        <div class="calc-input">
+          <label for="inFP">False Positives (FP)</label>
+          <input type="number" id="inFP" min="0" value="10">
+        </div>
+        <div class="calc-input">
+          <label for="inFN">False Negatives (FN)</label>
+          <input type="number" id="inFN" min="0" value="5">
+        </div>
+        <div class="calc-input">
+          <label for="inTN">True Negatives (TN)</label>
+          <input type="number" id="inTN" min="0" value="45">
+        </div>
+      </div>
+
+      <div class="results-grid" id="calcResults"></div>
+    </div>
+  </section>
+
+  <!-- CALCULATION PRACTICE -->
+  <section class="view" id="view-practice">
+    <div class="card" id="practiceContainer"></div>
+  </section>
+
+  <!-- SCENARIOS -->
+  <section class="view" id="view-scenarios">
+    <div class="card" id="scenariosContainer"></div>
+  </section>
+
+  <!-- MATCHING -->
+  <section class="view" id="view-matching">
+    <div class="card" id="matchingContainer"></div>
+  </section>
+
+</main>
+
+<footer>Based on the DPTD 712 Clinical Statistics Handout. For review purposes only.</footer>
+
+<script>
+/* ---------------- NAVIGATION ---------------- */
+const tabButtons = document.querySelectorAll('nav.tabs button');
+const views = document.querySelectorAll('section.view');
+function showView(name) {
+  views.forEach(v => v.classList.toggle('active', v.id === 'view-' + name));
+  tabButtons.forEach(b => b.classList.toggle('active', b.dataset.view === name));
+  window.scrollTo({top: 0, behavior: 'instant'});
+}
+tabButtons.forEach(b => b.addEventListener('click', () => showView(b.dataset.view)));
+document.querySelectorAll('.home-card').forEach(c => c.addEventListener('click', () => showView(c.dataset.go)));
+
+/* ---------------- CALCULATOR ---------------- */
+function fmtPct(x) { return isFinite(x) ? (x*100).toFixed(1) + '%' : '—'; }
+function fmtNum(x, d=2) { return isFinite(x) ? x.toFixed(d) : '—'; }
+
+function recalcCalculator() {
+  const TP = parseFloat(document.getElementById('inTP').value) || 0;
+  const FP = parseFloat(document.getElementById('inFP').value) || 0;
+  const FN = parseFloat(document.getElementById('inFN').value) || 0;
+  const TN = parseFloat(document.getElementById('inTN').value) || 0;
+
+  document.getElementById('cellTP').textContent = 'TP = ' + TP;
+  document.getElementById('cellFP').textContent = 'FP = ' + FP;
+  document.getElementById('cellFN').textContent = 'FN = ' + FN;
+  document.getElementById('cellTN').textContent = 'TN = ' + TN;
+
+  const total = TP + FP + FN + TN;
+  const sens = TP / (TP + FN);
+  const spec = TN / (TN + FP);
+  const ppv = TP / (TP + FP);
+  const npv = TN / (TN + FN);
+  const orVal = (TP/FN) / (FP/TN);
+  const lrPos = sens / (1 - spec);
+  const lrNeg = (1 - sens) / spec;
+  const prevalence = (TP + FN) / total;
+
+  const results = [
+    ['Sensitivity', 'TP / (TP + FN)', fmtPct(sens)],
+    ['Specificity', 'TN / (TN + FP)', fmtPct(spec)],
+    ['PPV', 'TP / (TP + FP)', fmtPct(ppv)],
+    ['NPV', 'TN / (TN + FN)', fmtPct(npv)],
+    ['Odds Ratio', '(TP/FN) / (FP/TN)', fmtNum(orVal)],
+    ['LR+', 'Sensitivity / (1 − Specificity)', fmtNum(lrPos)],
+    ['LR−', '(1 − Sensitivity) / Specificity', fmtNum(lrNeg)],
+    ['Prevalence (in this sample)', '(TP + FN) / Total', fmtPct(prevalence)],
+  ];
+
+  document.getElementById('calcResults').innerHTML = results.map(r => `
+    <div class="result-box">
+      <div class="label">${r[0]}</div>
+      <div class="formula">${r[1]}</div>
+      <div class="value">${r[2]}</div>
+    </div>
+  `).join('');
+}
+['inTP','inFP','inFN','inTN'].forEach(id => document.getElementById(id).addEventListener('input', recalcCalculator));
+recalcCalculator();
+
+/* ---------------- DRAG-AND-DROP CALCULATOR HELPER ---------------- */
+// Renders a set of draggable number tokens plus a formula with blank slots.
+// Students drag (or click-to-place) the given numbers into the slots; once every
+// slot in the formula is filled, the live result is computed and displayed.
+// This never grades or reveals the correct answer — it's purely an arithmetic aid.
+function renderCalcHelper(helper, container) {
+  const placed = {};       // slotId -> numeric value currently placed there
+  let selectedTokenId = null;
+
+  function slotIds() {
+    return helper.formulaParts.filter(p => p.slot).map(p => p.slot);
+  }
+
+  function allFilled() {
+    return slotIds().every(sid => placed.hasOwnProperty(sid));
+  }
+
+  function computeResult() {
+    if (!allFilled()) return null;
+    try { return helper.compute(placed); } catch (e) { return null; }
+  }
+
+  function formatSlotValue(v) {
+    return Number.isInteger(v) ? String(v) : String(v);
+  }
+
+  function draw() {
+    const tokensHtml = helper.tokens.map(t => `
+      <button type="button" class="calc-token${selectedTokenId === t.id ? ' selected' : ''}" draggable="true" data-token="${t.id}">${t.label}</button>
+    `).join('');
+
+    const formulaHtml = helper.formulaParts.map(p => {
+      if (p.text !== undefined) return `<span class="calc-text">${p.text}</span>`;
+      const filled = placed.hasOwnProperty(p.slot);
+      const display = filled ? formatSlotValue(placed[p.slot]) : '';
+      return `<span class="calc-slot${filled ? ' filled' : ''}" data-slot="${p.slot}">${display}</span>`;
+    }).join('');
+
+    const result = computeResult();
+    const resultHtml = result === null ? '—' : helper.format(result);
+
+    container.innerHTML = `
+      <div class="calc-helper">
+        <div class="calc-helper-label">🧮 Drag the values into the formula to calculate (optional helper — not graded)</div>
+        <div class="calc-tokens">${tokensHtml}</div>
+        <div class="calc-formula">${formulaHtml}<span class="calc-eq">=</span><span class="calc-result">${resultHtml}</span></div>
+        <button type="button" class="calc-clear-btn">Clear</button>
+      </div>
+    `;
+
+    container.querySelectorAll('.calc-token').forEach(btn => {
+      btn.addEventListener('dragstart', e => {
+        e.dataTransfer.setData('text/plain', btn.dataset.token);
+      });
+      btn.addEventListener('click', () => {
+        selectedTokenId = (selectedTokenId === btn.dataset.token) ? null : btn.dataset.token;
+        draw();
+      });
+    });
+
+    container.querySelectorAll('.calc-slot').forEach(slotEl => {
+      slotEl.addEventListener('dragover', e => { e.preventDefault(); slotEl.classList.add('dragover'); });
+      slotEl.addEventListener('dragleave', () => slotEl.classList.remove('dragover'));
+      slotEl.addEventListener('drop', e => {
+        e.preventDefault();
+        const tokenId = e.dataTransfer.getData('text/plain');
+        placeToken(tokenId, slotEl.dataset.slot);
+      });
+      slotEl.addEventListener('click', () => {
+        const slotId = slotEl.dataset.slot;
+        if (selectedTokenId) {
+          placeToken(selectedTokenId, slotId);
+        } else if (placed.hasOwnProperty(slotId)) {
+          delete placed[slotId];
+          draw();
+        }
+      });
+    });
+
+    const clearBtn = container.querySelector('.calc-clear-btn');
+    clearBtn.addEventListener('click', () => {
+      Object.keys(placed).forEach(k => delete placed[k]);
+      selectedTokenId = null;
+      draw();
+    });
+  }
+
+  function placeToken(tokenId, slotId) {
+    const token = helper.tokens.find(t => t.id === tokenId);
+    if (!token) return;
+    placed[slotId] = token.value;
+    selectedTokenId = null;
+    draw();
+  }
+
+  draw();
+}
+
+/* ---------------- GENERIC QUIZ ENGINE ---------------- */
+function buildQuiz(containerId, questions, opts) {
+  const container = document.getElementById(containerId);
+  // Prefix all generated element ids with containerId so they are unique document-wide,
+  // even though multiple quiz instances exist in the DOM at once.
+  const id = (name) => containerId + '-' + name;
+  let idx = 0, score = 0, answered = false;
+  const history = [];
+
+  function render() {
+    if (idx >= questions.length) { renderSummary(); return; }
+    const q = questions[idx];
+    answered = false;
+    const pct = Math.round((idx / questions.length) * 100);
+    let html = `
+      <div class="progress-row"><span>Question ${idx+1} of ${questions.length}</span><span>Score: ${score}</span></div>
+      <div class="progress-bar"><div class="progress-bar-fill" style="width:${pct}%"></div></div>
+      <div class="q-prompt">${q.prompt}</div>
+      ${q.hint ? `<div class="q-hint">${q.hint}</div>` : ''}
+      <div id="${id('answerArea')}"></div>
+      <div id="${id('calcHelperArea')}"></div>
+      <div id="${id('feedbackArea')}"></div>
+      <div id="${id('actionArea')}"></div>
+    `;
+    container.innerHTML = html;
+
+    const answerArea = container.querySelector('#' + id('answerArea'));
+    if (q.type === 'numeric') {
+      answerArea.innerHTML = `
+        <div class="answer-row">
+          <input type="text" id="${id('numAnswer')}" placeholder="${q.placeholder || 'Your answer'}">
+          <span class="muted">${q.unit || ''}</span>
+        </div>
+      `;
+      container.querySelector('#' + id('numAnswer')).addEventListener('keydown', e => {
+        if (e.key === 'Enter') submitAnswer();
+      });
+      if (q.calcHelper) {
+        const calcHelperArea = container.querySelector('#' + id('calcHelperArea'));
+        renderCalcHelper(q.calcHelper, calcHelperArea);
+      }
+    } else if (q.type === 'choice') {
+      const list = document.createElement('div');
+      list.className = 'choice-list';
+      q.choices.forEach((choice, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'choice-btn';
+        btn.textContent = choice;
+        btn.dataset.idx = i;
+        btn.addEventListener('click', () => selectChoice(i));
+        list.appendChild(btn);
+      });
+      answerArea.appendChild(list);
+    }
+
+    const actionArea = container.querySelector('#' + id('actionArea'));
+    const submitBtn = document.createElement('button');
+    submitBtn.className = 'primary';
+    submitBtn.textContent = 'Submit Answer';
+    submitBtn.id = id('submitBtn');
+    submitBtn.addEventListener('click', submitAnswer);
+    actionArea.appendChild(submitBtn);
+  }
+
+  let selectedChoice = null;
+  function selectChoice(i) {
+    if (answered) return;
+    selectedChoice = i;
+    container.querySelectorAll('.choice-btn').forEach(b => b.classList.toggle('selected', parseInt(b.dataset.idx) === i));
+  }
+
+  function submitAnswer() {
+    if (answered) { nextQuestion(); return; }
+    const q = questions[idx];
+    let isCorrect = false;
+    let userAnswerDisplay = '';
+
+    if (q.type === 'numeric') {
+      const inputEl = container.querySelector('#' + id('numAnswer'));
+      const raw = inputEl.value.trim();
+      const val = parseFloat(raw.replace('%',''));
+      userAnswerDisplay = raw || '(blank)';
+      if (!isNaN(val)) {
+        isCorrect = Math.abs(val - q.answer) <= q.tolerance;
+      }
+      inputEl.disabled = true;
+    } else if (q.type === 'choice') {
+      if (selectedChoice === null) { return; }
+      isCorrect = selectedChoice === q.correctIndex;
+      userAnswerDisplay = q.choices[selectedChoice];
+      container.querySelectorAll('.choice-btn').forEach((b, i) => {
+        b.disabled = true;
+        if (i === q.correctIndex) b.classList.add('correct');
+        else if (i === selectedChoice) b.classList.add('incorrect');
+      });
+    }
+
+    if (isCorrect) score++;
+    history.push({ prompt: q.prompt, userAnswer: userAnswerDisplay, correct: isCorrect, explanation: q.explanation, correctAnswerText: q.correctAnswerText || '' });
+
+    const fb = container.querySelector('#' + id('feedbackArea'));
+    fb.innerHTML = `<div class="feedback-box ${isCorrect ? 'correct' : 'incorrect'}">
+      <strong>${isCorrect ? 'Correct' : 'Not quite'}</strong>
+      ${q.explanation}
+    </div>`;
+
+    answered = true;
+    selectedChoice = null;
+    const submitBtn = container.querySelector('#' + id('submitBtn'));
+    submitBtn.textContent = (idx === questions.length - 1) ? 'See Results' : 'Next Question';
+  }
+
+  function nextQuestion() {
+    idx++;
+    render();
+  }
+
+  function renderSummary() {
+    const pct = Math.round((score / questions.length) * 100);
+    let html = `
+      <h2>Results</h2>
+      <div class="summary-score">${score} / ${questions.length}</div>
+      <p class="muted">${pct}% correct</p>
+      <h3>Review</h3>
+    `;
+    history.forEach(h => {
+      html += `
+        <div class="review-item ${h.correct ? 'hit' : 'miss'}">
+          <div class="qtext">${h.prompt}</div>
+          <div class="meta">Your answer: ${h.userAnswer} ${h.correct ? '✅' : '❌'}</div>
+          <div>${h.explanation}</div>
+        </div>
+      `;
+    });
+    html += `<button class="secondary" id="${id('retryBtn')}" style="margin-top:14px;">Try Again</button>`;
+    container.innerHTML = html;
+    container.querySelector('#' + id('retryBtn')).addEventListener('click', () => {
+      idx = 0; score = 0; history.length = 0; render();
+    });
+  }
+
+  render();
+}
+
+/* ---------------- CALCULATION PRACTICE DATA ---------------- */
+const practiceQuestions = [
+  {
+    type: 'numeric',
+    prompt: 'A new test for deep vein thrombosis (DVT) is compared against ultrasound (gold standard) in 120 patients: TP = 54, FN = 6, FP = 18, TN = 42. Calculate the <strong>sensitivity</strong> of the test.',
+    placeholder: 'e.g., 94', unit: '%',
+    answer: 90, tolerance: 1,
+    explanation: 'Sensitivity = TP / (TP + FN) = 54 / (54 + 6) = 54/60 = 0.90 = <strong>90%</strong>.',
+    calcHelper: {
+      tokens: [
+        { id: 'TP', label: 'TP = 54', value: 54 },
+        { id: 'FP', label: 'FP = 18', value: 18 },
+        { id: 'FN', label: 'FN = 6', value: 6 },
+        { id: 'TN', label: 'TN = 42', value: 42 },
+      ],
+      formulaParts: [ {slot:'num'}, {text:' / ('}, {slot:'den1'}, {text:' + '}, {slot:'den2'}, {text:')'} ],
+      compute: v => v.num / (v.den1 + v.den2),
+      format: r => (r*100).toFixed(1) + '%'
+    }
+  },
+  {
+    type: 'numeric',
+    prompt: 'Using the same DVT study (TP = 54, FN = 6, FP = 18, TN = 42), calculate the <strong>specificity</strong>.',
+    placeholder: 'e.g., 94', unit: '%',
+    answer: 70, tolerance: 1,
+    explanation: 'Specificity = TN / (TN + FP) = 42 / (42 + 18) = 42/60 = 0.70 = <strong>70%</strong>.',
+    calcHelper: {
+      tokens: [
+        { id: 'TP', label: 'TP = 54', value: 54 },
+        { id: 'FP', label: 'FP = 18', value: 18 },
+        { id: 'FN', label: 'FN = 6', value: 6 },
+        { id: 'TN', label: 'TN = 42', value: 42 },
+      ],
+      formulaParts: [ {slot:'num'}, {text:' / ('}, {slot:'den1'}, {text:' + '}, {slot:'den2'}, {text:')'} ],
+      compute: v => v.num / (v.den1 + v.den2),
+      format: r => (r*100).toFixed(1) + '%'
+    }
+  },
+  {
+    type: 'numeric',
+    prompt: 'Using the same DVT study (TP = 54, FN = 6, FP = 18, TN = 42), calculate the <strong>positive predictive value (PPV)</strong>.',
+    placeholder: 'e.g., 94', unit: '%',
+    answer: 75, tolerance: 1,
+    explanation: 'PPV = TP / (TP + FP) = 54 / (54 + 18) = 54/72 = 0.75 = <strong>75%</strong>.',
+    calcHelper: {
+      tokens: [
+        { id: 'TP', label: 'TP = 54', value: 54 },
+        { id: 'FP', label: 'FP = 18', value: 18 },
+        { id: 'FN', label: 'FN = 6', value: 6 },
+        { id: 'TN', label: 'TN = 42', value: 42 },
+      ],
+      formulaParts: [ {slot:'num'}, {text:' / ('}, {slot:'den1'}, {text:' + '}, {slot:'den2'}, {text:')'} ],
+      compute: v => v.num / (v.den1 + v.den2),
+      format: r => (r*100).toFixed(1) + '%'
+    }
+  },
+  {
+    type: 'numeric',
+    prompt: 'Using the same DVT study (TP = 54, FN = 6, FP = 18, TN = 42), calculate the <strong>negative predictive value (NPV)</strong>.',
+    placeholder: 'e.g., 94', unit: '%',
+    answer: 87.5, tolerance: 1,
+    explanation: 'NPV = TN / (TN + FN) = 42 / (42 + 6) = 42/48 = 0.875 = <strong>87.5%</strong>.',
+    calcHelper: {
+      tokens: [
+        { id: 'TP', label: 'TP = 54', value: 54 },
+        { id: 'FP', label: 'FP = 18', value: 18 },
+        { id: 'FN', label: 'FN = 6', value: 6 },
+        { id: 'TN', label: 'TN = 42', value: 42 },
+      ],
+      formulaParts: [ {slot:'num'}, {text:' / ('}, {slot:'den1'}, {text:' + '}, {slot:'den2'}, {text:')'} ],
+      compute: v => v.num / (v.den1 + v.den2),
+      format: r => (r*100).toFixed(1) + '%'
+    }
+  },
+  {
+    type: 'numeric',
+    prompt: 'A test has a sensitivity of 90% and specificity of 70%. Calculate the <strong>positive likelihood ratio (LR+)</strong>. Round to one decimal.',
+    placeholder: 'e.g., 94',
+    answer: 3.0, tolerance: 0.1,
+    explanation: 'LR+ = Sensitivity / (1 − Specificity) = 0.90 / (1 − 0.70) = 0.90 / 0.30 = <strong>3.0</strong>.',
+    calcHelper: {
+      tokens: [
+        { id: 'SENS', label: 'Sensitivity = 0.90', value: 0.90 },
+        { id: 'SPEC', label: 'Specificity = 0.70', value: 0.70 },
+      ],
+      formulaParts: [ {slot:'num'}, {text:' / (1 − '}, {slot:'den'}, {text:')'} ],
+      compute: v => v.num / (1 - v.den),
+      format: r => r.toFixed(2)
+    }
+  },
+  {
+    type: 'numeric',
+    prompt: 'Using the same test (sensitivity 90%, specificity 70%), calculate the <strong>negative likelihood ratio (LR−)</strong>. Round to two decimals.',
+    placeholder: 'e.g., 94',
+    answer: 0.14, tolerance: 0.01,
+    explanation: 'LR− = (1 − Sensitivity) / Specificity = (1 − 0.90) / 0.70 = 0.10 / 0.70 = <strong>0.14</strong>.',
+    calcHelper: {
+      tokens: [
+        { id: 'SENS', label: 'Sensitivity = 0.90', value: 0.90 },
+        { id: 'SPEC', label: 'Specificity = 0.70', value: 0.70 },
+      ],
+      formulaParts: [ {text:'(1 − '}, {slot:'num'}, {text:') / '}, {slot:'den'} ],
+      compute: v => (1 - v.num) / v.den,
+      format: r => r.toFixed(2)
+    }
+  },
+  {
+    type: 'numeric',
+    prompt: 'A case-control study examines prior hamstring strain as a risk factor for ACL injury. Among 50 cases (ACL injury), 30 had a prior hamstring strain and 20 did not. Among 50 controls, 12 had a prior hamstring strain and 38 did not. Calculate the <strong>odds ratio</strong>. Round to two decimals.',
+    placeholder: 'e.g., 94',
+    answer: 4.75, tolerance: 0.1,
+    explanation: 'OR = (30/20) / (12/38) = 1.5 / 0.316 = <strong>4.75</strong>. Athletes with a prior hamstring strain have about 4.75x the odds of ACL injury compared to those without.',
+    calcHelper: {
+      tokens: [
+        { id: 'CASE_STRAIN', label: 'Cases w/ strain = 30', value: 30 },
+        { id: 'CASE_NOSTRAIN', label: 'Cases w/o strain = 20', value: 20 },
+        { id: 'CTRL_STRAIN', label: 'Controls w/ strain = 12', value: 12 },
+        { id: 'CTRL_NOSTRAIN', label: 'Controls w/o strain = 38', value: 38 },
+      ],
+      formulaParts: [ {text:'('}, {slot:'a'}, {text:' / '}, {slot:'b'}, {text:') / ('}, {slot:'c'}, {text:' / '}, {slot:'d'}, {text:')'} ],
+      compute: v => (v.a / v.b) / (v.c / v.d),
+      format: r => r.toFixed(2)
+    }
+  },
+  {
+    type: 'numeric',
+    prompt: 'A cohort of 500 athletes is followed for one season: 200 use a new ACL prevention program and 300 do not. 20 of the 200 program users sustain an ACL injury; 45 of the 300 non-users do. Calculate the <strong>risk ratio</strong> (program users vs. non-users). Round to two decimals.',
+    placeholder: 'e.g., 94',
+    answer: 0.67, tolerance: 0.02,
+    explanation: 'Risk (exposed) = 20/200 = 0.10. Risk (unexposed) = 45/300 = 0.15. Risk Ratio = 0.10 / 0.15 = <strong>0.67</strong>. The program is associated with a 33% relative risk reduction.',
+    calcHelper: {
+      tokens: [
+        { id: 'INJ_PROGRAM', label: 'ACL injuries (program) = 20', value: 20 },
+        { id: 'PROGRAM_USERS', label: 'Program users = 200', value: 200 },
+        { id: 'INJ_NOPROGRAM', label: 'ACL injuries (no program) = 45', value: 45 },
+        { id: 'NONUSERS', label: 'Non-users = 300', value: 300 },
+      ],
+      formulaParts: [ {text:'('}, {slot:'a'}, {text:' / '}, {slot:'b'}, {text:') / ('}, {slot:'c'}, {text:' / '}, {slot:'d'}, {text:')'} ],
+      compute: v => (v.a / v.b) / (v.c / v.d),
+      format: r => r.toFixed(2)
+    }
+  },
+  {
+    type: 'numeric',
+    prompt: 'In a clinic population of 2,000 patients, 80 currently have low back pain with radiculopathy. Calculate the <strong>prevalence</strong>.',
+    placeholder: 'e.g., 94', unit: '%',
+    answer: 4, tolerance: 0.2,
+    explanation: 'Prevalence = existing cases / total population = 80 / 2000 = 0.04 = <strong>4%</strong>.',
+    calcHelper: {
+      tokens: [
+        { id: 'CASES', label: 'Existing cases = 80', value: 80 },
+        { id: 'POP', label: 'Total population = 2,000', value: 2000 },
+      ],
+      formulaParts: [ {slot:'num'}, {text:' / '}, {slot:'den'} ],
+      compute: v => v.num / v.den,
+      format: r => (r*100).toFixed(1) + '%'
+    }
+  },
+  {
+    type: 'numeric',
+    prompt: 'Over one year, a population at risk of 5,000 person-years has 25 new cases of ACL injury. Calculate the <strong>incidence rate</strong> per 1,000 person-years.',
+    placeholder: 'e.g., 94',
+    answer: 5, tolerance: 0.5,
+    explanation: 'Incidence = new cases / population at risk = 25 / 5,000 = 0.005, or <strong>5 cases per 1,000 person-years</strong>.',
+    calcHelper: {
+      tokens: [
+        { id: 'NEWCASES', label: 'New cases = 25', value: 25 },
+        { id: 'POPRISK', label: 'Population at risk = 5,000', value: 5000 },
+      ],
+      formulaParts: [ {slot:'num'}, {text:' / '}, {slot:'den'}, {text:' × 1,000'} ],
+      compute: v => (v.num / v.den) * 1000,
+      format: r => r.toFixed(1) + ' per 1,000 person-years'
+    }
+  },
+];
+
+/* ---------------- CLINICAL SCENARIOS DATA ---------------- */
+const scenarioQuestions = [
+  {
+    type: 'choice',
+    prompt: 'A screening test for a serious but treatable disease has sensitivity 98% and specificity 60%. What is its primary clinical usefulness?',
+    choices: [
+      'Excellent for ruling OUT disease when the result is negative (SnNout)',
+      'Excellent for ruling IN disease when the result is positive',
+      'Equally good at ruling disease in and out',
+      'Not useful in any clinical context'
+    ],
+    correctIndex: 0,
+    explanation: 'High sensitivity tests are best for ruling OUT disease when negative (SnNout). The low specificity means many false positives, so a positive result needs confirmatory testing.'
+  },
+  {
+    type: 'choice',
+    prompt: 'A confirmatory test has sensitivity 70% and specificity 99%. A positive result on this test...',
+    choices: [
+      'Strongly rules IN the disease (SpPin)',
+      'Strongly rules OUT the disease',
+      'Is uninformative either way',
+      'Means the test should be repeated regardless'
+    ],
+    correctIndex: 0,
+    explanation: 'High specificity tests are best for ruling IN disease when positive (SpPin) — a positive result is unlikely to be a false alarm.'
+  },
+  {
+    type: 'choice',
+    prompt: 'The same diagnostic test (sensitivity 90%, specificity 90%) is used in a specialty clinic (prevalence 40%) and a community screening program (prevalence 2%). In which setting will the PPV be higher?',
+    choices: [
+      'The low-prevalence community screening',
+      'The high-prevalence specialty clinic',
+      'PPV will be identical in both settings',
+      'PPV cannot be affected by prevalence'
+    ],
+    correctIndex: 1,
+    explanation: 'PPV is highly sensitive to prevalence. Even with the same sensitivity and specificity, a lower prevalence means false positives make up a larger share of all positive results, lowering PPV.'
+  },
+  {
+    type: 'choice',
+    prompt: 'A test has a positive likelihood ratio (LR+) of 10. What does this tell you?',
+    choices: [
+      'A positive result is 10 times more likely in someone with the disease than without it, substantially raising post-test probability',
+      'The disease is 10 times more prevalent than expected',
+      'The test has a sensitivity of 10%',
+      'The test has a specificity of 10%'
+    ],
+    correctIndex: 0,
+    explanation: 'LR+ compares how much more likely a positive result is in diseased vs. non-diseased patients. LR+ values above 10 produce a large, often decisive increase in post-test probability of disease.'
+  },
+  {
+    type: 'choice',
+    prompt: 'Which study design typically requires calculating an odds ratio rather than a risk ratio, because true incidence cannot be directly measured?',
+    choices: [
+      'Case-control study',
+      'Randomized controlled trial',
+      'Prospective cohort study',
+      'Cross-sectional prevalence survey'
+    ],
+    correctIndex: 0,
+    explanation: 'In case-control studies, participants are selected based on outcome status, so true incidence/risk in the population cannot be calculated directly — odds ratios are used instead.'
+  },
+  {
+    type: 'choice',
+    prompt: 'A study reports an odds ratio of 0.4 for ACL injury comparing athletes who use a prevention program to those who do not. This means the program is associated with:',
+    choices: [
+      'Lower odds of ACL injury',
+      'Higher odds of ACL injury',
+      'No association with ACL injury',
+      'An odds ratio cannot describe direction of association'
+    ],
+    correctIndex: 0,
+    explanation: 'An OR less than 1 means the event (ACL injury) is less likely in the exposed (program) group than the comparison group.'
+  },
+  {
+    type: 'choice',
+    prompt: 'A physical therapist wants to know how many NEW cases of low back pain develop in a workplace population over the next year, to plan a prevention program. Which measure should be tracked?',
+    choices: [
+      'Incidence',
+      'Prevalence',
+      'Positive predictive value',
+      'Specificity'
+    ],
+    correctIndex: 0,
+    explanation: 'Incidence measures new cases over a defined period — exactly what is needed to plan prevention efforts and estimate ongoing risk.'
+  },
+  {
+    type: 'choice',
+    prompt: 'A screening tool with low specificity is used widely in a low-prevalence population. What is the most likely downstream consequence?',
+    choices: [
+      'A large number of false positives, leading to unnecessary follow-up testing and patient anxiety',
+      'Most true cases will be missed',
+      'PPV will be very high',
+      'No clinically meaningful consequence'
+    ],
+    correctIndex: 0,
+    explanation: 'Low specificity means many people without the disease test positive. In a low-prevalence population, this drives PPV down and increases unnecessary downstream testing.'
+  },
+  {
+    type: 'choice',
+    prompt: 'A risk ratio of 0.6 for re-injury comparing a structured return-to-sport protocol to standard care means the protocol is associated with a ____ relative risk reduction.',
+    choices: [
+      '40%',
+      '60%',
+      '6%',
+      '140%'
+    ],
+    correctIndex: 0,
+    explanation: 'Relative risk reduction = 1 − RR = 1 − 0.6 = 0.4, or 40%.'
+  },
+  {
+    type: 'choice',
+    prompt: 'Before ordering a costly MRI for a suspected stress fracture, you want a quick test to help RULE OUT the fracture if negative. Test A: sensitivity 95%, specificity 50%. Test B: sensitivity 60%, specificity 95%. Which is the better choice for this purpose?',
+    choices: [
+      'Test A',
+      'Test B',
+      'Either test works equally well for this purpose',
+      'Neither test is useful for ruling out disease'
+    ],
+    correctIndex: 0,
+    explanation: 'High sensitivity is what matters for ruling out disease (SnNout) — Test A\'s 95% sensitivity makes a negative result more reassuring than Test B\'s 60% sensitivity.'
+  },
+];
+
+buildQuiz('practiceContainer', practiceQuestions);
+buildQuiz('scenariosContainer', scenarioQuestions);
+
+/* ---------------- MATCHING GAME ---------------- */
+const matchPairs = [
+  { term: 'Sensitivity', formula: 'TP / (TP + FN)', mnemonic: 'Sensitivity Sees the Sick' },
+  { term: 'Specificity', formula: 'TN / (TN + FP)', mnemonic: 'Specificity Spots the Healthy' },
+  { term: 'Positive Predictive Value (PPV)', formula: 'TP / (TP + FP)', mnemonic: '' },
+  { term: 'Negative Predictive Value (NPV)', formula: 'TN / (TN + FN)', mnemonic: '' },
+  { term: 'Odds Ratio (OR)', formula: '(TP/FN) / (FP/TN)', mnemonic: '' },
+  { term: 'Likelihood Ratio + (LR+)', formula: 'Sensitivity / (1 − Specificity)', mnemonic: '' },
+  { term: 'Likelihood Ratio − (LR−)', formula: '(1 − Sensitivity) / Specificity', mnemonic: '' },
+  { term: 'Prevalence', formula: 'Existing cases / Total population', mnemonic: 'Prevalence Paints the Population Picture' },
+  { term: 'Incidence', formula: 'New cases / Population at risk (over time)', mnemonic: 'Incidence Indicates Incoming Issues' },
+  { term: 'Risk Ratio (RR)', formula: 'Incidence (exposed) / Incidence (unexposed)', mnemonic: '' },
+];
+
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function buildMatchingGame(containerId, pairs) {
+  const container = document.getElementById(containerId);
+  const terms = shuffle(pairs.map((p, i) => ({ text: p.term, i })));
+  const formulas = shuffle(pairs.map((p, i) => ({ text: p.formula, i })));
+  let selectedTerm = null, selectedFormula = null;
+  let solvedCount = 0, attempts = 0;
+
+  function render() {
+    let html = `
+      <h2>Matching Game</h2>
+      <p class="muted">Click a term, then click its matching formula. Solved pairs turn green.</p>
+      <div class="match-stats"><span>Solved: <strong>${solvedCount} / ${pairs.length}</strong></span><span>Attempts: <strong>${attempts}</strong></span></div>
+      <div class="match-grid">
+        <div id="termsCol"></div>
+        <div id="formulasCol"></div>
+      </div>
+      <div id="matchSummary"></div>
+    `;
+    container.innerHTML = html;
+
+    const termsCol = document.getElementById('termsCol');
+    terms.forEach(t => {
+      const btn = document.createElement('button');
+      btn.className = 'match-btn';
+      btn.textContent = t.text;
+      btn.dataset.i = t.i;
+      if (solved.has(t.i)) { btn.classList.add('solved'); btn.disabled = true; }
+      btn.addEventListener('click', () => pick('term', t.i, btn));
+      termsCol.appendChild(btn);
+    });
+
+    const formulasCol = document.getElementById('formulasCol');
+    formulas.forEach(f => {
+      const btn = document.createElement('button');
+      btn.className = 'match-btn';
+      btn.textContent = f.text;
+      btn.dataset.i = f.i;
+      if (solved.has(f.i)) { btn.classList.add('solved'); btn.disabled = true; }
+      btn.addEventListener('click', () => pick('formula', f.i, btn));
+      formulasCol.appendChild(btn);
+    });
+
+    if (solvedCount === pairs.length) {
+      const acc = Math.round((pairs.length / attempts) * 100);
+      let summary = `
+        <div class="card" style="margin-top:18px; border-color:var(--good);">
+          <h3>All matched! 🎉</h3>
+          <p>Solved ${pairs.length} pairs in ${attempts} attempts (${acc}% efficiency).</p>
+          <h3>Review</h3>
+      `;
+      pairs.forEach(p => {
+        summary += `<div class="review-item hit"><div class="qtext">${p.term}</div><div class="meta">${p.formula}</div>${p.mnemonic ? `<div class="muted">${p.mnemonic}</div>` : ''}</div>`;
+      });
+      summary += `<button class="secondary" id="matchRetry" style="margin-top:10px;">Play Again</button></div>`;
+      document.getElementById('matchSummary').innerHTML = summary;
+      document.getElementById('matchRetry').addEventListener('click', () => {
+        solved.clear(); solvedCount = 0; attempts = 0; selectedTerm = null; selectedFormula = null;
+        render();
+      });
+    }
+  }
+
+  const solved = new Set();
+
+  function pick(kind, i, btn) {
+    if (solved.has(i)) return;
+    if (kind === 'term') {
+      document.querySelectorAll('#termsCol .match-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      selectedTerm = i;
+    } else {
+      document.querySelectorAll('#formulasCol .match-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      selectedFormula = i;
+    }
+    if (selectedTerm !== null && selectedFormula !== null) {
+      attempts++;
+      if (selectedTerm === selectedFormula) {
+        solved.add(selectedTerm);
+        solvedCount++;
+        selectedTerm = null; selectedFormula = null;
+        render();
+      } else {
+        const termBtn = document.querySelector(`#termsCol .match-btn[data-i="${selectedTerm}"]`);
+        const formulaBtn = document.querySelector(`#formulasCol .match-btn[data-i="${selectedFormula}"]`);
+        [termBtn, formulaBtn].forEach(b => b && b.classList.add('shake'));
+        setTimeout(() => {
+          [termBtn, formulaBtn].forEach(b => b && b.classList.remove('shake', 'selected'));
+          selectedTerm = null; selectedFormula = null;
+        }, 500);
+      }
+    }
+  }
+
+  render();
+}
+
+buildMatchingGame('matchingContainer', matchPairs);
+</script>
+</body>
+</html>
