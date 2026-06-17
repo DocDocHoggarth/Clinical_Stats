@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Diagnose Before Discharge — Clinical Stats Escape Room</title>
+<style>
+  :root{
+    --red:#c8102e;
+    --dark:#4d4d4f;
+    --darker:#2e2e30;
+    --light:#f4f4f5;
+    --gold:#d4af37;
+    --green:#2e7d32;
+    --shadow:0 6px 18px rgba(0,0,0,.18);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;height:100%;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:linear-gradient(160deg,var(--darker) 0%,var(--dark) 45%,#3a3a3c 100%);
+    color:#222;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    -webkit-user-select:none;
+    user-select:none;
+    overscroll-behavior:none;
+  }
+  #app{
+    width:100%;
+    max-width:760px;
+    min-height:100vh;
+    background:var(--light);
+    display:flex;
+    flex-direction:column;
+    box-shadow:var(--shadow);
+  }
+  header#topbar{
+    background:var(--darker);
+    color:#fff;
+    padding:10px 16px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    position:sticky;
+    top:0;
+    z-index:5;
+  }
+  .hdrTitle{font-weight:700;font-size:.95rem;}
+  #scoreBadge{background:#1c1c1d;padding:6px 14px;border-radius:20px;font-weight:700;font-size:1.05rem;white-space:nowrap;}
+  main{flex:1;padding:22px 20px 40px;display:flex;flex-direction:column;}
+  .room{display:flex;flex-direction:column;gap:14px;animation:fadeIn .4s ease;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  h1{color:var(--red);font-size:1.5rem;margin:0 0 4px;}
+  h2{color:var(--dark);font-size:1.15rem;margin:0 0 6px;border-left:5px solid var(--red);padding-left:10px;}
+  p{line-height:1.5;margin:0 0 8px;font-size:1rem;}
+  .badge{
+    display:inline-block;background:var(--red);color:#fff;font-size:.7rem;
+    font-weight:700;letter-spacing:.5px;text-transform:uppercase;
+    padding:3px 10px;border-radius:20px;margin-bottom:6px;
+  }
+  .card{
+    background:#fff;border-radius:12px;padding:16px;box-shadow:var(--shadow);
+    border:1px solid #e2e2e4;
+  }
+  table.datatbl{width:100%;border-collapse:collapse;margin:10px 0;font-size:.95rem;}
+  table.datatbl th,table.datatbl td{border:1px solid #ccc;padding:8px;text-align:center;}
+  table.datatbl th{background:var(--dark);color:#fff;}
+  .cite{font-size:.78rem;color:#777;font-style:italic;margin-top:6px;}
+  .mc{display:flex;flex-direction:column;gap:8px;margin:6px 0;}
+  .mc button{
+    text-align:left;padding:14px 16px;border-radius:10px;border:2px solid #ccc;
+    background:#fff;font-size:.97rem;cursor:pointer;line-height:1.4;
+  }
+  .mc button.selected{border-color:var(--red);background:#fdecee;}
+  .btnrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;}
+  button.primary{
+    background:var(--red);color:#fff;border:none;padding:14px 22px;border-radius:10px;
+    font-size:1.05rem;font-weight:700;cursor:pointer;flex:1;min-width:140px;
+    box-shadow:var(--shadow);
+  }
+  button.primary:active{transform:scale(.97);}
+  button.secondary{
+    background:#fff;color:var(--dark);border:2px solid var(--dark);padding:14px 18px;
+    border-radius:10px;font-size:1rem;font-weight:600;cursor:pointer;
+  }
+  button.secondary:active{transform:scale(.97);}
+  .msg{padding:10px 14px;border-radius:8px;font-weight:600;font-size:.95rem;display:none;}
+  .msg.bad{background:#fde2e2;color:#a31515;display:block;animation:shake .35s;}
+  .msg.good{background:#e3f3e2;color:var(--green);display:block;}
+  @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+  .hint{background:#fff8e6;border:1px dashed var(--gold);border-radius:8px;padding:10px 12px;font-size:.92rem;display:none;margin-top:4px;}
+  .hint.show{display:block;}
+  .toast{
+    position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+    background:var(--darker);color:#fff;padding:10px 18px;border-radius:30px;
+    font-size:.9rem;z-index:120;opacity:0;transition:opacity .3s;pointer-events:none;
+  }
+  .toast.show{opacity:1;}
+  .modal{
+    position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;
+    justify-content:center;z-index:100;padding:20px;
+  }
+  .modal.hidden{display:none;}
+  .modalbox{background:#fff;border-radius:14px;padding:22px;max-width:620px;max-height:85vh;overflow:auto;width:100%;}
+  .small{font-size:.8rem;color:#888;text-align:center;margin-top:18px;}
+  .center{text-align:center;}
+  .confetti{font-size:2.5rem;text-align:center;margin:8px 0;}
+  .keytbl{width:100%;font-size:.85rem;border-collapse:collapse;}
+  .keytbl td,.keytbl th{border:1px solid #ddd;padding:6px;text-align:left;}
+
+  /* ---- Drag & drop calculation tiles ---- */
+  .calcline{font-size:1.05rem;font-weight:600;color:var(--dark);margin:10px 0;display:flex;align-items:center;flex-wrap:wrap;gap:6px;}
+  .trayLabel{font-size:.82rem;color:#777;margin:10px 0 4px;font-weight:600;}
+  .tray{
+    display:flex;flex-wrap:wrap;gap:10px;background:#eaeaec;border-radius:10px;
+    padding:12px;min-height:60px;border:1px solid #ddd;
+  }
+  .slot{
+    display:inline-flex;min-width:62px;min-height:42px;align-items:center;justify-content:center;
+    border:2px dashed var(--red);border-radius:8px;background:#fff;padding:2px 8px;vertical-align:middle;
+  }
+  .slot.filled{border-style:solid;background:#fff9ec;}
+  .tile{
+    background:linear-gradient(160deg,#e6c358,var(--gold));
+    color:#2e2e30;font-weight:700;font-family:"Courier New",monospace;
+    padding:10px 16px;border-radius:8px;box-shadow:0 3px 8px rgba(0,0,0,.25);
+    cursor:grab;touch-action:none;user-select:none;font-size:1.02rem;
+  }
+  .tile.dragging{opacity:.9;box-shadow:0 10px 22px rgba(0,0,0,.4);}
+
+  /* ---- Hub / case board / hotspots ---- */
+  .hubStats{display:flex;gap:10px;flex-wrap:wrap;margin:4px 0 10px;}
+  .statBox{background:#fff;border-radius:10px;padding:10px 14px;box-shadow:var(--shadow);font-weight:700;color:var(--dark);display:flex;align-items:center;gap:8px;}
+  .letterRow{display:flex;gap:4px;}
+  .letterTile{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:700;font-family:"Courier New",monospace;font-size:.9rem;}
+  .letterTile.got{background:var(--gold);color:#2e2e30;}
+  .letterTile.pending{background:#ddd;color:#999;}
+
+  .scene{
+    position:relative;min-height:560px;
+    background:repeating-linear-gradient(45deg,#e8e1d3,#e8e1d3 10px,#ddd4bf 10px,#ddd4bf 20px);
+    border:3px solid #c9bd9e;border-radius:14px;margin:6px 0 16px;overflow:hidden;
+  }
+  .hotspot{
+    position:absolute;transform:translate(-50%,-50%);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
+    background:#fff;border:3px solid var(--dark);border-radius:50%;
+    width:88px;height:88px;box-shadow:var(--shadow);cursor:pointer;padding:4px;
+  }
+  .hotspot:active{transform:translate(-50%,-50%) scale(.95);}
+  .hotspot .hsIcon{font-size:1.7rem;line-height:1;}
+  .hotspot .hsLabel{font-size:.62rem;font-weight:700;text-align:center;color:var(--dark);line-height:1.05;padding:0 2px;}
+  .hotspot .hsBadge{
+    position:absolute;top:-8px;right:-8px;background:var(--red);color:#fff;border-radius:50%;
+    width:26px;height:26px;display:flex;align-items:center;justify-content:center;
+    font-size:.85rem;font-weight:700;border:2px solid #fff;
+  }
+  .hotspot.solved{border-color:var(--green);}
+  .hotspot.solved .hsBadge{background:var(--green);}
+  .hotspot.bonusSpot{width:62px;height:62px;border-style:dashed;opacity:.9;}
+  .hotspot.bonusSpot .hsIcon{font-size:1.25rem;}
+
+  .finalPanel{margin:4px 0 14px;padding:18px;border-radius:12px;text-align:center;font-weight:700;font-size:1.05rem;}
+  .finalPanel.locked{background:#ddd;color:#888;}
+  .finalPanel.ready{
+    background:linear-gradient(135deg,var(--red),#8e0c20);color:#fff;cursor:pointer;
+    animation:glow 1.6s infinite;
+  }
+  @keyframes glow{0%{box-shadow:0 0 0 0 rgba(200,16,46,.5);}70%{box-shadow:0 0 0 16px rgba(200,16,46,0);}100%{box-shadow:0 0 0 0 rgba(200,16,46,0);}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header id="topbar">
+    <div class="hdrTitle">🩺 Diagnose Before Discharge</div>
+    <div id="scoreBadge">⭐ <span id="scoreDisplay">0</span> pts</div>
+  </header>
+  <main id="roomContainer"></main>
+</div>
+<div class="toast" id="toast"></div>
+
+<div class="modal hidden" id="activityModal">
+  <div class="modalbox"></div>
+</div>
+
+<div class="modal hidden" id="facilitatorModal">
+  <div class="modalbox">
+    <h2 style="border:none;padding:0;">🔑 Facilitator Key</h2>
+    <p class="small" style="text-align:left;">Instructor reference only.</p>
+    <table class="keytbl">
+      <tr><th>Station</th><th>Answer(s)</th><th>Tolerance</th><th>Points / Letter</th></tr>
+      <tr><td>Exam Room 1 — Lachman table</td><td>TP=17, FN=3, FP=3, TN=47</td><td>±1 each</td><td>100 pts → letter A</td></tr>
+      <tr><td>Exam Room 2 — McMurray LR</td><td>LR+ ≈2.41 (Moderate), LR− ≈0.42 (Moderate)</td><td>±0.2 / ±0.1</td><td>100 pts → letter E</td></tr>
+      <tr><td>Records Room — Prevalence/PPV/NPV</td><td>Sports: PPV 78%, NPV 61%. Primary care: PPV 21%, NPV 96%</td><td>±4%</td><td>100 pts → letter N</td></tr>
+      <tr><td>Risk Chart Review — OR / RR</td><td>OR ≈23.2 (smoking/lung CA), RR ≈2.19 (paratrooper mTBI)</td><td>OR ±2, RR ±0.2</td><td>100 pts → letter X</td></tr>
+      <tr><td>Grand Rounds — Capstone</td><td>PPV to quote = 78%; MC = "SpPIn ACL + moderate/setting-dependent meniscus, recommend MRI"</td><td>±4%</td><td>100 pts → letter I</td></tr>
+      <tr><td>Sideline Consult — Hawkins-Kennedy LR</td><td>LR+ ≈1.93 (Minimal), LR− ≈0.36 (Moderate)</td><td>±0.2 / ±0.1</td><td>100 pts → letter M</td></tr>
+      <tr><td>Training Room — Incidence rate</td><td>IR = 2.0 per 1000 AE; MC = "far higher than the 0.089/1000 AE benchmark, flag it"</td><td>±0.2</td><td>100 pts → letter E</td></tr>
+      <tr><td>Mystery Folder — Bonus</td><td>"Not clinically indicated — wrong body region" (Spurling's = cervical, not knee)</td><td>exact</td><td>50 pts, no letter</td></tr>
+      <tr><td>Final Escape</td><td>Unscramble A+E+N+X+I+M+E → <strong>EXAMINE</strong></td><td>exact order</td><td>100 pts (−10/extra attempt, floor 50)</td></tr>
+    </table>
+    <p class="cite" style="margin-top:10px;">Each hint costs points (−20 main rooms, −10 bonus, −20 final) instead of time. Sources: Lachman Sn/Sp — Benjaminse A, Gokeler A, van der Schans CP. Am J Sports Med meta-analysis. McMurray &amp; Hawkins-Kennedy Sn/Sp — Hegedus EJ et al. systematic review/meta-analysis of orthopedic special tests (knee and shoulder). Smoking/lung cancer OR — Int J Cancer. 2011;131(5):1210–1219. Paratrooper mTBI RR — Knapik J, Steelman R. J Athl Train. 2016;51(11):962-80. ACL incidence benchmark — meta-analysis of ACL injury incidence in adolescent athletes (female athletes overall ≈0.089/1000 AE; soccer highest per-season risk among female athletes ≈1.08%).</p>
+    <div class="btnrow"><button class="primary" onclick="closeFacilitator()">Close</button></div>
+  </div>
+</div>
+
+<script>
+/* ===================== CONSTANTS ===================== */
+const MAIN_ROOMS = ['r1','r2','r3','r4','r5','r6','r7'];
+const LETTER_MAP = { r1:'A', r2:'E', r3:'N', r4:'X', r5:'I', r6:'M', r7:'E' };
+const FINAL_WORD = 'EXAMINE';
+const TITLES = {
+  r1:'Exam Room 1', r2:'Exam Room 2', r3:'Records Room',
+  r4:'Risk Chart Review', r5:'Grand Rounds', r6:'Sideline Consult',
+  r7:'Training Room', bonus:'Mystery Folder'
+};
+const ROOM_BASE = 100, BONUS_BASE = 50, FINAL_BASE = 100;
+const ROOM_HINT_PENALTY = 20, BONUS_HINT_PENALTY = 10, FINAL_HINT_PENALTY = 20;
+
+/* ===================== DRAG/DROP CALCULATION TILES ===================== */
+const DRAG_CONFIG = {
+  r1: { slots:['tp','fp','fn','tn'], correct:{tp:17,fp:3,fn:3,tn:47}, tol:{tp:1,fp:1,fn:1,tn:1}, tiles:["17","3","3","47","18","2","4","46"] },
+  r2: { slots:['lrplus','lrminus'], correct:{lrplus:2.41,lrminus:0.42}, tol:{lrplus:0.2,lrminus:0.1}, tiles:["2.41","0.42","0.70","0.71","1.45","0.59","3.45","6.00"] },
+  r3: { slots:['ppv_a','npv_a','ppv_b','npv_b'], correct:{ppv_a:78,npv_a:61,ppv_b:21,npv_b:96}, tol:{ppv_a:4,npv_a:4,ppv_b:4,npv_b:4}, tiles:["78","61","21","96","60","10","70","71"] },
+  r4: { slots:['or','rr'], correct:{or:23.2,rr:2.19}, tol:{or:2,rr:0.2}, tiles:["23.2","2.19","9.0","1.77","0.46","2.0"] },
+  r5: { slots:['ppv'], correct:{ppv:78}, tol:{ppv:4}, tiles:["78","61","21","96","85"] },
+  r6: { slots:['lrplus','lrminus'], correct:{lrplus:1.93,lrminus:0.36}, tol:{lrplus:0.2,lrminus:0.1}, tiles:["1.93","0.36","0.79","0.59","2.41","0.42","1.41","0.46"] },
+  r7: { slots:['ir'], correct:{ir:2.0}, tol:{ir:0.2}, tiles:["2.0","0.2","20","0.089","13.3","0.5"] }
+};
+
+function shuffle(arr){
+  for(let i=arr.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]] = [arr[j],arr[i]];
+  }
+  return arr;
+}
+function renderTray(prefix){
+  const cfg = DRAG_CONFIG[prefix];
+  const vals = shuffle([...cfg.tiles]);
+  const tiles = vals.map(v=>`<div class="tile" data-tray="${prefix}_tray" data-value="${v}">${v}</div>`).join('');
+  return `<div class="trayLabel">🧮 Drag the correct value(s) into the blank(s) above:</div><div class="tray" id="${prefix}_tray">${tiles}</div>`;
+}
+function slot(prefix,name,extra){
+  return `<span class="slot" data-slot="${prefix}_${name}">${extra||''}</span>`;
+}
+function slotValue(id){
+  const s = document.querySelector('[data-slot="'+id+'"]');
+  const tile = s ? s.querySelector('.tile') : null;
+  return tile ? tile.dataset.value : null;
+}
+function near(val,target,tol){
+  const v = parseFloat(val);
+  if(isNaN(v)) return false;
+  return Math.abs(v-target) <= tol;
+}
+function checkAllSlots(prefix){
+  const cfg = DRAG_CONFIG[prefix];
+  return cfg.slots.every(s=>near(slotValue(prefix+'_'+s), cfg.correct[s], cfg.tol[s]));
+}
+function resetTiles(prefix){
+  const cfg = DRAG_CONFIG[prefix];
+  const tray = document.getElementById(prefix+'_tray');
+  cfg.slots.forEach(s=>{
+    const sEl = document.querySelector('[data-slot="'+prefix+'_'+s+'"]');
+    const tile = sEl ? sEl.querySelector('.tile') : null;
+    if(tile && tray){ tray.appendChild(tile); sEl.classList.remove('filled'); }
+  });
+}
+
+/* generic pointer-based drag engine (touch + mouse, no external libs) */
+let dragging = null;
+function onTileSlotChange(slotEl){
+  slotEl.classList.toggle('filled', !!slotEl.querySelector('.tile'));
+}
+document.addEventListener('pointerdown', e=>{
+  const tile = e.target.closest('.tile');
+  if(!tile || dragging) return;
+  const rect = tile.getBoundingClientRect();
+  dragging = { el:tile, offsetX:e.clientX-rect.left, offsetY:e.clientY-rect.top, fromSlot: tile.closest('.slot') };
+  try{ tile.setPointerCapture(e.pointerId); }catch(err){}
+  tile.style.position='fixed';
+  tile.style.left=rect.left+'px';
+  tile.style.top=rect.top+'px';
+  tile.style.width=rect.width+'px';
+  tile.style.zIndex=999;
+  tile.classList.add('dragging');
+  document.body.appendChild(tile);
+  e.preventDefault();
+},{passive:false});
+
+document.addEventListener('pointermove', e=>{
+  if(!dragging) return;
+  dragging.el.style.left = (e.clientX-dragging.offsetX)+'px';
+  dragging.el.style.top = (e.clientY-dragging.offsetY)+'px';
+  e.preventDefault();
+},{passive:false});
+
+function endDrag(e){
+  if(!dragging) return;
+  const el = dragging.el;
+  const rect = el.getBoundingClientRect();
+  const cx = rect.left+rect.width/2, cy = rect.top+rect.height/2;
+  let targetSlot = null;
+  document.querySelectorAll('.slot').forEach(s=>{
+    const r = s.getBoundingClientRect();
+    if(cx>=r.left && cx<=r.right && cy>=r.top && cy<=r.bottom) targetSlot = s;
+  });
+  el.style.position=''; el.style.left=''; el.style.top=''; el.style.width=''; el.style.zIndex='';
+  el.classList.remove('dragging');
+
+  if(dragging.fromSlot) onTileSlotChange(dragging.fromSlot);
+
+  if(targetSlot){
+    const occupant = targetSlot.querySelector('.tile');
+    if(occupant && occupant!==el){
+      const trayId = occupant.dataset.tray;
+      const tray = document.getElementById(trayId);
+      if(tray) tray.appendChild(occupant);
+    }
+    targetSlot.appendChild(el);
+    onTileSlotChange(targetSlot);
+  } else {
+    const trayId = el.dataset.tray;
+    const tray = document.getElementById(trayId);
+    if(tray) tray.appendChild(el);
+  }
+  dragging = null;
+}
+document.addEventListener('pointerup', endDrag);
+document.addEventListener('pointercancel', endDrag);
+
+/* ===================== GAME STATE / SCORING ===================== */
+function freshState(){
+  return { solved:{r1:false,r2:false,r3:false,r4:false,r5:false,r6:false,r7:false,bonus:false}, letters:{}, score:0, log:[], finalAttempts:0 };
+}
+let gameState = freshState();
+
+function addScore(delta, label){
+  gameState.score = Math.max(0, gameState.score+delta);
+  gameState.log.push({label, delta});
+  const disp = document.getElementById('scoreDisplay');
+  if(disp) disp.textContent = gameState.score;
+}
+let toastTimeout;
+function showToast(msg){
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastTimeout);
+  toastTimeout = setTimeout(()=>el.classList.remove('show'),2600);
+}
+function toggleHint(prefix, penalty, label){
+  const h = document.getElementById(prefix+'_hint');
+  if(h && !h.classList.contains('show')){
+    h.classList.add('show');
+    addScore(-penalty, (label||prefix)+' hint used');
+    showToast('−'+penalty+' pts hint penalty');
+  }
+}
+const mcState = {};
+function selectMC(prefix, btn, isCorrect){
+  const group = btn.parentElement;
+  [...group.children].forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  mcState[prefix] = isCorrect;
+}
+function showMsg(id, ok, text){
+  const m = document.getElementById(id);
+  m.className = 'msg ' + (ok?'good':'bad');
+  m.textContent = text;
+}
+function allMainSolved(){ return MAIN_ROOMS.every(id=>gameState.solved[id]); }
+
+function awardRoom(id){
+  if(gameState.solved[id]) return;
+  gameState.solved[id] = true;
+  gameState.letters[id] = LETTER_MAP[id];
+  addScore(ROOM_BASE, 'Solved '+TITLES[id]+' (letter '+LETTER_MAP[id]+')');
+}
+function awardBonus(){
+  if(gameState.solved['bonus']) return;
+  gameState.solved['bonus'] = true;
+  addScore(BONUS_BASE, 'Solved '+TITLES['bonus']);
+}
+function awardFinal(){
+  const attempts = gameState.finalAttempts||0;
+  const pts = Math.max(50, FINAL_BASE - 10*attempts);
+  addScore(pts, 'Unlocked the Final Escape');
+}
+function finishActivitySoon(){
+  setTimeout(()=>{ document.getElementById('activityModal').classList.add('hidden'); renderHub(); },1400);
+}
+
+/* ===================== HUB / CASE BOARD ===================== */
+function hotspot(id,icon,label,top,left,isBonus){
+  const solved = gameState.solved[id];
+  const cls = 'hotspot' + (solved?' solved':'') + (isBonus?' bonusSpot':'');
+  const badge = solved ? (isBonus?'✓':gameState.letters[id]) : (isBonus?'?':'🔒');
+  return `<button type="button" class="${cls}" style="top:${top};left:${left};" onclick="handleHotspot('${id}')">
+      <span class="hsBadge">${badge}</span>
+      <span class="hsIcon">${icon}</span>
+      <span class="hsLabel">${label}</span>
+    </button>`;
+}
+function handleHotspot(id){
+  if(gameState.solved[id]){
+    const pts = id==='bonus'?BONUS_BASE:ROOM_BASE;
+    const letterMsg = id==='bonus' ? '' : ` — letter "${gameState.letters[id]}" earned`;
+    showToast(`Already solved${letterMsg} (worth ${pts} pts).`);
+    return;
+  }
+  openActivity(id);
+}
+function openActivity(id){
+  document.querySelector('#activityModal .modalbox').innerHTML = ACTIVITIES[id].render();
+  document.getElementById('activityModal').classList.remove('hidden');
+}
+function closeActivity(){
+  document.getElementById('activityModal').classList.add('hidden');
+  renderHub();
+}
+function openFinal(){
+  if(!allMainSolved()) return;
+  document.querySelector('#activityModal .modalbox').innerHTML = renderFinal();
+  document.getElementById('activityModal').classList.remove('hidden');
+}
+function renderHub(){
+  const lettersHtml = MAIN_ROOMS.map(id=>{
+    return gameState.solved[id]
+      ? `<div class="letterTile got">${gameState.letters[id]}</div>`
+      : `<div class="letterTile pending">?</div>`;
+  }).join('');
+  const ready = allMainSolved();
+  document.getElementById('roomContainer').innerHTML = `
+    <div class="room">
+      <div class="badge">Case File — Sports Medicine Clinic</div>
+      <h1>Diagnose Before Discharge</h1>
+      <div class="card">
+        <p><strong>Patient:</strong> Mr. Alvarez, 34, recreational soccer player — twisted his knee yesterday changing direction. Pain, swelling, and a sense of "giving way."</p>
+        <p>Tap a station on the case board to work through that part of the chart. Solve it correctly to earn points <em>and</em> a letter. Collect all 7 letters, then unscramble them to unlock the Final Escape. Hints are available any time, but cost points.</p>
+      </div>
+      <div class="hubStats">
+        <div class="statBox">🔤 Letters: <div class="letterRow">${lettersHtml}</div></div>
+      </div>
+      <div class="scene" id="sceneBoard">
+        ${hotspot('r1','🦵','Exam Room 1<br>Lachman','15%','13%')}
+        ${hotspot('r2','🔍','Exam Room 2<br>McMurray','15%','50%')}
+        ${hotspot('r6','💪','Sideline<br>Consult','15%','87%')}
+        ${hotspot('r3','📋','Records Room<br>Prevalence','50%','13%')}
+        ${hotspot('bonus','❔','Mystery<br>Folder','50%','50%',true)}
+        ${hotspot('r4','📈','Risk Chart<br>Review','50%','87%')}
+        ${hotspot('r7','📅','Training<br>Room','85%','30%')}
+        ${hotspot('r5','🩺','Grand Rounds<br>Capstone','85%','70%')}
+      </div>
+      <div class="finalPanel ${ready?'ready':'locked'}" onclick="${ready?'openFinal()':''}">
+        ${ready ? '🔓 All letters collected — Tap to attempt the Final Escape!' : '🔒 Collect all 7 letters to unlock the Final Escape'}
+      </div>
+      <p class="small" onclick="openFacilitator()" style="cursor:pointer;text-decoration:underline;">(instructor key)</p>
+    </div>
+  `;
+  const disp = document.getElementById('scoreDisplay');
+  if(disp) disp.textContent = gameState.score;
+}
+
+/* ===================== ACTIVITIES ===================== */
+const ACTIVITIES = {
+r1: { render: ()=>`
+  <button class="secondary" onclick="closeActivity()">← Back to Case Board</button>
+  <div class="badge">Exam Room 1</div>
+  <h2>Build the Chart — Lachman / ACL</h2>
+  <div class="card">
+    <p>Mr. Alvarez gets a <strong>Lachman test</strong> for the ACL. Before trusting it, your team pulls the pooled accuracy data and a comparison sample to rebuild the 2x2 table.</p>
+    <p><strong>Pooled accuracy (meta-analysis):</strong> Sensitivity = 85%, Specificity = 94%.</p>
+    <p><strong>Reference sample (arthroscopy-confirmed):</strong> 20 patients with a true ACL tear, 50 patients with no tear.</p>
+    <p>Drag tiles into the table to rebuild it. Round to the nearest whole patient.</p>
+    <table class="datatbl">
+      <tr><th></th><th>ACL tear (n=20)</th><th>No tear (n=50)</th></tr>
+      <tr><td><strong>Lachman +</strong></td><td>TP = ${slot('r1','tp')}</td><td>FP = ${slot('r1','fp')}</td></tr>
+      <tr><td><strong>Lachman −</strong></td><td>FN = ${slot('r1','fn')}</td><td>TN = ${slot('r1','tn')}</td></tr>
+    </table>
+    ${renderTray('r1')}
+    <p class="cite">Lachman Sn/Sp: Benjaminse A, et al. pooled meta-analysis, Am J Sports Med.</p>
+    <div class="hint" id="r1_hint">Sensitivity = TP/(TP+FN). You have 20 true-tear patients and Sn=85% — solve for TP, then FN is the remainder. Same logic with Specificity (94%) and the 50 true-negative patients for TN and FP.</div>
+    <div class="msg" id="r1_msg"></div>
+    <div class="btnrow">
+      <button class="secondary" onclick="toggleHint('r1',${ROOM_HINT_PENALTY},'Exam Room 1')">💡 Hint (−${ROOM_HINT_PENALTY} pts)</button>
+      <button class="secondary" onclick="resetTiles('r1')">↺ Reset Tiles</button>
+      <button class="primary" onclick="checkRoom1()">Submit</button>
+    </div>
+  </div>`
+},
+r2: { render: ()=>`
+  <button class="secondary" onclick="closeActivity()">← Back to Case Board</button>
+  <div class="badge">Exam Room 2</div>
+  <h2>Rule In or Rule Out? — McMurray / Meniscus</h2>
+  <div class="card">
+    <p>The Lachman result is in. Now the team performs a <strong>McMurray test</strong> for a meniscus tear.</p>
+    <p><strong>Pooled accuracy:</strong> Sensitivity = 70%, Specificity = 71%.</p>
+    <p>Calculate the likelihood ratios, then drag the matching tiles into place.</p>
+    <div class="calcline">LR+ = Sn / (1−Sp) = ${slot('r2','lrplus')}</div>
+    <div class="calcline">LR− = (1−Sn) / Sp = ${slot('r2','lrminus')}</div>
+    ${renderTray('r2')}
+    <p style="font-weight:600;margin-top:10px;">Does a positive McMurray confidently rule the tear IN, and does a negative McMurray confidently rule it OUT? (Strong &gt;10 or &lt;0.1, Moderate 2–10 or 0.1–0.5, Minimal 1–2 or 0.5–1)</p>
+    <div class="mc" id="r2_mc">
+      <button onclick="selectMC('r2',this,true)">No to both — McMurray only moderately shifts suspicion either direction.</button>
+      <button onclick="selectMC('r2',this,false)">Yes — McMurray is strong enough to rule the tear in AND out.</button>
+      <button onclick="selectMC('r2',this,false)">Only rules IN, never rules out.</button>
+    </div>
+    <p class="cite">McMurray Sn/Sp: Hegedus EJ, et al. systematic review &amp; meta-analysis of knee special tests.</p>
+    <div class="hint" id="r2_hint">LR+ = Sn/(1−Sp). LR− = (1−Sn)/Sp. Both should land in the "moderate" band — not strong enough to act on alone.</div>
+    <div class="msg" id="r2_msg"></div>
+    <div class="btnrow">
+      <button class="secondary" onclick="toggleHint('r2',${ROOM_HINT_PENALTY},'Exam Room 2')">💡 Hint (−${ROOM_HINT_PENALTY} pts)</button>
+      <button class="secondary" onclick="resetTiles('r2')">↺ Reset Tiles</button>
+      <button class="primary" onclick="checkRoom2()">Submit</button>
+    </div>
+  </div>`
+},
+r3: { render: ()=>`
+  <button class="secondary" onclick="closeActivity()">← Back to Case Board</button>
+  <div class="badge">Records Room</div>
+  <h2>Setting Changes Everything — Prevalence</h2>
+  <div class="card">
+    <p>A resident asks: "What if Mr. Alvarez had gone to his primary care doctor instead of this sports medicine clinic?" Same McMurray test (Sn=70%, Sp=71%) — but a different starting probability of disease.</p>
+    <p><strong>Sports medicine clinic:</strong> prevalence of meniscus tear among patients like him ≈ 60%.<br>
+    <strong>Primary care clinic:</strong> prevalence among general knee-pain patients ≈ 10%.</p>
+    <p class="cite" style="margin-bottom:0;">PPV = (Sn×Prev) / [Sn×Prev + (1−Sp)×(1−Prev)] &nbsp;|&nbsp; NPV = (Sp×(1−Prev)) / [Sp×(1−Prev) + (1−Sn)×Prev]</p>
+    <div class="calcline">Sports clinic — PPV = ${slot('r3','ppv_a')}%&nbsp;&nbsp;NPV = ${slot('r3','npv_a')}%</div>
+    <div class="calcline">Primary care — PPV = ${slot('r3','ppv_b')}%&nbsp;&nbsp;NPV = ${slot('r3','npv_b')}%</div>
+    ${renderTray('r3')}
+    <div class="hint" id="r3_hint">Plug Prev=0.60 into both formulas for the sports clinic, then Prev=0.10 for primary care. Sn=0.70 and Sp=0.71 stay the same in both. Watch how dramatically PPV moves even though the test itself didn't change.</div>
+    <div class="msg" id="r3_msg"></div>
+    <div class="btnrow">
+      <button class="secondary" onclick="toggleHint('r3',${ROOM_HINT_PENALTY},'Records Room')">💡 Hint (−${ROOM_HINT_PENALTY} pts)</button>
+      <button class="secondary" onclick="resetTiles('r3')">↺ Reset Tiles</button>
+      <button class="primary" onclick="checkRoom3()">Submit</button>
+    </div>
+  </div>`
+},
+r4: { render: ()=>`
+  <button class="secondary" onclick="closeActivity()">← Back to Case Board</button>
+  <div class="badge">Risk Chart Review</div>
+  <h2>The Bigger Picture — OR / RR</h2>
+  <div class="card">
+    <p>While waiting on imaging, the team reviews Mr. Alvarez's risk history: he's a smoker and a former Army paratrooper. The attending wants both points framed with real numbers — using the same two studies from lecture.</p>
+    <table class="datatbl">
+      <tr><th>Lung Cancer (male)</th><th>Yes</th><th>No</th></tr>
+      <tr><td>Current smokers</td><td>6784</td><td>3829</td></tr>
+      <tr><td>Never smokers</td><td>220</td><td>2883</td></tr>
+    </table>
+    <div class="calcline">Odds Ratio = (TP/FN)/(FP/TN) = ${slot('r4','or')}</div>
+    <p>Fort Bragg survey: 29.6% of airborne soldiers reported a concussion (mTBI) vs. 13.5% of non-airborne soldiers.</p>
+    <div class="calcline">Risk Ratio = Incidence(exposed) / Incidence(non-exposed) = ${slot('r4','rr')}</div>
+    ${renderTray('r4')}
+    <p class="cite">OR: Int J Cancer. 2011;131(5):1210–1219. RR: Knapik J, Steelman R. J Athl Train. 2016;51(11):962-80.</p>
+    <div class="hint" id="r4_hint">OR = (6784/220) / (3829/2883). RR = 29.6 / 13.5 (percent over percent).</div>
+    <div class="msg" id="r4_msg"></div>
+    <div class="btnrow">
+      <button class="secondary" onclick="toggleHint('r4',${ROOM_HINT_PENALTY},'Risk Chart Review')">💡 Hint (−${ROOM_HINT_PENALTY} pts)</button>
+      <button class="secondary" onclick="resetTiles('r4')">↺ Reset Tiles</button>
+      <button class="primary" onclick="checkRoom4()">Submit</button>
+    </div>
+  </div>`
+},
+r5: { render: ()=>`
+  <button class="secondary" onclick="closeActivity()">← Back to Case Board</button>
+  <div class="badge">Grand Rounds</div>
+  <h2>Final Diagnosis — Capstone</h2>
+  <div class="card">
+    <p>Lachman: <strong>positive.</strong> McMurray: <strong>positive.</strong> You're back in the sports medicine clinic setting from the Records Room.</p>
+    <div class="calcline">PPV to quote the attending for the meniscus finding, in THIS setting = ${slot('r5','ppv')}%</div>
+    ${renderTray('r5')}
+    <p style="font-weight:600;margin-top:10px;">Which statement best summarizes the diagnostic picture?</p>
+    <div class="mc" id="r5_mc">
+      <button onclick="selectMC('r5',this,false)">Both tests are equally strong — confidently diagnose ACL tear AND meniscus tear, no imaging needed.</button>
+      <button onclick="selectMC('r5',this,false)">Neither test is useful; order an MRI with no working diagnosis at all.</button>
+      <button onclick="selectMC('r5',this,true)">Lachman's high specificity strongly supports (SpPIn) an ACL tear; McMurray's positive result raises suspicion for a meniscus tear with only moderate confidence — confirm with MRI before finalizing the surgical plan.</button>
+    </div>
+    <div class="hint" id="r5_hint">Which test had the higher specificity — and what does SpPIn say about a positive result on that test? The PPV here is the same number you calculated for the sports clinic in the Records Room.</div>
+    <div class="msg" id="r5_msg"></div>
+    <div class="btnrow">
+      <button class="secondary" onclick="toggleHint('r5',${ROOM_HINT_PENALTY},'Grand Rounds')">💡 Hint (−${ROOM_HINT_PENALTY} pts)</button>
+      <button class="secondary" onclick="resetTiles('r5')">↺ Reset Tiles</button>
+      <button class="primary" onclick="checkRoom5()">Submit Final Diagnosis</button>
+    </div>
+  </div>`
+},
+r6: { render: ()=>`
+  <button class="secondary" onclick="closeActivity()">← Back to Case Board</button>
+  <div class="badge">Sideline Consult</div>
+  <h2>A Second Complaint — Hawkins-Kennedy / Shoulder Impingement</h2>
+  <div class="card">
+    <p>While bracing himself during the fall, Mr. Alvarez also landed hard on his right arm. He mentions shoulder pain almost as an afterthought. The PT performs a <strong>Hawkins-Kennedy test</strong> for subacromial impingement.</p>
+    <p><strong>Pooled accuracy (meta-analysis):</strong> Sensitivity = 79%, Specificity = 59%.</p>
+    <p>Calculate the likelihood ratios, then drag the matching tiles into place.</p>
+    <div class="calcline">LR+ = Sn / (1−Sp) = ${slot('r6','lrplus')}</div>
+    <div class="calcline">LR− = (1−Sn) / Sp = ${slot('r6','lrminus')}</div>
+    ${renderTray('r6')}
+    <p style="font-weight:600;margin-top:10px;">Is a positive Hawkins-Kennedy here strong enough to confirm impingement on its own? (Strong &gt;10 or &lt;0.1, Moderate 2–10 or 0.1–0.5, Minimal 1–2 or 0.5–1)</p>
+    <div class="mc" id="r6_mc">
+      <button onclick="selectMC('r6',this,true)">No — LR+ is minimal (&lt;2), so a positive result barely raises suspicion; LR− is moderate, so a negative result is more useful for lowering suspicion than a positive one is for raising it.</button>
+      <button onclick="selectMC('r6',this,false)">Yes — both LR+ and LR− are strong enough to act on alone.</button>
+      <button onclick="selectMC('r6',this,false)">No — neither value tells us anything useful, so don't bother testing for impingement at all.</button>
+    </div>
+    <p class="cite">Hawkins-Kennedy Sn/Sp: Hegedus EJ, et al. systematic review &amp; meta-analysis of shoulder special tests.</p>
+    <div class="hint" id="r6_hint">LR+ = Sn/(1−Sp) = 0.79/0.41. LR− = (1−Sn)/Sp = 0.21/0.59. Compare both to the McMurray values from Exam Room 2 — this test is even weaker for ruling impingement in.</div>
+    <div class="msg" id="r6_msg"></div>
+    <div class="btnrow">
+      <button class="secondary" onclick="toggleHint('r6',${ROOM_HINT_PENALTY},'Sideline Consult')">💡 Hint (−${ROOM_HINT_PENALTY} pts)</button>
+      <button class="secondary" onclick="resetTiles('r6')">↺ Reset Tiles</button>
+      <button class="primary" onclick="checkRoom6()">Submit</button>
+    </div>
+  </div>`
+},
+r7: { render: ()=>`
+  <button class="secondary" onclick="closeActivity()">← Back to Case Board</button>
+  <div class="badge">Training Room</div>
+  <h2>Counting the Cases — Incidence Rate</h2>
+  <div class="card">
+    <p>Mr. Alvarez also coaches a local U16 girls' soccer team. The athletic trainer hands you the season's injury log: over the fall season, the team logged <strong>1,000 athlete-exposures</strong> (practices + games combined), and <strong>2 athletes</strong> sustained a new ACL tear.</p>
+    <div class="calcline">Incidence Rate = (new cases / athlete-exposures) × 1000 = ${slot('r7','ir')} per 1000 AE</div>
+    ${renderTray('r7')}
+    <p style="font-weight:600;margin-top:10px;">A published meta-analysis estimates ACL incidence in female athletes overall at ~0.089 per 1000 athlete-exposures (with soccer carrying the highest per-season risk among female athletes, ~1.08%). How does this team's rate compare?</p>
+    <div class="mc" id="r7_mc">
+      <button onclick="selectMC('r7',this,true)">Far higher than the published benchmark — worth flagging to the athletic trainer as a possible cluster or surveillance difference, not assuming it's "normal."</button>
+      <button onclick="selectMC('r7',this,false)">Right in line with the published literature.</button>
+      <button onclick="selectMC('r7',this,false)">Lower than published rates, so no further action is needed.</button>
+    </div>
+    <p class="cite">Benchmark incidence: meta-analysis of ACL injury incidence in adolescent athletes (female athletes overall ≈0.089 per 1000 AE; soccer highest per-season risk among female athletes ≈1.08%).</p>
+    <div class="hint" id="r7_hint">Incidence rate = new cases ÷ total exposure time (or exposures), scaled to a standard denominator — here, per 1000 athlete-exposures. 2 cases / 1000 AE × 1000 = ?</div>
+    <div class="msg" id="r7_msg"></div>
+    <div class="btnrow">
+      <button class="secondary" onclick="toggleHint('r7',${ROOM_HINT_PENALTY},'Training Room')">💡 Hint (−${ROOM_HINT_PENALTY} pts)</button>
+      <button class="secondary" onclick="resetTiles('r7')">↺ Reset Tiles</button>
+      <button class="primary" onclick="checkRoom7()">Submit</button>
+    </div>
+  </div>`
+},
+bonus: { render: ()=>`
+  <button class="secondary" onclick="closeActivity()">← Back to Case Board</button>
+  <div class="badge">Bonus — Mystery Folder</div>
+  <h2>The Decoy Chart</h2>
+  <div class="card">
+    <p>A nurse hands you a chart with <strong>Spurling's test</strong> results: Sensitivity = 50%, Specificity = 86%, ordered for "the patient with knee pain."</p>
+    <p>Before you calculate anything — what's the right move?</p>
+    <div class="mc" id="bonus_mc">
+      <button onclick="selectMC('bonus',this,false)">Calculate LR+ and LR− and apply them to Mr. Alvarez's case.</button>
+      <button onclick="selectMC('bonus',this,true)">Not clinically indicated — wrong body region (Spurling's tests for cervical radiculopathy, not a knee injury).</button>
+      <button onclick="selectMC('bonus',this,false)">Use it as a tiebreaker between the Lachman and McMurray results.</button>
+    </div>
+    <div class="hint" id="bonus_hint">What part of the body does Spurling's test examine?</div>
+    <div class="msg" id="bonus_msg"></div>
+    <div class="btnrow">
+      <button class="secondary" onclick="toggleHint('bonus',${BONUS_HINT_PENALTY},'Mystery Folder')">💡 Hint (−${BONUS_HINT_PENALTY} pts)</button>
+      <button class="primary" onclick="checkBonus()">Submit</button>
+    </div>
+  </div>`
+}
+};
+
+/* ===================== ROOM CHECKS ===================== */
+function checkRoom1(){
+  if(checkAllSlots('r1')){ showMsg('r1_msg',true,"✅ Chart rebuilt correctly! +100 pts, letter earned: R"); awardRoom('r1'); finishActivitySoon(); }
+  else showMsg('r1_msg',false,"Not quite. Recheck Sn=TP/(TP+FN)=85% with 20 true-positive patients, and Sp=TN/(TN+FP)=94% with 50 true-negative patients.");
+}
+function checkRoom2(){
+  const mcOk = mcState['r2']===true;
+  if(checkAllSlots('r2') && mcOk){ showMsg('r2_msg',true,"✅ Correct! +100 pts, letter earned: A"); awardRoom('r2'); finishActivitySoon(); }
+  else showMsg('r2_msg',false,"Check your LR tiles and make sure your selected statement matches what the LR values actually show.");
+}
+function checkRoom3(){
+  if(checkAllSlots('r3')){ showMsg('r3_msg',true,"✅ Same test, very different answer! +100 pts, letter earned: T"); awardRoom('r3'); finishActivitySoon(); }
+  else showMsg('r3_msg',false,"Double-check which prevalence (60% or 10%) goes with which setting, and recompute carefully — small algebra slips are easy here.");
+}
+function checkRoom4(){
+  if(checkAllSlots('r4')){ showMsg('r4_msg',true,"✅ Numbers confirmed! +100 pts, letter earned: C"); awardRoom('r4'); finishActivitySoon(); }
+  else showMsg('r4_msg',false,"OR = (6784/220)/(3829/2883). RR = 29.6/13.5. Recheck your tiles.");
+}
+function checkRoom5(){
+  const mcOk = mcState['r5']===true;
+  if(checkAllSlots('r5') && mcOk){ showMsg('r5_msg',true,"✅ Case closed for now! +100 pts, letter earned: H"); awardRoom('r5'); finishActivitySoon(); }
+  else showMsg('r5_msg',false,"Check the PPV tile against the Records Room sports-clinic value, and re-read the answer choices for the one that matches both tests' actual strength.");
+}
+function checkRoom6(){
+  const mcOk = mcState['r6']===true;
+  if(checkAllSlots('r6') && mcOk){ showMsg('r6_msg',true,"✅ Correct! +100 pts, letter earned: M"); awardRoom('r6'); finishActivitySoon(); }
+  else showMsg('r6_msg',false,"Check your LR tiles, and make sure your selected statement matches what a 'minimal' LR+ and a 'moderate' LR− actually mean.");
+}
+function checkRoom7(){
+  const mcOk = mcState['r7']===true;
+  if(checkAllSlots('r7') && mcOk){ showMsg('r7_msg',true,"✅ Correct! +100 pts, letter earned: E"); awardRoom('r7'); finishActivitySoon(); }
+  else showMsg('r7_msg',false,"Recheck the incidence calculation (2 cases ÷ 1000 AE × 1000), and reconsider how this rate stacks up against the published benchmark.");
+}
+function checkBonus(){
+  const ok = mcState['bonus']===true;
+  if(ok){ showMsg('bonus_msg',true,"✅ Exactly — good clinical reasoning, not just good math. +50 pts"); awardBonus(); finishActivitySoon(); }
+  else showMsg('bonus_msg',false,"Think about what body region Spurling's test actually examines.");
+}
+
+/* ===================== FINAL ESCAPE ===================== */
+function renderFinal(){
+  const letters = MAIN_ROOMS.map(id=>gameState.letters[id]);
+  const shuffled = shuffle([...letters]);
+  const tiles = shuffled.map(l=>`<div class="tile" data-tray="final_tray" data-value="${l}">${l}</div>`).join('');
+  const n = FINAL_WORD.length;
+  const slots = Array.from({length:n},(_,i)=>i+1).map(i=>`<span class="slot" data-slot="final_${i}"></span>`).join('');
+  return `
+    <button class="secondary" onclick="closeActivity()">← Back to Case Board</button>
+    <div class="badge">Final Escape</div>
+    <h2>Unscramble the Case</h2>
+    <div class="card">
+      <p>These seven letters came from every station you solved. Drag them into the boxes below to spell the word that's tied this whole investigation together — think about what you were doing at every single station.</p>
+      <div class="calcline" style="justify-content:center;font-size:1.4rem;">${slots}</div>
+      <div class="trayLabel">🔤 Drag your letters into order:</div>
+      <div class="tray" id="final_tray">${tiles}</div>
+      <div class="hint" id="final_hint">Both ends of the word are the same letter — and you earned that letter twice: once in Exam Room 2, once in the Training Room.</div>
+      <div class="msg" id="final_msg"></div>
+      <div class="btnrow">
+        <button class="secondary" onclick="toggleHint('final',${FINAL_HINT_PENALTY},'Final Escape')">💡 Hint (−${FINAL_HINT_PENALTY} pts)</button>
+        <button class="secondary" onclick="resetFinalTiles()">↺ Reset Tiles</button>
+        <button class="primary" onclick="checkFinal()">🔓 Unlock</button>
+      </div>
+    </div>`;
+}
+function resetFinalTiles(){
+  const tray = document.getElementById('final_tray');
+  const n = FINAL_WORD.length;
+  Array.from({length:n},(_,i)=>i+1).forEach(i=>{
+    const s = document.querySelector('[data-slot="final_'+i+'"]');
+    const t = s ? s.querySelector('.tile') : null;
+    if(t && tray) tray.appendChild(t);
+  });
+}
+function checkFinal(){
+  const n = FINAL_WORD.length;
+  const word = Array.from({length:n},(_,i)=>i+1).map(i=>slotValue('final_'+i)||'').join('');
+  if(word.toUpperCase()===FINAL_WORD){
+    showMsg('final_msg',true,'🔓 Unlocked! The word was "'+FINAL_WORD+'" — well done.');
+    awardFinal();
+    setTimeout(()=>{ document.getElementById('activityModal').classList.add('hidden'); showComplete(); },1500);
+  } else {
+    gameState.finalAttempts = (gameState.finalAttempts||0)+1;
+    showMsg('final_msg',false,'Not quite that order — keep trying. (Retries are free; only the hint costs points.)');
+  }
+}
+
+/* ===================== COMPLETE SCREEN ===================== */
+function showComplete(){
+  const rows = gameState.log.map(e=>`<tr><td>${e.label}</td><td style="text-align:right;">${e.delta>0?'+':''}${e.delta}</td></tr>`).join('');
+  document.getElementById('roomContainer').innerHTML = `
+    <div class="room">
+      <div class="confetti">🎉🩺🎉</div>
+      <h1>Case Closed</h1>
+      <div class="card">
+        <p class="center" style="font-size:1.3rem;"><strong>Final Score: ${gameState.score} pts</strong></p>
+        <table class="keytbl"><tr><th>Event</th><th>Points</th></tr>${rows}</table>
+      </div>
+      <div class="card">
+        <p>Be ready to discuss as a class:</p>
+        <p>① Why did the same McMurray test give wildly different PPVs in the Records Room — and what does that mean every time you read "this test has X% PPV" in a study?<br>
+        ② Why is it dangerous to treat a "moderate" LR+ test result the same as a SnNOut/SpPIn result?<br>
+        ③ How would you explain the Exam Room 1 table-building exercise to a classmate who skipped the video?</p>
+      </div>
+      <div class="btnrow"><button class="primary" onclick="resetGame()">↻ Reset for Next Group</button></div>
+    </div>`;
+}
+function resetGame(){
+  gameState = freshState();
+  Object.keys(mcState).forEach(k=>delete mcState[k]);
+  renderHub();
+}
+
+function openFacilitator(){
+  const pw = prompt('Instructor key — enter password:');
+  if(pw===null) return;
+  if(pw.trim().toUpperCase()!=='EBP'){ showToast('Incorrect password.'); return; }
+  document.getElementById('facilitatorModal').classList.remove('hidden');
+}
+function closeFacilitator(){ document.getElementById('facilitatorModal').classList.add('hidden'); }
+
+/* ===================== INIT ===================== */
+renderHub();
+</script>
+</body>
+</html>
