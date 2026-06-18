@@ -192,17 +192,17 @@
     <p class="small" style="text-align:left;">Instructor reference only.</p>
     <table class="keytbl">
       <tr><th>Station</th><th>Answer(s)</th><th>Tolerance</th><th>Points / Letter</th></tr>
-      <tr><td>Exam Room 1 — Lachman table</td><td>TP=17, FN=3, FP=3, TN=47</td><td>±1 each</td><td>100 pts → letter A</td></tr>
+      <tr><td>Exam Room 1 — Lachman table</td><td>TP=17, FN=3, FP=3, TN=47</td><td>±0.5 each</td><td>100 pts → letter A</td></tr>
       <tr><td>Exam Room 2 — McMurray LR</td><td>LR+ ≈2.41 (Moderate), LR− ≈0.42 (Moderate)</td><td>±0.2 / ±0.1</td><td>100 pts → letter E</td></tr>
-      <tr><td>Records Room — Prevalence/PPV/NPV</td><td>Sports: PPV 78%, NPV 61%. Primary care: PPV 21%, NPV 96%</td><td>±4%</td><td>100 pts → letter N</td></tr>
-      <tr><td>Risk Chart Review — OR / RR</td><td>OR ≈23.2 (smoking/lung CA), RR ≈2.19 (paratrooper mTBI)</td><td>OR ±2, RR ±0.2</td><td>100 pts → letter X</td></tr>
+      <tr><td>Records Room — Prevalence/PPV/NPV</td><td>Sports: PPV 78%, NPV 61%. Primary care: PPV 21%, NPV 96%</td><td>±0.5%</td><td>100 pts → letter N</td></tr>
+      <tr><td>Risk Chart Review — OR / RR</td><td>OR ≈23.2 (smoking/lung CA), RR ≈2.19 (paratrooper mTBI)</td><td>OR ±2, RR ±0.1</td><td>100 pts → letter X</td></tr>
       <tr><td>Grand Rounds — Capstone</td><td>PPV to quote = 78%; MC = "SpPIn ACL + moderate/setting-dependent meniscus, recommend MRI"</td><td>±4%</td><td>100 pts → letter I</td></tr>
-      <tr><td>Sideline Consult — Hawkins-Kennedy LR</td><td>LR+ ≈1.93 (Minimal), LR− ≈0.36 (Moderate)</td><td>±0.2 / ±0.1</td><td>100 pts → letter M</td></tr>
+      <tr><td>Sideline Consult — Hawkins-Kennedy LR</td><td>LR+ ≈1.93 (Minimal), LR− ≈0.36 (Moderate)</td><td>±0.2 / ±0.05</td><td>100 pts → letter M</td></tr>
       <tr><td>Training Room — Incidence rate</td><td>IR = 2.0 per 1000 AE; MC = "far higher than the 0.089/1000 AE benchmark, flag it"</td><td>±0.2</td><td>100 pts → letter E</td></tr>
-      <tr><td>Mystery Folder — Bonus</td><td>"Not clinically indicated — wrong body region" (Spurling's = cervical, not knee)</td><td>exact</td><td>50 pts, no letter</td></tr>
+      <tr><td>Mystery Folder — Bonus</td><td>Recompute Sn=80%, Sp=90% from table (her note claimed 92%/75% — wrong); MC = "don't trust the printed numbers, recompute"</td><td>±0.5%</td><td>50 pts, no letter</td></tr>
       <tr><td>Final Escape</td><td>Unscramble A+E+N+X+I+M+E → <strong>EXAMINE</strong></td><td>exact order</td><td>100 pts (−10/extra attempt, floor 50)</td></tr>
     </table>
-    <p class="cite" style="margin-top:10px;">Each hint costs points (−20 main rooms, −10 bonus, −20 final) instead of time. Sources: Lachman Sn/Sp — Benjaminse A, Gokeler A, van der Schans CP. Am J Sports Med meta-analysis. McMurray &amp; Hawkins-Kennedy Sn/Sp — Hegedus EJ et al. systematic review/meta-analysis of orthopedic special tests (knee and shoulder). Smoking/lung cancer OR — Int J Cancer. 2011;131(5):1210–1219. Paratrooper mTBI RR — Knapik J, Steelman R. J Athl Train. 2016;51(11):962-80. ACL incidence benchmark — meta-analysis of ACL injury incidence in adolescent athletes (female athletes overall ≈0.089/1000 AE; soccer highest per-season risk among female athletes ≈1.08%).</p>
+    <p class="cite" style="margin-top:10px;">Each hint costs points (−20 main rooms, −10 bonus, −20 final) instead of time. Sources: Lachman Sn/Sp — Benjaminse A, Gokeler A, van der Schans CP. Am J Sports Med meta-analysis. McMurray &amp; Hawkins-Kennedy Sn/Sp — Hegedus EJ et al. systematic review/meta-analysis of orthopedic special tests (knee and shoulder). Smoking/lung cancer OR — Int J Cancer. 2011;131(5):1210–1219. Paratrooper mTBI RR — Knapik J, Steelman R. J Athl Train. 2016;51(11):962-80. ACL incidence benchmark — Gornitzky AL, Lott A, Yellin JL, Fabricant PD, Lawrence JT, Ganley TJ. Am J Sports Med. 2016;44(10):2716–2723 (female high school athletes overall ≈0.089/1000 AE; girls' soccer highest sport-specific rate ≈0.148/1000 AE).</p>
     <div class="btnrow"><button class="primary" onclick="closeFacilitator()">Close</button></div>
   </div>
 </div>
@@ -222,13 +222,14 @@ const ROOM_HINT_PENALTY = 20, BONUS_HINT_PENALTY = 10, FINAL_HINT_PENALTY = 20;
 
 /* ===================== DRAG/DROP CALCULATION TILES ===================== */
 const DRAG_CONFIG = {
-  r1: { slots:['tp','fp','fn','tn'], correct:{tp:17,fp:3,fn:3,tn:47}, tol:{tp:1,fp:1,fn:1,tn:1}, tiles:["17","3","3","47","18","2","4","46"] },
+  r1: { slots:['tp','fp','fn','tn'], correct:{tp:17,fp:3,fn:3,tn:47}, tol:{tp:0.5,fp:0.5,fn:0.5,tn:0.5}, tiles:["17","3","3","47","18","2","4","46"] },
   r2: { slots:['lrplus','lrminus'], correct:{lrplus:2.41,lrminus:0.42}, tol:{lrplus:0.2,lrminus:0.1}, tiles:["2.41","0.42","0.70","0.71","1.45","0.59","3.45","6.00"] },
-  r3: { slots:['ppv_a','npv_a','ppv_b','npv_b'], correct:{ppv_a:78,npv_a:61,ppv_b:21,npv_b:96}, tol:{ppv_a:4,npv_a:4,ppv_b:4,npv_b:4}, tiles:["78","61","21","96","60","10","70","71"] },
-  r4: { slots:['or','rr'], correct:{or:23.2,rr:2.19}, tol:{or:2,rr:0.2}, tiles:["23.2","2.19","9.0","1.77","0.46","2.0"] },
+  r3: { slots:['ppv_a','npv_a','ppv_b','npv_b'], correct:{ppv_a:78,npv_a:61,ppv_b:21,npv_b:96}, tol:{ppv_a:0.5,npv_a:0.5,ppv_b:0.5,npv_b:0.5}, tiles:["78","61","21","96","60","10","70","71"] },
+  r4: { slots:['or','rr'], correct:{or:23.2,rr:2.19}, tol:{or:2,rr:0.1}, tiles:["23.2","2.19","9.0","1.77","0.46","2.0"] },
   r5: { slots:['ppv'], correct:{ppv:78}, tol:{ppv:4}, tiles:["78","61","21","96","85"] },
-  r6: { slots:['lrplus','lrminus'], correct:{lrplus:1.93,lrminus:0.36}, tol:{lrplus:0.2,lrminus:0.1}, tiles:["1.93","0.36","0.79","0.59","2.41","0.42","1.41","0.46"] },
-  r7: { slots:['ir'], correct:{ir:2.0}, tol:{ir:0.2}, tiles:["2.0","0.2","20","0.089","13.3","0.5"] }
+  r6: { slots:['lrplus','lrminus'], correct:{lrplus:1.93,lrminus:0.36}, tol:{lrplus:0.2,lrminus:0.05}, tiles:["1.93","0.36","0.79","0.59","2.41","1.41","0.21","3.45"] },
+  r7: { slots:['ir'], correct:{ir:2.0}, tol:{ir:0.2}, tiles:["2.0","0.2","20","0.089","13.3","0.5"] },
+  bonus: { slots:['sn','sp'], correct:{sn:80,sp:90}, tol:{sn:0.5,sp:0.5}, tiles:["80","90","92","75","36","72"] }
 };
 
 function shuffle(arr){
@@ -623,13 +624,13 @@ r7: { render: ()=>`
     <p>Mr. Alvarez also coaches a local U16 girls' soccer team. The athletic trainer hands you the season's injury log: over the fall season, the team logged <strong>1,000 athlete-exposures</strong> (practices + games combined), and <strong>2 athletes</strong> sustained a new ACL tear.</p>
     <div class="calcline">Incidence Rate = (new cases / athlete-exposures) × 1000 = ${slot('r7','ir')} per 1000 AE</div>
     ${renderTray('r7')}
-    <p style="font-weight:600;margin-top:10px;">A published meta-analysis estimates ACL incidence in female athletes overall at ~0.089 per 1000 athlete-exposures (with soccer carrying the highest per-season risk among female athletes, ~1.08%). How does this team's rate compare?</p>
+    <p style="font-weight:600;margin-top:10px;">A published meta-analysis estimates ACL incidence in female high school athletes overall at ~0.089 per 1000 athlete-exposures (girls' soccer specifically runs higher, ~0.148 per 1000 AE — still the same order of magnitude). How does this team's rate compare?</p>
     <div class="mc" id="r7_mc">
       <button onclick="selectMC('r7',this,true)">Far higher than the published benchmark — worth flagging to the athletic trainer as a possible cluster or surveillance difference, not assuming it's "normal."</button>
       <button onclick="selectMC('r7',this,false)">Right in line with the published literature.</button>
       <button onclick="selectMC('r7',this,false)">Lower than published rates, so no further action is needed.</button>
     </div>
-    <p class="cite">Benchmark incidence: meta-analysis of ACL injury incidence in adolescent athletes (female athletes overall ≈0.089 per 1000 AE; soccer highest per-season risk among female athletes ≈1.08%).</p>
+    <p class="cite">Benchmark incidence: Gornitzky AL, et al. Am J Sports Med. 2016;44(10):2716–2723 (female high school athletes overall ≈0.089 per 1000 AE; girls' soccer ≈0.148 per 1000 AE).</p>
     <div class="hint" id="r7_hint">Incidence rate = new cases ÷ total exposure time (or exposures), scaled to a standard denominator — here, per 1000 athlete-exposures. 2 cases / 1000 AE × 1000 = ?</div>
     <div class="msg" id="r7_msg"></div>
     <div class="btnrow">
@@ -642,19 +643,31 @@ r7: { render: ()=>`
 bonus: { render: ()=>`
   <button class="secondary" onclick="closeActivity()">← Back to Case Board</button>
   <div class="badge">Bonus — Mystery Folder</div>
-  <h2>The Decoy Chart</h2>
+  <h2>Check the Math</h2>
   <div class="card">
-    <p>A nurse hands you a chart with <strong>Spurling's test</strong> results: Sensitivity = 50%, Specificity = 86%, ordered for "the patient with knee pain."</p>
-    <p>Before you calculate anything — what's the right move?</p>
+    <p>A first-year DPT student left this 2x2 table in the folder from a test she was practicing on her own patients, along with a sticky note claiming the stats. Before anyone uses her numbers for anything, verify them.</p>
+    <table class="datatbl">
+      <tr><th></th><th>Condition + (n=45)</th><th>Condition − (n=80)</th></tr>
+      <tr><td><strong>Test +</strong></td><td>TP = 36</td><td>FP = 8</td></tr>
+      <tr><td><strong>Test −</strong></td><td>FN = 9</td><td>TN = 72</td></tr>
+    </table>
+    <p style="font-style:italic;">Her sticky note says: "Sensitivity = 92%, Specificity = 75%."</p>
+    <p>Recompute both directly from the table above — don't take her note's word for it.</p>
+    <div class="calcline">Actual Sensitivity = TP/(TP+FN) = ${slot('bonus','sn')}%</div>
+    <div class="calcline">Actual Specificity = TN/(TN+FP) = ${slot('bonus','sp')}%</div>
+    ${renderTray('bonus')}
+    <p style="font-weight:600;margin-top:10px;">What should you do with her note?</p>
     <div class="mc" id="bonus_mc">
-      <button onclick="selectMC('bonus',this,false)">Calculate LR+ and LR− and apply them to Mr. Alvarez's case.</button>
-      <button onclick="selectMC('bonus',this,true)">Not clinically indicated — wrong body region (Spurling's tests for cervical radiculopathy, not a knee injury).</button>
-      <button onclick="selectMC('bonus',this,false)">Use it as a tiebreaker between the Lachman and McMurray results.</button>
+      <button onclick="selectMC('bonus',this,false)">Trust it as written — if it's already calculated, there's no need to double-check.</button>
+      <button onclick="selectMC('bonus',this,true)">Don't trust the printed numbers — recompute from the raw counts, and flag that they don't match what she wrote down.</button>
+      <button onclick="selectMC('bonus',this,false)">Average her numbers with your recalculated ones, since they're both probably a little bit right.</button>
     </div>
-    <div class="hint" id="bonus_hint">What part of the body does Spurling's test examine?</div>
+    <p class="cite">Practice scenario — the counts and note are invented for this exercise, not drawn from a published study. The skill being tested: never repeat a stat you haven't verified yourself.</p>
+    <div class="hint" id="bonus_hint">Sensitivity = TP/(TP+FN) = 36/45. Specificity = TN/(TN+FP) = 72/80. Compare what you get to what her note claims.</div>
     <div class="msg" id="bonus_msg"></div>
     <div class="btnrow">
       <button class="secondary" onclick="toggleHint('bonus',${BONUS_HINT_PENALTY},'Mystery Folder')">💡 Hint (−${BONUS_HINT_PENALTY} pts)</button>
+      <button class="secondary" onclick="resetTiles('bonus')">↺ Reset Tiles</button>
       <button class="primary" onclick="checkBonus()">Submit</button>
     </div>
   </div>`
@@ -663,25 +676,25 @@ bonus: { render: ()=>`
 
 /* ===================== ROOM CHECKS ===================== */
 function checkRoom1(){
-  if(checkAllSlots('r1')){ showMsg('r1_msg',true,"✅ Chart rebuilt correctly! +100 pts, letter earned: R"); awardRoom('r1'); finishActivitySoon(); }
+  if(checkAllSlots('r1')){ showMsg('r1_msg',true,"✅ Chart rebuilt correctly! +100 pts, letter earned: A"); awardRoom('r1'); finishActivitySoon(); }
   else showMsg('r1_msg',false,"Not quite. Recheck Sn=TP/(TP+FN)=85% with 20 true-positive patients, and Sp=TN/(TN+FP)=94% with 50 true-negative patients.");
 }
 function checkRoom2(){
   const mcOk = mcState['r2']===true;
-  if(checkAllSlots('r2') && mcOk){ showMsg('r2_msg',true,"✅ Correct! +100 pts, letter earned: A"); awardRoom('r2'); finishActivitySoon(); }
+  if(checkAllSlots('r2') && mcOk){ showMsg('r2_msg',true,"✅ Correct! +100 pts, letter earned: E"); awardRoom('r2'); finishActivitySoon(); }
   else showMsg('r2_msg',false,"Check your LR tiles and make sure your selected statement matches what the LR values actually show.");
 }
 function checkRoom3(){
-  if(checkAllSlots('r3')){ showMsg('r3_msg',true,"✅ Same test, very different answer! +100 pts, letter earned: T"); awardRoom('r3'); finishActivitySoon(); }
+  if(checkAllSlots('r3')){ showMsg('r3_msg',true,"✅ Same test, very different answer! +100 pts, letter earned: N"); awardRoom('r3'); finishActivitySoon(); }
   else showMsg('r3_msg',false,"Double-check which prevalence (60% or 10%) goes with which setting, and recompute carefully — small algebra slips are easy here.");
 }
 function checkRoom4(){
-  if(checkAllSlots('r4')){ showMsg('r4_msg',true,"✅ Numbers confirmed! +100 pts, letter earned: C"); awardRoom('r4'); finishActivitySoon(); }
+  if(checkAllSlots('r4')){ showMsg('r4_msg',true,"✅ Numbers confirmed! +100 pts, letter earned: X"); awardRoom('r4'); finishActivitySoon(); }
   else showMsg('r4_msg',false,"OR = (6784/220)/(3829/2883). RR = 29.6/13.5. Recheck your tiles.");
 }
 function checkRoom5(){
   const mcOk = mcState['r5']===true;
-  if(checkAllSlots('r5') && mcOk){ showMsg('r5_msg',true,"✅ Case closed for now! +100 pts, letter earned: H"); awardRoom('r5'); finishActivitySoon(); }
+  if(checkAllSlots('r5') && mcOk){ showMsg('r5_msg',true,"✅ Case closed for now! +100 pts, letter earned: I"); awardRoom('r5'); finishActivitySoon(); }
   else showMsg('r5_msg',false,"Check the PPV tile against the Records Room sports-clinic value, and re-read the answer choices for the one that matches both tests' actual strength.");
 }
 function checkRoom6(){
@@ -695,9 +708,9 @@ function checkRoom7(){
   else showMsg('r7_msg',false,"Recheck the incidence calculation (2 cases ÷ 1000 AE × 1000), and reconsider how this rate stacks up against the published benchmark.");
 }
 function checkBonus(){
-  const ok = mcState['bonus']===true;
-  if(ok){ showMsg('bonus_msg',true,"✅ Exactly — good clinical reasoning, not just good math. +50 pts"); awardBonus(); finishActivitySoon(); }
-  else showMsg('bonus_msg',false,"Think about what body region Spurling's test actually examines.");
+  const mcOk = mcState['bonus']===true;
+  if(checkAllSlots('bonus') && mcOk){ showMsg('bonus_msg',true,"✅ Exactly — her note didn't match the table. Always verify a stat yourself before repeating it. +50 pts"); awardBonus(); finishActivitySoon(); }
+  else showMsg('bonus_msg',false,"Recompute Sn = TP/(TP+FN) and Sp = TN/(TN+FP) from the table, and re-read the choices for the one that reflects good verification habits.");
 }
 
 /* ===================== FINAL ESCAPE ===================== */
@@ -759,12 +772,12 @@ function showComplete(){
         <table class="keytbl"><tr><th>Event</th><th>Points</th></tr>${rows}</table>
       </div>
       <div class="card">
-        <p>Be ready to discuss as a class:</p>
+        <p>Consider these questions:</p>
         <p>① Why did the same McMurray test give wildly different PPVs in the Records Room — and what does that mean every time you read "this test has X% PPV" in a study?<br>
         ② Why is it dangerous to treat a "moderate" LR+ test result the same as a SnNOut/SpPIn result?<br>
         ③ How would you explain the Exam Room 1 table-building exercise to a classmate who skipped the video?</p>
       </div>
-      <div class="btnrow"><button class="primary" onclick="resetGame()">↻ Reset for Next Group</button></div>
+      <div class="btnrow"><button class="primary" onclick="resetGame()">↻ Try Again</button></div>
     </div>`;
 }
 function resetGame(){
