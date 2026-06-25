@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Design Your Own RCT — DPT Lab</title>
+<style>
+  :root{
+    --cardinal:#CB182F;
+    --cardinal-dark:#9c1224;
+    --ink:#222;
+    --gray-bg:#f5f5f7;
+    --border:#d8d8dc;
+    --green:#2e7d32;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Segoe UI', Helvetica, Arial, sans-serif;
+    color:var(--ink);
+    background:var(--gray-bg);
+    line-height:1.5;
+  }
+  header.app-header{
+    background:var(--cardinal);
+    color:#fff;
+    padding:18px 28px;
+  }
+  header.app-header h1{ margin:0; font-size:1.4rem; font-weight:700; }
+  header.app-header p{ margin:4px 0 0; font-size:0.9rem; opacity:0.92; }
+  .wrap{ max-width:880px; margin:0 auto; padding:24px 20px 80px; }
+  .card{
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:24px 28px;
+    margin-bottom:18px;
+    box-shadow:0 1px 3px rgba(0,0,0,0.06);
+  }
+  .progress-track{ display:flex; gap:4px; margin:18px 0 24px; }
+  .progress-seg{ flex:1; height:6px; border-radius:3px; background:#e3e3e6; }
+  .progress-seg.done{ background:var(--cardinal); }
+  .progress-label{ font-size:0.8rem; color:#666; margin-bottom:6px; }
+  h2.step-title{
+    color:var(--cardinal-dark);
+    margin-top:0;
+    font-size:1.25rem;
+    border-bottom:2px solid var(--border);
+    padding-bottom:8px;
+  }
+  .instructions{ font-size:0.92rem; color:#555; }
+  label{ display:block; font-weight:600; margin:16px 0 6px; font-size:0.92rem; }
+  label .hint{ font-weight:400; color:#666; font-size:0.82rem; }
+  input[type=text], input[type=number], textarea, select{
+    width:100%;
+    padding:9px 10px;
+    border:1px solid #bbb;
+    border-radius:6px;
+    font-size:0.95rem;
+    font-family:inherit;
+  }
+  textarea{ min-height:60px; resize:vertical; }
+  .row2{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  @media (max-width:600px){ .row2{grid-template-columns:1fr;} }
+  .scenario-box{
+    background:#fdf1f3;
+    border-left:4px solid var(--cardinal);
+    padding:14px 16px;
+    border-radius:6px;
+    margin:14px 0;
+    font-size:0.95rem;
+  }
+  .scenario-box h3{ margin:0 0 6px; color:var(--cardinal-dark); font-size:1.05rem; }
+  .resource-link{ margin:8px 0 0; font-size:0.88rem; }
+  .resource-link a{ color:var(--cardinal-dark); font-weight:600; text-decoration:underline; }
+  .ethics-box{
+    background:#fff8e1;
+    border-left:4px solid #f9a825;
+    padding:14px 16px;
+    border-radius:6px;
+    margin:14px 0;
+    font-size:0.95rem;
+  }
+  .ethics-box h3{ margin:0 0 6px; color:#8a6100; font-size:1rem; }
+  .calc-result{
+    background:#eef6ee;
+    border:1px solid #bcdcc0;
+    border-radius:8px;
+    padding:14px 18px;
+    margin-top:14px;
+    font-size:0.97rem;
+  }
+  .calc-result strong{ color:var(--green); font-size:1.1rem; }
+  .nav-buttons{ display:flex; justify-content:space-between; margin-top:22px; }
+  button{
+    font-family:inherit;
+    font-size:0.95rem;
+    padding:10px 22px;
+    border-radius:6px;
+    border:none;
+    cursor:pointer;
+    font-weight:600;
+  }
+  .btn-primary{ background:var(--cardinal); color:#fff; }
+  .btn-primary:hover{ background:var(--cardinal-dark); }
+  .btn-secondary{ background:#e9e9ec; color:#333; }
+  .btn-secondary:hover{ background:#d9d9de; }
+  .btn-primary:disabled, .btn-secondary:disabled{ opacity:0.4; cursor:not-allowed; }
+  .gate{ text-align:center; padding:30px 10px; }
+  .gate input[type=text], .gate input[type=number]{ max-width:280px; margin:0 auto 10px; display:block; }
+  .small-note{ font-size:0.82rem; color:#777; margin-top:4px; }
+  .summary-section{ margin-bottom:18px; padding-bottom:14px; border-bottom:1px solid var(--border); }
+  .summary-section h3{ color:var(--cardinal-dark); margin:0 0 8px; font-size:1.02rem; }
+  .summary-section .field{ margin-bottom:6px; }
+  .summary-section .field-label{ font-weight:600; }
+  .export-buttons{ display:flex; gap:12px; margin:18px 0; flex-wrap:wrap; }
+  .copy-confirm{ display:none; color:var(--green); font-weight:600; margin-left:8px; }
+  #step-container .step{ display:none; }
+  #step-container .step.active{ display:block; }
+
+  /* choice widgets */
+  .choice-group{ margin:8px 0 4px; }
+  .choice-option{
+    display:block;
+    border:1px solid #ddd;
+    border-radius:7px;
+    padding:9px 12px;
+    margin-bottom:7px;
+    cursor:pointer;
+    font-size:0.92rem;
+    transition:background 0.1s, border-color 0.1s;
+  }
+  .choice-option:hover{ background:#fdf1f3; border-color:#eab; }
+  .choice-option input{ margin-right:9px; vertical-align:middle; }
+  .choice-option.checked{ background:#fdf1f3; border-color:var(--cardinal); }
+  .pico-block{ margin-bottom:18px; }
+  .pico-sentence{
+    background:#f0f4ff;
+    border:1px solid #c7d2f0;
+    border-radius:8px;
+    padding:12px 16px;
+    margin-top:10px;
+    font-size:0.97rem;
+    font-style:italic;
+  }
+  .crit-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    border:1px solid #ddd;
+    border-radius:7px;
+    padding:9px 12px;
+    margin-bottom:7px;
+    flex-wrap:wrap;
+  }
+  .crit-text{ flex:1 1 260px; font-size:0.9rem; }
+  .crit-options{ display:flex; gap:12px; font-size:0.82rem; flex-wrap:nowrap; }
+  .crit-options label{ display:flex; align-items:center; gap:4px; font-weight:400; margin:0; white-space:nowrap; }
+
+  @media print{
+    header.app-header, .progress-track, .progress-label, .nav-buttons, .export-buttons, #wizard-card{ display:none !important; }
+    body{ background:#fff; }
+    .wrap{ max-width:100%; padding:0; }
+    #print-summary{ display:block !important; }
+    .summary-section{ break-inside:avoid; }
+  }
+  #print-summary{ display:none; }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <h1>Design Your Own RCT</h1>
+  <p>DPTD 712 — Guided Lab Activity</p>
+</header>
+
+<div class="wrap">
+
+  <!-- GATE: group setup -->
+  <div class="card gate" id="gate-card">
+    <h2 class="step-title" style="border-bottom:none;">Get Started</h2>
+    <p>Enter your group name and group number. Your group number determines which clinical scenario your team will design a trial around — every group gets a different case.</p>
+    <label for="group-name">Group / Team Name</label>
+    <input type="text" id="group-name" placeholder="e.g., Team Femur">
+    <label for="group-num">Group Number <span class="hint">(ask your instructor if unsure)</span></label>
+    <select id="group-num">
+      <option value="">-- Select your group --</option>
+      <option value="1">Group 1</option>
+      <option value="2">Group 2</option>
+      <option value="3">Group 3</option>
+      <option value="4">Group 4</option>
+      <option value="5">Group 5</option>
+      <option value="6">Group 6</option>
+      <option value="7">Group 7</option>
+      <option value="8">Group 8</option>
+    </select>
+    <div style="margin-top:18px;">
+      <button class="btn-primary" id="start-btn" onclick="startLab()">Start Lab</button>
+    </div>
+    <p class="small-note">Most steps are click-to-choose. Your work is held in this browser tab only for the duration of class — nothing is saved automatically. Use the Print or Copy buttons at the end to submit.</p>
+  </div>
+
+  <!-- WIZARD -->
+  <div class="card" id="wizard-card" style="display:none;">
+    <div class="progress-label" id="progress-label">Step 1 of 8</div>
+    <div class="progress-track" id="progress-track"></div>
+
+    <div id="step-container">
+
+      <!-- STEP 1: PICO -->
+      <div class="step" data-step="1">
+        <h2 class="step-title">Step 1 — Your Scenario &amp; PICO Question</h2>
+        <div class="scenario-box" id="scenario-display"></div>
+        <p class="instructions">For each part of your PICO question, choose the option that best fits your scenario. Some options are intentionally flawed — discuss as a group why you're ruling them out.</p>
+
+        <div class="pico-block">
+          <label>Population</label>
+          <div class="choice-group" id="pico-population-group"></div>
+        </div>
+        <div class="pico-block">
+          <label>Intervention</label>
+          <div class="choice-group" id="pico-intervention-group"></div>
+        </div>
+        <div class="pico-block">
+          <label>Comparison</label>
+          <div class="choice-group" id="pico-comparison-group"></div>
+        </div>
+        <div class="pico-block">
+          <label>Outcome</label>
+          <div class="choice-group" id="pico-outcome-group"></div>
+        </div>
+
+        <label>Your PICO Question <span class="hint">(builds automatically from your choices above)</span></label>
+        <div class="pico-sentence" id="pico-sentence">Make a selection for each section above to build your PICO question.</div>
+      </div>
+
+      <!-- STEP 2: Participant Selection -->
+      <div class="step" data-step="2">
+        <h2 class="step-title">Step 2 — Participant Selection Criteria</h2>
+        <p class="instructions">For each candidate criterion below, decide whether your team would use it as an <strong>Inclusion</strong> criterion, an <strong>Exclusion</strong> criterion, or leave it out as <strong>Not Relevant</strong> to your study.</p>
+        <div id="criteria-list"></div>
+        <label>Anything you'd add? <span class="hint">(optional, one line)</span></label>
+        <textarea id="crit-add" placeholder="Optional: a criterion not listed above that your group thinks is important"></textarea>
+      </div>
+
+      <!-- STEP 3: Group Assignment -->
+      <div class="step" data-step="3">
+        <h2 class="step-title">Step 3 — Group Assignment Strategy</h2>
+        <p class="instructions">Per the GL handout, there are two main ways to assign participants to groups: <strong>random assignment</strong> (each participant has an equal chance of being placed in either group) and <strong>matching</strong> (participants are paired or balanced on a known characteristic before assignment).</p>
+        <label>Group Assignment Method</label>
+        <select id="random-method">
+          <option value="">-- Select a method --</option>
+          <option value="Random Assignment">Random Assignment</option>
+          <option value="Matching">Matching</option>
+        </select>
+
+        <label>Best justification for your choice</label>
+        <div class="choice-group" id="random-justify-group"></div>
+
+        <label>If you used matching (or want to balance the groups), which variable(s) would you match participants on? <span class="hint">(select all that apply)</span></label>
+        <div class="choice-group" id="strat-vars-group"></div>
+      </div>
+
+      <!-- STEP 4: Outcome Measures -->
+      <div class="step" data-step="4">
+        <h2 class="step-title">Step 4 — Outcome Measures</h2>
+        <label>Primary Outcome Measure</label>
+        <div class="choice-group" id="outcome-primary-group"></div>
+
+        <label>Secondary Outcome Measure(s) <span class="hint">(select up to 2)</span></label>
+        <div class="choice-group" id="outcome-secondary-group"></div>
+
+        <label>When will you measure outcomes? <span class="hint">(select all that apply)</span></label>
+        <div class="choice-group" id="outcome-timepoints-group"></div>
+      </div>
+
+      <!-- STEP 5: Sample Size -->
+      <div class="step" data-step="5">
+        <h2 class="step-title">Step 5 — Sample Size &amp; Attrition</h2>
+        <p>Your scenario specifies a starting (pre-attrition) sample size per group based on a power analysis. Enter an expected attrition rate and the calculator will compute your adjusted sample size, using the same formula from the GL handout:</p>
+        <p style="text-align:center; font-weight:600;">Adjusted N = Initial N ÷ (1 − Attrition Rate)</p>
+        <div class="row2">
+          <div>
+            <label>Initial N per group <span class="hint">(from your scenario, fixed)</span></label>
+            <input type="text" id="initial-n-display" readonly>
+          </div>
+          <div>
+            <label>Expected Attrition Rate (%)</label>
+            <input type="number" id="attrition-rate" min="0" max="90" step="1">
+          </div>
+        </div>
+        <div class="calc-result" id="calc-result"></div>
+        <label>Why might participants drop out of this study? <span class="hint">(select all that apply)</span></label>
+        <div class="choice-group" id="attrition-reasons-group"></div>
+      </div>
+
+      <!-- STEP 6: Bias -->
+      <div class="step" data-step="6">
+        <h2 class="step-title">Step 6 — Risk of Bias</h2>
+        <label>Identify the bias type and explanation that best fits a real risk in your trial</label>
+        <div class="choice-group" id="bias-combined-group"></div>
+
+        <label>How will you minimize this risk? <span class="hint">(select all that apply)</span></label>
+        <div class="choice-group" id="bias-mitigation-group"></div>
+      </div>
+
+      <!-- STEP 7: Ethics -->
+      <div class="step" data-step="7">
+        <h2 class="step-title">Step 7 — Ethical Considerations</h2>
+        <div class="ethics-box" id="ethics-display"></div>
+        <label>Which strategies would your team use to address this ethical tension? <span class="hint">(select at least 1)</span></label>
+        <div class="choice-group" id="ethics-strategies-group"></div>
+
+        <label>In one sentence, what would you tell participants during informed consent about this issue? <span class="hint">(optional)</span></label>
+        <textarea id="ethics-consent" placeholder="Optional: your group's own wording for the consent conversation"></textarea>
+      </div>
+
+      <!-- STEP 8: Summary -->
+      <div class="step" data-step="8">
+        <h2 class="step-title">Step 8 — Protocol Summary &amp; Submission</h2>
+        <p>Review your compiled protocol below. Use the buttons to export for submission.</p>
+        <div class="export-buttons">
+          <button class="btn-primary" onclick="window.print()">Print / Save as PDF</button>
+          <button class="btn-secondary" onclick="copyAsText()">Copy as Text</button>
+          <span class="copy-confirm" id="copy-confirm">Copied!</span>
+        </div>
+        <div id="summary-render"></div>
+      </div>
+
+    </div>
+
+    <div class="nav-buttons">
+      <button class="btn-secondary" id="back-btn" onclick="navStep(-1)">Back</button>
+      <button class="btn-primary" id="next-btn" onclick="navStep(1)">Next</button>
+    </div>
+  </div>
+
+  <!-- Hidden, print-only clean summary -->
+  <div id="print-summary"></div>
+
+</div>
+
+<script>
+/* ---------------------------------------------------------
+   SCENARIO DATA — 6 distinct clinical cases.
+   Group number maps deterministically to a scenario so that
+   every group in the room gets a different case automatically.
+   Most fields below feed click-to-choose radio/checkbox groups
+   rather than free text, to keep engagement high.
+--------------------------------------------------------- */
+const SCENARIOS = [
+  {
+    title: "Scenario 1 — Stroke: Community-Based Gait Training",
+    vignette: "A 64-year-old patient is 8 months post-ischemic stroke with residual hemiparetic gait and reduced community mobility. Your team is designing a trial to test a novel 8-week community-based, task-specific gait training program against usual outpatient PT care.",
+    initialN: 18,
+    attrition: 15,
+    ethicsTwist: "Patients in the control (usual care) arm continue to have limited community mobility for the full 8-week trial period while the experimental group receives the novel program. Some control participants may have safety concerns (e.g., fall risk) that the intervention could address sooner.",
+    resource: { label: "APTA Clinical Practice Guideline: Improve Locomotor Function Following Chronic Stroke (task-specific gait training)", url: "https://www.apta.org/patient-care/evidence-based-practice-resources/cpgs/clinical-practice-guideline-to-improve-locomotor-function-following-chronic-stroke-incomplete-spinal-cord-injury-and-brain-injury" },
+    pico: {
+      population: [
+        "Adults 6+ months post-stroke with residual hemiparetic gait who can ambulate household distances with or without an assistive device",
+        "Adults within 48 hours of acute stroke who are still medically unstable",
+        "Any adult with a self-reported history of stroke at any time in the past, regardless of mobility status"
+      ],
+      intervention: [
+        "8-week, 3x/week task-specific community-based gait training program (60 min/session)",
+        "A single one-time gait training education session with a home handout",
+        "Daily inpatient gait training for 8 weeks, requiring hospital admission"
+      ],
+      comparison: [
+        "Usual outpatient PT care, continued unchanged",
+        "No therapy or contact at all (true no-treatment control)",
+        "Sham gait training using a non-therapeutic walking activity with no task-specific component"
+      ],
+      outcome: [
+        "Community mobility / functional gait performance",
+        "Cardiovascular endurance",
+        "Cognitive function"
+      ]
+    },
+    criteria: [
+      "Diagnosis of stroke confirmed by physician/medical record",
+      "At least 6 months post-stroke (chronic phase)",
+      "Able to ambulate 10 meters with or without an assistive device",
+      "Significant cognitive impairment preventing ability to follow instructions",
+      "Diagnosed comorbid neurological condition (e.g., Parkinson's, MS)",
+      "Age over 65",
+      "Currently receiving outpatient PT for an unrelated condition"
+    ],
+    stratVars: ["Stroke severity (e.g., NIHSS score)", "Time since stroke", "Baseline gait speed", "Affected side (left/right)"],
+    outcomes: {
+      primary: ["10-Meter Walk Test (gait speed)", "Timed Up and Go (TUG)", "6-Minute Walk Test"],
+      secondary: ["Berg Balance Scale", "Stroke Impact Scale", "Activities-specific Balance Confidence (ABC) Scale"],
+      timepoints: ["Baseline", "Post-intervention (week 8)", "3-month follow-up", "6-month follow-up"]
+    },
+    attritionReasons: ["Relocation or moving out of the area", "Symptom improvement leading to loss of motivation to continue", "Transportation barriers to community sessions", "New medical event (e.g., another stroke, hospitalization)", "Caregiver burden / scheduling conflicts"],
+    biasOptions: [
+      "Selection bias: systematic differences in the characteristics of participants selected for different groups — e.g., if recruitment relies on one clinic's outpatient list, the sample may not represent stroke survivors broadly.",
+      "Performance bias: systematic differences in the care provided to the groups apart from the intervention itself — e.g., therapists and patients can't be blinded to which gait program they're delivering/receiving, which may influence effort or expectations.",
+      "Detection bias: systematic differences in how outcomes are assessed — e.g., an assessor who knows group assignment may unconsciously score the experimental group's walking performance more favorably.",
+      "Attrition bias: systematic differences in dropout rates or loss to follow-up between groups — e.g., patients who respond poorly to community-based training may be more likely to drop out, skewing results toward responders."
+    ]
+  },
+  {
+    title: "Scenario 2 — Acute Care: Early Mobilization After Total Knee Arthroplasty",
+    vignette: "Patients admitted to the hospital following total knee arthroplasty (TKA) are randomized to a structured early mobilization protocol (out of bed and ambulating within hours of surgery) versus standard inpatient mobility progression. The acute care PT team wants to know if earlier mobilization reduces hospital length of stay and improves readiness for safe discharge.",
+    initialN: 25,
+    attrition: 8,
+    ethicsTwist: "The control group receives only standard inpatient mobility progression and may have a delayed first out-of-bed attempt, increasing their risk of complications such as deconditioning or DVT during the acute hospital stay.",
+    resource: { label: "Impact of Early Mobilization on Length of Stay After Primary Total Knee Arthroplasty (PMC)", url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC6409239/" },
+    pico: {
+      population: [
+        "Adults admitted to the hospital for primary unilateral TKA, postoperative day 0, medically cleared for mobilization",
+        "Adults already discharged home who are attending outpatient follow-up visits",
+        "Adults admitted to the ICU on mechanical ventilation following an unrelated medical event"
+      ],
+      intervention: [
+        "Structured early mobilization protocol: out of bed and ambulating within 4 hours of return from the post-anesthesia care unit (PACU), with progressive mobility sessions every shift",
+        "A single physical therapy consult on the day of discharge with no inpatient mobility sessions",
+        "Early mobilization protocol delivered only by nursing staff with no physical therapist involvement"
+      ],
+      comparison: [
+        "Standard inpatient mobility progression per current hospital protocol, with first out-of-bed attempt typically on post-op day 1 (usual care)",
+        "Strict bed rest for the entire inpatient stay",
+        "An outpatient home exercise program initiated only after hospital discharge"
+      ],
+      outcome: [
+        "Hospital length of stay and functional mobility at discharge",
+        "Long-term implant survivorship",
+        "Patient satisfaction with the surgeon"
+      ]
+    },
+    criteria: [
+      "Primary unilateral TKA performed during the current hospital admission",
+      "Medically cleared by the surgical team for mobilization (stable vitals, no contraindication)",
+      "Able to follow basic verbal commands for mobility training",
+      "Revision TKA surgery",
+      "Postoperative complication requiring ICU-level care (e.g., cardiac event, uncontrolled bleeding)",
+      "History of deep vein thrombosis in either leg",
+      "Anticipated discharge to a skilled nursing facility rather than home"
+    ],
+    stratVars: ["Surgeon", "Pre-op functional mobility level", "Age category"],
+    outcomes: {
+      primary: ["Hospital Length of Stay (days)", "Time to First Ambulation (hours post-op)", "AM-PAC “6-Clicks” Basic Mobility Score"],
+      secondary: ["Discharge Disposition (home vs. facility)", "Numeric Pain Rating Scale (NPRS) with mobility"],
+      timepoints: ["Post-op day 0 (day of surgery)", "Post-op day 1", "Post-op day 2", "Discharge"]
+    },
+    attritionReasons: ["Transfer to ICU for a postoperative complication", "Unplanned return to the operating room", "Medical instability preventing continued mobilization sessions", "Discharge sooner than expected, missing a planned data-collection timepoint", "Withdrawal due to dissatisfaction with assigned protocol"],
+    biasOptions: [
+      "Selection bias: systematic differences in the characteristics of participants selected for different groups — e.g., if only patients from one surgeon's caseload are recruited, the sample may not represent acute-care TKA patients broadly.",
+      "Performance bias: systematic differences in the care provided to the groups apart from the intervention itself — e.g., acute care PT staff and patients can't be blinded to which mobilization protocol is being used, which may affect effort or expectations on the unit.",
+      "Detection bias: systematic differences in how outcomes are assessed — e.g., an assessor who knows group assignment may document the 6-Clicks mobility score or time-to-ambulation more favorably for the experimental group.",
+      "Attrition bias: systematic differences in dropout rates or loss to follow-up between groups — e.g., patients who develop post-op complications requiring ICU transfer may be lost from one group at a different rate, skewing length-of-stay results."
+    ]
+  },
+  {
+    title: "Scenario 3 — Pediatric Torticollis: Positioning Intervention",
+    vignette: "Infants (0–12 months) diagnosed with congenital muscular torticollis are enrolled in a trial comparing a structured caregiver-administered positioning/handling program to standard stretching-only home exercise programs, measuring cervical ROM and symmetry over 12 weeks.",
+    initialN: 20,
+    attrition: 20,
+    ethicsTwist: "Participants are infants who cannot consent for themselves — parents/guardians provide consent on their behalf. Torticollis has a developmental window where early intervention matters most, raising concern about delaying a potentially more effective treatment for the control group.",
+    resource: { label: "Physical Therapy Management of Congenital Muscular Torticollis: APTA Pediatric Clinical Practice Guideline (PMC)", url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC8568067/" },
+    pico: {
+      population: [
+        "Infants 0-12 months diagnosed with congenital muscular torticollis by a pediatric PT or physician",
+        "Toddlers 2-4 years old with long-standing, untreated torticollis",
+        "Infants with any head-shape asymmetry regardless of torticollis diagnosis"
+      ],
+      intervention: [
+        "12-week structured caregiver-administered positioning and handling program with weekly PT coaching",
+        "A single in-clinic positioning demonstration with no caregiver follow-through component",
+        "Surgical release of the sternocleidomastoid muscle"
+      ],
+      comparison: [
+        "Standard stretching-only home exercise program (usual care)",
+        "No intervention or parent education at all",
+        "An unrelated developmental play program with no neck-specific component"
+      ],
+      outcome: [
+        "Cervical range of motion and head/neck symmetry",
+        "Gross motor milestone achievement (e.g., independent walking)",
+        "Parental stress levels"
+      ]
+    },
+    criteria: [
+      "Diagnosed congenital muscular torticollis confirmed by PT or physician",
+      "Age 0-12 months at enrollment",
+      "Caregiver able to perform daily home program and attend weekly visits",
+      "Co-occurring craniofacial anomaly requiring surgical referral",
+      "Torticollis due to acute trauma rather than congenital cause",
+      "Firstborn child",
+      "Premature birth (less than 37 weeks gestation)"
+    ],
+    stratVars: ["Severity of torticollis at baseline", "Age at enrollment (0-6mo vs. 6-12mo)"],
+    outcomes: {
+      primary: ["Cervical Range of Motion (goniometry, rotation & lateral flexion)", "Congenital Muscular Torticollis Severity Scale", "Head/neck symmetry photographic assessment"],
+      secondary: ["Muscle Function Scale", "Caregiver-reported home program adherence"],
+      timepoints: ["Baseline", "6 weeks", "12 weeks", "6-month follow-up"]
+    },
+    attritionReasons: ["Family relocation", "Caregiver unable to maintain daily home program", "Resolution of symptoms motivating early dropout", "Scheduling conflicts with weekly visits", "Loss to follow-up / unable to contact family"],
+    biasOptions: [
+      "Selection bias: systematic differences in the characteristics of participants selected for different groups — e.g., if recruitment relies on one pediatric clinic, the sample may not represent infants with torticollis broadly.",
+      "Performance bias: systematic differences in the care provided to the groups apart from the intervention itself — e.g., caregivers can't be blinded to which home program they're using, which may affect how consistently they perform it.",
+      "Detection bias: systematic differences in how outcomes are assessed — e.g., an assessor who knows group assignment may rate cervical ROM or symmetry more favorably for the experimental group.",
+      "Attrition bias: systematic differences in dropout rates or loss to follow-up between groups — e.g., families with less time/support may drop out of the more demanding structured program at a higher rate."
+    ]
+  },
+  {
+    title: "Scenario 4 — Chronic Low Back Pain: McKenzie Method Exercise",
+    vignette: "Adults with chronic non-specific low back pain (>3 months duration) are randomized to a McKenzie-method directional preference exercise program versus general strengthening exercise, measuring pain (NPRS) and disability (Oswestry) over 6 weeks.",
+    initialN: 30,
+    attrition: 12,
+    ethicsTwist: "Both arms receive an active exercise intervention rather than a true no-treatment control, but the team must still justify why withholding the McKenzie-specific approach from the comparison group is ethically acceptable given chronic pain's impact on quality of life.",
+    resource: { label: "JOSPT Clinical Practice Guideline: Interventions for the Management of Acute and Chronic Low Back Pain (Revision 2021)", url: "https://www.jospt.org/doi/abs/10.2519/jospt.2021.0304" },
+    pico: {
+      population: [
+        "Adults with chronic non-specific low back pain (>3 months) without red-flag findings",
+        "Adults with acute low back pain of less than 1 week's duration",
+        "Adults with low back pain due to a confirmed vertebral fracture"
+      ],
+      intervention: [
+        "6-week McKenzie-method directional preference exercise program, individualized to each patient's directional preference",
+        "A single home exercise handout mailed with no clinician follow-up or progression",
+        "6 weeks of spinal manipulation only, with no exercise component"
+      ],
+      comparison: [
+        "General strengthening exercise program, matched in session frequency and duration",
+        "No treatment, advice to rest and avoid activity",
+        "Opioid medication management only"
+      ],
+      outcome: [
+        "Pain intensity and functional disability",
+        "Spinal imaging findings (e.g., disc height on MRI)",
+        "Return-to-work status only"
+      ]
+    },
+    criteria: [
+      "Low back pain present for more than 3 months",
+      "No red-flag findings (e.g., cauda equina signs, suspected fracture, malignancy)",
+      "Clear directional preference identified on exam (centralization with specific movement)",
+      "Current pregnancy",
+      "Prior lumbar spine surgery within the last year",
+      "Currently employed",
+      "Pain radiating below the knee with neurological signs"
+    ],
+    stratVars: ["Directional preference type (flexion vs. extension)", "Duration of symptoms", "Baseline pain level"],
+    outcomes: {
+      primary: ["Numeric Pain Rating Scale (NPRS)", "Oswestry Disability Index (ODI)", "Patient-Specific Functional Scale (PSFS)"],
+      secondary: ["Fear-Avoidance Beliefs Questionnaire (FABQ)", "Global Rating of Change Scale"],
+      timepoints: ["Baseline", "3 weeks", "6 weeks", "3-month follow-up"]
+    },
+    attritionReasons: ["Symptom resolution leading to early self-discharge", "Treatment burden / difficulty fitting sessions into schedule", "Dissatisfaction with assigned exercise group", "Flare-up requiring outside medical care", "Loss to follow-up"],
+    biasOptions: [
+      "Selection bias: systematic differences in the characteristics of participants selected for different groups — e.g., if recruitment relies on one clinic's referral pattern, the sample may not represent chronic LBP patients broadly.",
+      "Performance bias: systematic differences in the care provided to the groups apart from the intervention itself — e.g., patients and PTs can't be blinded to which exercise approach is being used, which may affect adherence or expectations.",
+      "Detection bias: systematic differences in how outcomes are assessed — e.g., a clinician who knows group assignment may score self-reported pain/disability questionnaires with subtle influence.",
+      "Attrition bias: systematic differences in dropout rates or loss to follow-up between groups — e.g., patients who don't respond to their assigned exercise approach may drop out more often, skewing results toward responders."
+    ]
+  },
+  {
+    title: "Scenario 5 — Parkinson's Disease: LSVT BIG-Style Training",
+    vignette: "Patients with idiopathic Parkinson's disease (Hoehn & Yahr stages 1–3) are randomized to an LSVT BIG-style high-amplitude movement training program versus standard balance/strengthening PT, measuring UPDRS motor scores and gait velocity over 4 weeks.",
+    initialN: 15,
+    attrition: 18,
+    ethicsTwist: "Parkinson's disease is progressive — withholding a potentially more effective intervention from the control group during the trial period could mean irreversible functional decline that a delayed-start design might better address.",
+    resource: { label: "Physical Therapist Management of Parkinson Disease: APTA Clinical Practice Guideline (Physical Therapy Journal)", url: "https://academic.oup.com/ptj/article/102/4/pzab302/6485202" },
+    pico: {
+      population: [
+        "Adults with idiopathic Parkinson's disease, Hoehn & Yahr stages 1-3",
+        "Adults with any parkinsonian syndrome, including atypical parkinsonism (e.g., MSA, PSP)",
+        "Adults with advanced Parkinson's disease, Hoehn & Yahr stage 5, wheelchair-bound"
+      ],
+      intervention: [
+        "4-week LSVT BIG-style high-amplitude movement training, 4x/week, 1 hour/session",
+        "A single educational seminar about exercise benefits in Parkinson's disease",
+        "4 weeks of low-amplitude, slow-tempo movement training"
+      ],
+      comparison: [
+        "Standard balance and strengthening PT, matched in frequency and duration",
+        "No physical therapy or exercise of any kind",
+        "Deep brain stimulation surgery"
+      ],
+      outcome: [
+        "Motor symptom severity and gait speed",
+        "Cognitive screening scores",
+        "Medication dosage changes"
+      ]
+    },
+    criteria: [
+      "Diagnosis of idiopathic Parkinson's disease, Hoehn & Yahr stage 1-3",
+      "Able to follow multi-step verbal instructions",
+      "Atypical parkinsonism or significant dementia diagnosis",
+      "Currently stable on Parkinson's medication regimen (no recent changes)",
+      "Severe orthopedic condition limiting safe participation in high-amplitude movement",
+      "Right-handed",
+      "Age over 80"
+    ],
+    stratVars: ["Hoehn & Yahr stage", "Disease duration", "Baseline UPDRS score"],
+    outcomes: {
+      primary: ["UPDRS Motor Subscale (Part III)", "Gait velocity (10-Meter Walk Test)", "Timed Up and Go (TUG)"],
+      secondary: ["PDQ-39 (quality of life)", "6-Minute Walk Test"],
+      timepoints: ["Baseline", "Post-intervention (week 4)", "3-month follow-up"]
+    },
+    attritionReasons: ["Disease progression limiting ability to participate", "Medication change during the study period", "Transportation barriers to 4x/week sessions", "Intercurrent illness or hospitalization", "Caregiver scheduling conflicts"],
+    biasOptions: [
+      "Selection bias: systematic differences in the characteristics of participants selected for different groups — e.g., if recruitment relies on one movement-disorder clinic, the sample may not represent Parkinson's patients broadly.",
+      "Performance bias: systematic differences in the care provided to the groups apart from the intervention itself — e.g., patients and PTs can't be blinded to which movement training approach is used, which may affect motivation or expectations.",
+      "Detection bias: systematic differences in how outcomes are assessed — e.g., an assessor who knows group assignment may score UPDRS motor items or gait speed more favorably for the experimental group.",
+      "Attrition bias: systematic differences in dropout rates or loss to follow-up between groups — e.g., patients with faster disease progression may drop out at different rates between groups, skewing results."
+    ]
+  },
+  {
+    title: "Scenario 6 — Adolescent ACL Injury-Prevention Training",
+    vignette: "A school-based trial enrolls adolescent athletes (ages 14–18) in competitive sports, comparing a neuromuscular injury-prevention warm-up program to athletes' usual warm-up routine, tracking ACL injury incidence and landing mechanics across a competitive season.",
+    initialN: 40,
+    attrition: 25,
+    ethicsTwist: "Participants are minors, requiring both parental/guardian consent and adolescent assent. The team must also justify withholding a warm-up program with known injury-prevention evidence from the control athletes for an entire competitive season.",
+    resource: { label: "Evidence-Based Best-Practice Guidelines for Preventing ACL Injuries in Young Athletes: Systematic Review & Meta-Analysis (PMC)", url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC6592422/" },
+    pico: {
+      population: [
+        "Adolescent athletes ages 14-18 participating in competitive cutting/pivoting sports",
+        "Adult professional athletes ages 25-35",
+        "Adolescents who have already torn their ACL and are post-surgical"
+      ],
+      intervention: [
+        "Neuromuscular injury-prevention warm-up program performed before every practice/game for a full season",
+        "A single pre-season injury-prevention lecture with no ongoing physical component",
+        "Season-long heavy resistance strength training program unrelated to warm-up routines"
+      ],
+      comparison: [
+        "Athletes' usual warm-up routine (standard practice)",
+        "No warm-up of any kind before activity",
+        "An alternative experimental warm-up program from a competing research group"
+      ],
+      outcome: [
+        "ACL injury incidence and landing mechanics",
+        "Overall team win/loss record",
+        "Athletes' self-reported enjoyment of warm-up routine"
+      ]
+    },
+    criteria: [
+      "Age 14-18, currently rostered on a competitive cutting/pivoting sport team",
+      "No history of prior ACL injury or reconstruction",
+      "Prior ACL injury or reconstruction in either knee",
+      "Medical clearance to participate in sport for the season",
+      "Lower-extremity injury within the past 3 months limiting full participation",
+      "Plays multiple sports",
+      "Attends a school with an existing certified athletic trainer on staff"
+    ],
+    stratVars: ["Sport type", "Sex", "School / site (if multi-site)"],
+    outcomes: {
+      primary: ["ACL injury incidence (count over season)", "Landing Error Scoring System (LESS)", "Tuck Jump Assessment"],
+      secondary: ["Y-Balance Test", "Single-Leg Hop Test for Distance"],
+      timepoints: ["Pre-season baseline", "Mid-season", "End-of-season", "Post-season follow-up"]
+    },
+    attritionReasons: ["Athlete transfers schools or quits the team", "Unrelated injury removes athlete from play", "Inconsistent attendance at warm-up sessions", "Graduation/season ends before follow-up testing", "Withdrawal of parental consent"],
+    biasOptions: [
+      "Selection bias: systematic differences in the characteristics of participants selected for different groups — e.g., if recruitment relies on one school's teams, the sample may not represent adolescent athletes broadly.",
+      "Performance bias: systematic differences in the care provided to the groups apart from the intervention itself — e.g., coaches and athletes can't be blinded to which warm-up program is being used, which may affect effort or buy-in.",
+      "Detection bias: systematic differences in how outcomes are assessed — e.g., an assessor who knows group assignment may score landing mechanics (e.g., LESS) more favorably for the experimental group.",
+      "Attrition bias: systematic differences in dropout rates or loss to follow-up between groups — e.g., athletes who get injured or benched may drop out of one group at a different rate than the other, skewing results."
+    ]
+  },
+  {
+    title: "Scenario 7 — Unilateral Vestibular Hypofunction: Gaze Stabilization Training",
+    vignette: "Adults with confirmed unilateral vestibular hypofunction report persistent dizziness and gaze instability during head movement. Your team is designing a trial comparing a structured gaze stabilization and habituation exercise program to a general balance exercise program, measured over 6 weeks.",
+    initialN: 22,
+    attrition: 18,
+    ethicsTwist: "Participants experience dizziness/disequilibrium symptoms during the study period regardless of group assignment, and the team must consider fall risk during home exercise sessions for both arms.",
+    resource: { label: "Vestibular Rehabilitation for Peripheral Vestibular Hypofunction: Updated APTA Clinical Practice Guideline (PMC)", url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC8920012/" },
+    pico: {
+      population: [
+        "Adults with vestibular hypofunction confirmed by abnormal vestibular function testing (e.g., video head impulse test or caloric testing), reporting dizziness with head movement",
+        "Adults with dizziness of any cause, including cardiac or psychiatric origin, without vestibular testing confirmation",
+        "Adults with bilateral vestibular loss who are completely areflexic on testing"
+      ],
+      intervention: [
+        "6-week structured gaze stabilization and habituation exercise program, progressed weekly, performed 2x/day at home plus weekly clinic visits",
+        "A single one-time vestibular education handout with no structured exercise progression",
+        "Canalith repositioning maneuver only, performed once in clinic"
+      ],
+      comparison: [
+        "General balance exercise program, matched in frequency and duration, without head-movement-specific gaze stabilization exercises",
+        "No intervention or contact at all (true no-treatment control)",
+        "Vestibular suppressant medication management only, no exercise"
+      ],
+      outcome: [
+        "Dizziness-related disability and gaze/gait stability",
+        "Hearing thresholds on audiometry",
+        "Overall life satisfaction unrelated to dizziness symptoms"
+      ]
+    },
+    criteria: [
+      "Confirmed unilateral vestibular hypofunction on vestibular function testing",
+      "Reports dizziness or unsteadiness provoked by head movement",
+      "Able to tolerate provocative head-movement exercises without severe nausea",
+      "Acute peripheral vertigo less than 48 hours from onset (still in acute vestibular neuritis phase)",
+      "Diagnosed benign paroxysmal positional vertigo (BPPV) as the primary cause of symptoms",
+      "Uncorrected visual impairment significant enough to prevent visual fixation tasks",
+      "Currently taking vestibular suppressant medication"
+    ],
+    stratVars: ["Chronicity of symptoms (acute vs. chronic)", "Severity of vestibular loss on caloric testing", "Baseline Dizziness Handicap Inventory score"],
+    outcomes: {
+      primary: ["Dizziness Handicap Inventory (DHI)", "Dynamic Visual Acuity Test", "Gait speed during head-turn dual task"],
+      secondary: ["Functional Gait Assessment", "Activities-specific Balance Confidence (ABC) Scale"],
+      timepoints: ["Baseline", "3 weeks", "6 weeks", "3-month follow-up"]
+    },
+    attritionReasons: ["Symptom resolution leading to early self-discharge", "Nausea/intolerance to provocative exercises", "Transportation barriers to weekly clinic visits", "New unrelated medical event", "Loss to follow-up / unable to contact"],
+    biasOptions: [
+      "Selection bias: systematic differences in the characteristics of participants selected for different groups — e.g., if recruitment relies on one vestibular clinic's referral pattern, the sample may not represent patients with vestibular hypofunction broadly.",
+      "Performance bias: systematic differences in the care provided to the groups apart from the intervention itself — e.g., patients and PTs can't be blinded to which exercise program is being performed, which may affect adherence or expectations.",
+      "Detection bias: systematic differences in how outcomes are assessed — e.g., an assessor who knows group assignment may score the Dizziness Handicap Inventory or gait stability more favorably for the experimental group.",
+      "Attrition bias: systematic differences in dropout rates or loss to follow-up between groups — e.g., patients who experience more nausea during gaze stabilization exercises may drop out at a higher rate than those in general balance training."
+    ]
+  },
+  {
+    title: "Scenario 8 — COPD: High-Intensity Interval Training vs. Continuous Aerobic Training",
+    vignette: "Adults with moderate-to-severe COPD enrolled in outpatient pulmonary rehabilitation are randomized to a high-intensity interval training (HIIT) protocol versus standard continuous moderate-intensity aerobic training, measuring exercise capacity and dyspnea over 8 weeks.",
+    initialN: 28,
+    attrition: 22,
+    ethicsTwist: "Participants with COPD are at risk of dyspnea-related distress and oxygen desaturation during exercise testing/training regardless of group, requiring careful monitoring and a plan to stop sessions safely in both arms.",
+    resource: { label: "Interval Versus Continuous Training in Individuals With COPD: A Systematic Review (NCBI Bookshelf)", url: "https://www.ncbi.nlm.nih.gov/books/NBK78907/" },
+    pico: {
+      population: [
+        "Adults with moderate-to-severe COPD (GOLD stage II-III) who are clinically stable and enrolled in outpatient pulmonary rehabilitation",
+        "Adults with COPD currently hospitalized for an acute exacerbation",
+        "Adults with asthma rather than COPD, regardless of severity"
+      ],
+      intervention: [
+        "8-week high-intensity interval training (HIIT) protocol, alternating short bursts of high-intensity cycling with active recovery, 3x/week",
+        "A single supervised exercise session with no structured progression afterward",
+        "8 weeks of resistance training only, with no aerobic/interval component"
+      ],
+      comparison: [
+        "Standard continuous moderate-intensity aerobic training, matched in total session time and frequency",
+        "No exercise program at all, usual medical management only",
+        "Inspiratory muscle training only, with no aerobic exercise component"
+      ],
+      outcome: [
+        "Exercise capacity and dyspnea during activity",
+        "Pulmonary function test values (FEV1) at rest",
+        "Number of medications prescribed"
+      ]
+    },
+    criteria: [
+      "Diagnosis of COPD confirmed by spirometry (GOLD stage II-III)",
+      "Clinically stable, no exacerbation requiring hospitalization in the past 4 weeks",
+      "Able to safely tolerate exercise testing per physician clearance",
+      "Resting oxygen saturation below 88% on room air requiring continuous supplemental oxygen during all activity",
+      "Unstable cardiac condition (e.g., recent MI, unstable angina) within the past 3 months",
+      "Current smoker",
+      "Able to attend 3x/week sessions for 8 weeks"
+    ],
+    stratVars: ["GOLD stage (II vs. III)", "Baseline 6-Minute Walk Test distance", "Use of supplemental oxygen"],
+    outcomes: {
+      primary: ["6-Minute Walk Test (6MWT)", "Modified Medical Research Council (mMRC) Dyspnea Scale", "Borg Rating of Perceived Exertion during peak exercise"],
+      secondary: ["Chronic Respiratory Questionnaire (CRQ)", "St. George's Respiratory Questionnaire (SGRQ)"],
+      timepoints: ["Baseline", "4 weeks", "8 weeks", "3-month follow-up"]
+    },
+    attritionReasons: ["COPD exacerbation requiring hospitalization", "Intolerance to exercise intensity (excessive dyspnea)", "Transportation barriers to 3x/week sessions", "New unrelated medical event", "Withdrawal due to dissatisfaction with assigned protocol"],
+    biasOptions: [
+      "Selection bias: systematic differences in the characteristics of participants selected for different groups — e.g., if recruitment relies on one pulmonary rehab program's referral list, the sample may not represent COPD patients broadly.",
+      "Performance bias: systematic differences in the care provided to the groups apart from the intervention itself — e.g., patients and exercise staff can't be blinded to which training protocol is being used, which may affect effort or expectations.",
+      "Detection bias: systematic differences in how outcomes are assessed — e.g., an assessor who knows group assignment may score the 6-Minute Walk Test or dyspnea scale more favorably for the experimental (HIIT) group.",
+      "Attrition bias: systematic differences in dropout rates or loss to follow-up between groups — e.g., patients who find the high-intensity intervals too difficult may drop out at a higher rate than those in continuous moderate training."
+    ]
+  }
+];
+
+/* Generic, reusable option sets (not scenario-specific) */
+const RANDOM_JUSTIFY_OPTIONS = [
+  "Random assignment — gives each participant an equal chance of being placed in either group, reducing selection bias and keeping the assignment process simple",
+  "Matching — pairs or balances participants on a known characteristic before assignment, helping ensure the groups are comparable at baseline on that variable",
+  "Random assignment — chosen mainly because it is faster to carry out than matching, regardless of group comparability",
+  "Matching — chosen mainly to guarantee exactly equal group sizes, regardless of baseline comparability"
+];
+const BIAS_MITIGATION_OPTIONS = [
+  "Randomization — give each participant an equal chance of being assigned to any group, reducing systematic differences between groups (addresses selection bias)",
+  "Allocation concealment — hide the allocation sequence from those enrolling/assigning participants, preventing this from influencing who ends up in which group (addresses selection bias)",
+  "Blinding — keep participants and those delivering the intervention unaware of group assignment, reducing differential treatment (addresses performance bias)",
+  "Blinded outcome assessment — keep those assessing outcomes unaware of group assignment, reducing bias in outcome measurement (addresses detection bias)",
+  "Intention-to-treat analysis — include all randomized participants in the analysis regardless of whether they completed the study, preserving the benefit of randomization (addresses attrition bias)",
+  "Follow-up and retention strategies — use thorough follow-up procedures to minimize dropout and loss to follow-up (addresses attrition bias)"
+];
+const ETHICS_STRATEGY_OPTIONS = [
+  "Informed consent — clearly explain the study's purpose, procedures, risks, and benefits so participants (or their parent/guardian) can make an informed decision about joining either group",
+  "Confidentiality — store participant data securely and use coded/anonymized IDs instead of identifying details during analysis and reporting",
+  "Participant safety — build in monitoring protocols such as regular check-ins and a clear plan for immediate medical assistance if problems arise",
+  "(Appendix/advanced) Data Monitoring Committee — have an independent committee periodically review interim safety data during the trial",
+  "(Appendix/advanced) Predefined stopping criteria — set clear, objective criteria in advance for modifying or stopping the study early based on interim findings"
+];
+
+let state = { groupName: "", groupNum: null, scenario: null, currentStep: 1 };
+const TOTAL_STEPS = 8;
+
+/* ---------- rendering helpers ---------- */
+function renderChoiceGroup(containerId, name, options, type){
+  const container = document.getElementById(containerId);
+  container.innerHTML = options.map((opt, i) => {
+    const id = name + '-' + i;
+    return '<label class="choice-option" for="' + id + '">' +
+      '<input type="' + type + '" id="' + id + '" name="' + name + '" value="' + escapeAttr(opt) + '"> ' +
+      escapeHtml(opt) + '</label>';
+  }).join('');
+  container.querySelectorAll('input').forEach(inp => {
+    inp.addEventListener('change', () => {
+      onChoiceChange(container, type, name);
+    });
+  });
+}
+function onChoiceChange(container, type, name){
+  container.querySelectorAll('.choice-option').forEach(lbl => {
+    const inp = lbl.querySelector('input');
+    lbl.classList.toggle('checked', inp.checked);
+  });
+  if(name && name.indexOf('pico-') === 0){ updatePicoSentence(); }
+}
+function escapeHtml(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function escapeAttr(s){ return escapeHtml(s).replace(/"/g,'&quot;'); }
+
+function getRadioValue(name){
+  const el = document.querySelector('input[name="' + name + '"]:checked');
+  return el ? el.value : '';
+}
+function getCheckboxValues(name){
+  const els = document.querySelectorAll('input[name="' + name + '"]:checked');
+  return Array.from(els).map(e => e.value);
+}
+
+/* ---------- lab start ---------- */
+function startLab(){
+  const name = document.getElementById('group-name').value.trim();
+  const numRaw = document.getElementById('group-num').value.trim();
+  if(!name || !numRaw){
+    alert("Please enter a group name and select your group number to continue.");
+    return;
+  }
+  const num = parseInt(numRaw, 10);
+  if(isNaN(num) || num < 1){
+    alert("Please select a valid group number.");
+    return;
+  }
+  state.groupName = name;
+  state.groupNum = num;
+  state.scenario = SCENARIOS[(num - 1) % SCENARIOS.length];
+
+  document.getElementById('gate-card').style.display = 'none';
+  document.getElementById('wizard-card').style.display = 'block';
+
+  buildProgressTrack();
+  renderScenario();
+  buildAllChoiceContent();
+  document.getElementById('initial-n-display').value = state.scenario.initialN;
+  document.getElementById('attrition-rate').value = state.scenario.attrition;
+  calcSampleSize();
+  showStep(1);
+}
+
+function buildProgressTrack(){
+  const track = document.getElementById('progress-track');
+  track.innerHTML = '';
+  for(let i=0; i<TOTAL_STEPS; i++){
+    const seg = document.createElement('div');
+    seg.className = 'progress-seg';
+    seg.id = 'seg-' + (i+1);
+    track.appendChild(seg);
+  }
+}
+
+function renderScenario(){
+  const s = state.scenario;
+  let html = '<h3>' + s.title + '</h3><p>' + s.vignette + '</p>';
+  if (s.resource) {
+    html += '<p class="resource-link">Background reading on this intervention: <a href="' + escapeAttr(s.resource.url) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(s.resource.label) + '</a></p>';
+  }
+  document.getElementById('scenario-display').innerHTML = html;
+  document.getElementById('ethics-display').innerHTML = '<h3>Ethical Tension in This Scenario</h3><p>' + s.ethicsTwist + '</p>';
+}
+
+function buildAllChoiceContent(){
+  const s = state.scenario;
+  renderChoiceGroup('pico-population-group', 'pico-population', s.pico.population, 'radio');
+  renderChoiceGroup('pico-intervention-group', 'pico-intervention', s.pico.intervention, 'radio');
+  renderChoiceGroup('pico-comparison-group', 'pico-comparison', s.pico.comparison, 'radio');
+  renderChoiceGroup('pico-outcome-group', 'pico-outcome', s.pico.outcome, 'radio');
+
+  const critList = document.getElementById('criteria-list');
+  critList.innerHTML = s.criteria.map((text, i) => {
+    const name = 'crit-' + i;
+    return '<div class="crit-row"><div class="crit-text">' + escapeHtml(text) + '</div>' +
+      '<div class="crit-options">' +
+      '<label><input type="radio" name="' + name + '" value="Inclusion"> Inclusion</label>' +
+      '<label><input type="radio" name="' + name + '" value="Exclusion"> Exclusion</label>' +
+      '<label><input type="radio" name="' + name + '" value="Not Relevant"> Not Relevant</label>' +
+      '</div></div>';
+  }).join('');
+
+  renderChoiceGroup('random-justify-group', 'random-justify', RANDOM_JUSTIFY_OPTIONS, 'radio');
+  renderChoiceGroup('strat-vars-group', 'strat-vars', s.stratVars.concat(["None — simple randomization is sufficient"]), 'checkbox');
+
+  renderChoiceGroup('outcome-primary-group', 'outcome-primary', s.outcomes.primary, 'radio');
+  renderChoiceGroup('outcome-secondary-group', 'outcome-secondary', s.outcomes.secondary, 'checkbox');
+  renderChoiceGroup('outcome-timepoints-group', 'outcome-timepoints', s.outcomes.timepoints, 'checkbox');
+
+  renderChoiceGroup('attrition-reasons-group', 'attrition-reasons', s.attritionReasons, 'checkbox');
+
+  renderChoiceGroup('bias-combined-group', 'bias-combined', s.biasOptions, 'radio');
+  renderChoiceGroup('bias-mitigation-group', 'bias-mitigation', BIAS_MITIGATION_OPTIONS, 'checkbox');
+
+  renderChoiceGroup('ethics-strategies-group', 'ethics-strategies', ETHICS_STRATEGY_OPTIONS, 'checkbox');
+}
+
+function updatePicoSentence(){
+  const p = getRadioValue('pico-population');
+  const i = getRadioValue('pico-intervention');
+  const c = getRadioValue('pico-comparison');
+  const o = getRadioValue('pico-outcome');
+  const box = document.getElementById('pico-sentence');
+  if(p && i && c && o){
+    box.textContent = 'In ' + lower1(p) + ', does ' + lower1(i) + ', compared to ' + lower1(c) + ', improve ' + lower1(o) + '?';
+  } else {
+    box.textContent = 'Make a selection for each section above to build your PICO question.';
+  }
+}
+function lower1(s){ return s.charAt(0).toLowerCase() + s.slice(1); }
+
+/* ---------- navigation ---------- */
+function showStep(n){
+  document.querySelectorAll('.step').forEach(el => {
+    el.classList.toggle('active', parseInt(el.dataset.step) === n);
+  });
+  document.getElementById('progress-label').textContent = 'Step ' + n + ' of ' + TOTAL_STEPS;
+  for(let i=1; i<=TOTAL_STEPS; i++){
+    document.getElementById('seg-' + i).classList.toggle('done', i <= n);
+  }
+  document.getElementById('back-btn').disabled = (n === 1);
+  document.getElementById('next-btn').textContent = (n === TOTAL_STEPS) ? 'Finish' : 'Next';
+  document.getElementById('next-btn').onclick = (n === TOTAL_STEPS) ? function(){ renderSummary(); } : function(){ navStep(1); };
+  state.currentStep = n;
+  if(n === 8){ renderSummary(); }
+}
+function navStep(dir){
+  const target = state.currentStep + dir;
+  if(target < 1 || target > TOTAL_STEPS) return;
+  showStep(target);
+}
+
+/* ---------- sample size calculator ---------- */
+function calcSampleSize(){
+  const initial = state.scenario.initialN;
+  let rate = parseFloat(document.getElementById('attrition-rate').value);
+  if(isNaN(rate) || rate < 0) rate = 0;
+  if(rate >= 100) rate = 99;
+  const adjustedPerGroup = Math.ceil(initial / (1 - rate/100));
+  const totalN = adjustedPerGroup * 2;
+  document.getElementById('calc-result').innerHTML =
+    'Adjusted N per group: <strong>' + adjustedPerGroup + '</strong> &nbsp;|&nbsp; ' +
+    'Total sample size (2 groups): <strong>' + totalN + '</strong>';
+}
+document.addEventListener('input', function(e){
+  if(e.target && e.target.id === 'attrition-rate'){ calcSampleSize(); }
+});
+
+/* ---------- summary / export ---------- */
+function val(id){
+  const el = document.getElementById(id);
+  if(!el) return '';
+  return el.value.trim();
+}
+
+function buildSummaryData(){
+  calcSampleSize();
+  const s = state.scenario;
+  const initial = s.initialN;
+  let rate = parseFloat(document.getElementById('attrition-rate').value) || 0;
+  const adjustedPerGroup = Math.ceil(initial / (1 - rate/100));
+  const totalN = adjustedPerGroup * 2;
+
+  const critLines = s.criteria.map((text, i) => {
+    const choice = getRadioValue('crit-' + i) || '(not classified)';
+    return text + ' — ' + choice;
+  }).join('\n');
+
+  return [
+    { heading: 'Group', fields: [
+        ['Group Name', state.groupName],
+        ['Group Number', state.groupNum],
+        ['Assigned Scenario', s.title]
+    ]},
+    { heading: 'PICO Question', fields: [
+        ['Population', getRadioValue('pico-population')],
+        ['Intervention', getRadioValue('pico-intervention')],
+        ['Comparison', getRadioValue('pico-comparison')],
+        ['Outcome', getRadioValue('pico-outcome')],
+        ['PICO Question', document.getElementById('pico-sentence').textContent]
+    ]},
+    { heading: 'Participant Selection', fields: [
+        ['Criteria Classification', critLines],
+        ['Additional Criterion (optional)', val('crit-add')]
+    ]},
+    { heading: 'Randomization Strategy', fields: [
+        ['Method', val('random-method')],
+        ['Justification', getRadioValue('random-justify')],
+        ['Matching/Balancing Variable(s)', getCheckboxValues('strat-vars').join('; ')]
+    ]},
+    { heading: 'Outcome Measures', fields: [
+        ['Primary Outcome', getRadioValue('outcome-primary')],
+        ['Secondary Outcome(s)', getCheckboxValues('outcome-secondary').join('; ')],
+        ['Measurement Timepoints', getCheckboxValues('outcome-timepoints').join('; ')]
+    ]},
+    { heading: 'Sample Size & Attrition', fields: [
+        ['Initial N per group', initial],
+        ['Expected Attrition Rate', rate + '%'],
+        ['Adjusted N per group', adjustedPerGroup],
+        ['Total Sample Size', totalN],
+        ['Anticipated Reasons for Dropout', getCheckboxValues('attrition-reasons').join('; ')]
+    ]},
+    { heading: 'Risk of Bias', fields: [
+        ['Identified Bias & Explanation', getRadioValue('bias-combined')],
+        ['Mitigation Strategies', getCheckboxValues('bias-mitigation').join('; ')]
+    ]},
+    { heading: 'Ethical Considerations', fields: [
+        ['Ethical Tension', s.ethicsTwist],
+        ['Strategies Selected', getCheckboxValues('ethics-strategies').join('; ')],
+        ['Informed Consent Talking Point (optional)', val('ethics-consent')]
+    ]}
+  ];
+}
+
+function renderSummary(){
+  const data = buildSummaryData();
+  let html = '';
+  data.forEach(section => {
+    html += '<div class="summary-section"><h3>' + section.heading + '</h3>';
+    section.fields.forEach(f => {
+      const value = String(f[1]).trim();
+      html += '<div class="field"><span class="field-label">' + f[0] + ':</span> ' +
+              (value ? escapeHtml(value).replace(/\n/g,'<br>') : '<em>(not yet completed)</em>') + '</div>';
+    });
+    html += '</div>';
+  });
+  document.getElementById('summary-render').innerHTML = html;
+
+  let printHtml = '<h1 style="color:#CB182F;">Design Your Own RCT — Protocol Summary</h1>';
+  printHtml += '<p><strong>' + escapeHtml(state.groupName) + '</strong> (Group ' + state.groupNum + ')</p>';
+  printHtml += html;
+  document.getElementById('print-summary').innerHTML = printHtml;
+}
+
+function copyAsText(){
+  const data = buildSummaryData();
+  let text = 'DESIGN YOUR OWN RCT — PROTOCOL SUMMARY\n';
+  text += '=======================================\n';
+  text += state.groupName + ' (Group ' + state.groupNum + ')\n\n';
+  data.forEach(section => {
+    text += section.heading.toUpperCase() + '\n' + '-'.repeat(section.heading.length) + '\n';
+    section.fields.forEach(f => {
+      text += f[0] + ': ' + (String(f[1]).trim() ? f[1] : '(not yet completed)') + '\n';
+    });
+    text += '\n';
+  });
+
+  function showConfirm(){
+    const c = document.getElementById('copy-confirm');
+    c.style.display = 'inline';
+    setTimeout(() => { c.style.display = 'none'; }, 2000);
+  }
+
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(showConfirm).catch(() => fallbackCopy(text, showConfirm));
+  } else {
+    fallbackCopy(text, showConfirm);
+  }
+}
+
+function fallbackCopy(text, cb){
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.left = '-9999px';
+  document.body.appendChild(ta);
+  ta.focus();
+  ta.select();
+  try{ document.execCommand('copy'); cb(); }
+  catch(e){ alert('Copy failed. Please select and copy the summary text manually.'); }
+  document.body.removeChild(ta);
+}
+</script>
+</body>
+</html>
