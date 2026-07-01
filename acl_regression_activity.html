@@ -1,0 +1,1436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The RTS Consult: A Regression Case Study</title>
+<style>
+  :root{
+    --navy:#0B3D5C;
+    --teal:#1C7293;
+    --seafoam:#5FB0A8;
+    --sand:#F4EFE6;
+    --coral:#E4572E;
+    --ink:#1A2B33;
+    --good:#2E7D5B;
+    --bad:#B3452C;
+    --card:#FFFFFF;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:Calibri,Arial,sans-serif;
+    background:linear-gradient(180deg,var(--navy) 0%, var(--navy) 220px, var(--sand) 220px, var(--sand) 100%);
+    color:var(--ink);
+    min-height:100vh;
+  }
+  .wrap{max-width:900px;margin:0 auto;padding:24px 20px 80px;}
+  header.top{
+    max-width:900px;margin:0 auto;padding:28px 20px 10px;color:#fff;
+  }
+  header.top h1{margin:0 0 4px;font-size:26px;}
+  header.top p{margin:0;color:#CADCFC;font-size:15px;}
+  .progress{
+    display:flex;gap:8px;margin:18px auto 0;max-width:900px;padding:0 20px;
+  }
+  .progress .seg{flex:1;height:8px;border-radius:4px;background:rgba(255,255,255,0.25);}
+  .progress .seg.done{background:var(--seafoam);}
+  .progress .seg.active{background:#fff;}
+
+  .card{
+    background:var(--card);
+    border-radius:14px;
+    padding:28px 30px;
+    margin-top:22px;
+    box-shadow:0 6px 20px rgba(11,61,92,0.12);
+  }
+  .station-tag{
+    display:inline-block;
+    background:var(--teal);
+    color:#fff;
+    font-size:12px;
+    font-weight:bold;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    padding:5px 12px;
+    border-radius:20px;
+    margin-bottom:14px;
+  }
+  h2{color:var(--navy);font-size:22px;margin:0 0 12px;}
+  h3{color:var(--teal);font-size:17px;margin:22px 0 8px;}
+  p{line-height:1.55;font-size:15.5px;}
+  .lo-note{
+    background:#EAF4F2;
+    border-radius:10px;
+    padding:12px 16px;
+    font-size:14px;
+    color:var(--navy);
+    margin-top:16px;
+  }
+  .choices{display:flex;flex-direction:column;gap:10px;margin-top:18px;}
+  button.choice{
+    text-align:left;
+    background:#fff;
+    border:2px solid #D7E4E9;
+    border-radius:10px;
+    padding:14px 16px;
+    font-size:15px;
+    cursor:pointer;
+    color:var(--ink);
+    transition:border-color .15s, background .15s;
+    font-family:inherit;
+  }
+  button.choice:hover{border-color:var(--teal);background:#F5FBFA;}
+  button.choice:disabled{cursor:default;opacity:0.5;}
+  button.choice.correct:disabled,button.choice.incorrect:disabled{opacity:1;}
+  button.choice.correct{border-color:var(--good);background:#EAF6EF;}
+  button.choice.incorrect{border-color:var(--bad);background:#FBEDEA;}
+  button.choice.selected{border-color:var(--teal);background:#EAF4F2;}
+
+  .feedback{
+    margin-top:18px;
+    padding:16px 18px;
+    border-radius:10px;
+    font-size:15px;
+    line-height:1.5;
+    display:none;
+  }
+  .feedback.show{display:block;}
+  .feedback.good{background:#EAF6EF;border:1px solid var(--good);}
+  .feedback.corrective{background:#FBEDEA;border:1px solid var(--bad);}
+  .feedback.neutral{background:#EEF3FA;border:1px solid var(--teal);}
+
+  .nextbtn{
+    margin-top:22px;
+    display:none;
+    background:var(--coral);
+    color:#fff;
+    border:none;
+    padding:13px 26px;
+    border-radius:30px;
+    font-size:15px;
+    font-weight:bold;
+    cursor:pointer;
+    font-family:inherit;
+  }
+  .nextbtn.show{display:inline-block;}
+  .nextbtn:hover{background:#c8461f;}
+
+  table{border-collapse:collapse;width:100%;margin:14px 0;font-size:14px;}
+  th,td{border:1px solid #D7E4E9;padding:8px 10px;text-align:center;}
+  th{background:var(--navy);color:#fff;font-weight:600;}
+  tr:nth-child(even) td{background:#F5FBFA;}
+
+  .eq{
+    background:var(--navy);
+    color:#fff;
+    font-size:19px;
+    text-align:center;
+    padding:14px;
+    border-radius:10px;
+    margin:16px 0;
+    letter-spacing:0.02em;
+  }
+  .group-name-box{margin-top:20px;}
+  .group-name-box input{
+    font-size:16px;padding:10px 14px;border-radius:8px;border:2px solid #D7E4E9;width:100%;max-width:320px;
+  }
+  .timer-badge{
+    display:inline-block;background:#F4EFE6;color:var(--navy);border-radius:20px;padding:4px 12px;font-size:13px;font-weight:bold;margin-left:8px;
+  }
+  .patient-card{
+    display:flex;gap:16px;flex-wrap:wrap;background:#F5FBFA;border-radius:10px;padding:16px;margin:14px 0;
+  }
+  .patient-stat{flex:1;min-width:130px;}
+  .patient-stat .label{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--teal);font-weight:bold;}
+  .patient-stat .val{font-size:20px;color:var(--navy);font-weight:bold;}
+  .hidden{display:none!important;}
+  .final-screen{text-align:center;}
+  .final-screen .big{font-size:40px;margin-bottom:6px;}
+  ul.lo-list{padding-left:20px;}
+  ul.lo-list li{margin-bottom:6px;}
+  footer.credit{
+    max-width:900px;margin:30px auto 0;padding:0 20px;color:#7a8a92;font-size:12px;text-align:center;
+  }
+
+  /* Terminology matching game */
+  .term-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px;}
+  @media (max-width:640px){.term-grid{grid-template-columns:1fr;}}
+  .term-col-label{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--teal);font-weight:bold;margin-bottom:6px;}
+  .match-progress{font-size:14px;color:var(--navy);font-weight:bold;margin-top:14px;}
+
+  /* Slider simulator */
+  .sim-controls{margin:18px 0;display:flex;flex-direction:column;gap:16px;}
+  .slider-row label{display:block;font-size:14px;font-weight:bold;color:var(--navy);margin-bottom:6px;}
+  .slider-row input[type=range]{width:100%;accent-color:var(--coral);}
+  .readout-row{display:flex;gap:12px;flex-wrap:wrap;margin:14px 0;}
+  .readout-box{background:#F5FBFA;border-radius:10px;padding:10px 14px;flex:1;min-width:110px;text-align:center;}
+  .readout-box .num{font-size:22px;font-weight:bold;color:var(--navy);}
+  .readout-box .lbl{font-size:11px;color:var(--teal);text-transform:uppercase;font-weight:bold;letter-spacing:.03em;}
+  .sim-btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;}
+  button.sim-btn{
+    background:var(--teal);color:#fff;border:none;padding:11px 20px;border-radius:24px;
+    font-size:14px;font-weight:bold;cursor:pointer;font-family:inherit;
+  }
+  button.sim-btn:hover{background:#155a75;}
+  button.sim-btn.secondary{background:#fff;color:var(--teal);border:2px solid var(--teal);}
+  button.sim-btn.secondary:hover{background:#EEF3FA;}
+
+  /* Patient ranking / triage */
+  .patient-rank-card{
+    background:#F5FBFA;border-radius:10px;padding:14px 16px;margin:10px 0;
+    display:flex;align-items:center;gap:16px;flex-wrap:wrap;border:2px solid transparent;
+  }
+  .patient-rank-card.correct{border-color:var(--good);background:#EAF6EF;}
+  .patient-rank-card.incorrect{border-color:var(--bad);background:#FBEDEA;}
+  .patient-rank-card .pr-id{font-weight:bold;color:var(--navy);font-size:16px;min-width:34px;}
+  .patient-rank-card .pr-stats{flex:2;min-width:200px;font-size:14px;color:var(--ink);}
+  .patient-rank-card select{font-size:15px;padding:7px 10px;border-radius:8px;border:2px solid #D7E4E9;font-family:inherit;}
+  .patient-rank-card .pr-reveal{font-size:13px;color:var(--teal);font-weight:bold;min-width:110px;display:none;}
+  .patient-rank-card.revealed .pr-reveal{display:block;}
+
+  /* Drag-and-drop calculator */
+  .calc-banner{
+    background:var(--navy);color:#fff;border-radius:10px;padding:14px 18px;margin:14px 0 6px;
+    font-size:15px;text-align:center;font-weight:bold;
+  }
+  .calc-panel{
+    background:#fff;border:2px dashed #D7E4E9;border-radius:10px;padding:14px;margin:12px 0;width:100%;
+  }
+  .calc-tray{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;}
+  .calc-chip{
+    background:var(--teal);color:#fff;padding:8px 14px;border-radius:20px;font-size:14px;font-weight:bold;
+    cursor:grab;user-select:none;
+  }
+  .calc-chip.used{opacity:0.3;cursor:default;pointer-events:none;}
+  .calc-eq-row{
+    display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:14px;color:var(--navy);font-weight:bold;
+    margin-bottom:12px;
+  }
+  .calc-slot{
+    min-width:70px;min-height:34px;border:2px dashed var(--teal);border-radius:8px;display:flex;
+    align-items:center;justify-content:center;padding:4px 10px;font-size:13px;color:var(--teal);background:#F5FBFA;
+  }
+  .calc-slot.filled{border-style:solid;border-color:var(--good);background:#EAF6EF;color:var(--navy);}
+  .calc-slot.rejected{border-color:var(--bad);}
+  .calc-result{font-size:15px;font-weight:bold;color:var(--navy);margin:10px 0;min-height:20px;}
+  .calc-write label{font-size:13px;font-weight:bold;color:var(--navy);}
+  .calc-write input{font-size:15px;padding:6px 10px;border-radius:8px;border:2px solid #D7E4E9;width:100px;margin-left:8px;}
+
+  /* Stress-test bonus */
+  .warn-note{
+    background:#FDEDE8;border-radius:10px;padding:12px 16px;font-size:14px;color:#7a2f12;margin:14px 0;
+  }
+
+  /* Floating/sticky calculator layout for Station 5 */
+  .triage-layout{display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap;margin-top:14px;}
+  .triage-sidebar{flex:1 1 250px;position:sticky;top:14px;align-self:flex-start;z-index:5;}
+  .triage-main{flex:3 1 320px;min-width:280px;}
+  #shared-calc{box-shadow:0 6px 16px rgba(11,61,92,0.18);margin:0;}
+  @media (max-width:640px){
+    .triage-sidebar{position:sticky;top:8px;}
+  }
+
+  /* Instructor guide footer link + password gate + modal */
+  .instructor-link-row{max-width:900px;margin:12px auto 24px;padding:0 20px;text-align:center;}
+  .instructor-link-row a{
+    display:inline-block;color:var(--teal);background:#fff;border:2px solid var(--teal);
+    font-size:13px;font-weight:bold;text-decoration:none;cursor:pointer;
+    padding:8px 18px;border-radius:20px;
+  }
+  .instructor-link-row a:hover{background:var(--teal);color:#fff;}
+  .modal-overlay{
+    position:fixed;inset:0;background:rgba(11,61,92,0.82);z-index:200;
+    display:flex;align-items:flex-start;justify-content:center;padding:40px 16px;overflow-y:auto;
+  }
+  .modal-card{background:#fff;border-radius:14px;padding:28px 30px;max-width:420px;width:100%;margin-top:40px;}
+  .modal-card.wide{max-width:820px;}
+  .modal-card input[type=password]{
+    font-size:16px;padding:10px 14px;border-radius:8px;border:2px solid #D7E4E9;width:100%;margin:12px 0;font-family:inherit;
+  }
+  .guide-content h3{margin-top:26px;}
+  .guide-content h4{color:var(--navy);font-size:15px;margin:18px 0 6px;}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <h1>The RTS Consult</h1>
+  <p>A choose-your-path regression case study &mdash; DPTD 712</p>
+</header>
+<div class="progress" id="progressBar"></div>
+
+<div class="wrap">
+
+  <!-- INTRO / GROUP NAME -->
+  <section class="card" id="screen-intro">
+    <span class="station-tag">Before You Begin</span>
+    <h2>Welcome to the consult</h2>
+    <p>Your group has been brought in by <strong>Summit Sports Physical Therapy</strong> to help them make sense of
+    their return-to-sport (RTS) data after ACL reconstruction. Over the next six stops, you'll build vocabulary, try
+    fitting a regression line yourselves, read a real statistical output, apply a model to a small caseload, and
+    weigh what that data can &mdash; and can't &mdash; tell a clinician.</p>
+    <p>Work through this together as a group. Talk out loud, argue a little, and agree on an answer before you click.</p>
+    <div class="group-name-box">
+      <label for="groupName" style="font-size:14px;font-weight:bold;color:var(--navy);">Group name or number:</label><br>
+      <input type="text" id="groupName" placeholder="e.g. Group 3">
+    </div>
+    <button class="nextbtn show" onclick="goToStation('primer')">Start the Consult &rarr;</button>
+  </section>
+
+  <!-- CLINICAL PRIMER -->
+  <section class="card hidden" id="screen-primer">
+    <span class="station-tag">Orientation <span class="timer-badge">~5 min</span></span>
+    <h2>Clinical primer: ACL reconstruction &amp; return to sport</h2>
+    <p>Before you consult, a quick orientation to the case &mdash; read this together as a group.</p>
+
+    <h3>What is ACL reconstruction?</h3>
+    <p>The <strong>anterior cruciate ligament (ACL)</strong> is one of the main stabilizing ligaments of the knee.
+    It's frequently torn during sports that involve cutting, pivoting, or sudden deceleration &mdash; soccer,
+    basketball, and skiing are common culprits. Because the torn ligament can't reliably heal on its own,
+    surgeons typically reconstruct it using a <strong>graft</strong>, most often harvested from either the
+    <strong>patellar tendon</strong> or the <strong>hamstring tendon</strong>. The graft is threaded through the
+    knee to take over the ACL's job of preventing the shin bone from sliding forward relative to the thigh bone.</p>
+
+    <h3>What does "return to sport" mean?</h3>
+    <p>Surgery repairs the structure, but the graft needs months to mature, and the surrounding muscles need
+    extensive rehab before the knee can safely handle the demands of sport again. <strong>Return to sport (RTS)
+    clearance</strong> is the point at which a clinician judges a patient ready to resume full sport participation.
+    Clearing a patient too early raises the risk of re-tearing the graft or injuring the other knee; clearing too
+    late delays an athlete's return without added benefit. Getting this timing right is one of the highest-stakes
+    decisions in sports PT &mdash; which is exactly why clinics look for objective data to help guide it.</p>
+
+    <h3>The three factors in this case</h3>
+    <div class="lo-note">
+      <strong>Quad strength symmetry index (LSI):</strong> the surgical leg's quadriceps strength measured
+      against the uninvolved leg, expressed as a percentage (a patient at 85% LSI has regained 85% of their
+      uninjured leg's quad strength). Many clinics use LSI as one benchmark for RTS readiness, since quad
+      strength is critical for absorbing landing and cutting forces.
+    </div>
+    <div class="lo-note" style="margin-top:10px;">
+      <strong>Age:</strong> younger athletes often return to high-demand cutting sports more often and sooner,
+      and healing/recovery trajectories can differ across age groups.
+    </div>
+    <div class="lo-note" style="margin-top:10px;">
+      <strong>Graft type:</strong> patellar tendon and hamstring tendon grafts come from different tissue and
+      can carry different recovery patterns &mdash; for example, some research points to slower early quad
+      strength recovery after hamstring grafts, since the hamstring is itself a knee-flexing muscle affected by
+      the harvest.
+    </div>
+
+    <p style="margin-top:16px;">Keep these three factors in mind as you move through the consult &mdash; you'll
+    be asked to reason about all three.</p>
+
+    <button class="nextbtn show" onclick="goToStation('warmup')">Begin Station 1 &rarr;</button>
+  </section>
+
+  <!-- STATION 1: TERMINOLOGY WARM-UP -->
+  <section class="card hidden" id="screen-warmup">
+    <span class="station-tag">Station 1 of 6 <span class="timer-badge">~6 min</span></span>
+    <h2>Warm-Up: Match the Terms</h2>
+    <p>Before you dive in, get your vocabulary straight as a group. Click a term on the left, then click the
+    definition on the right you think matches it. Correct matches lock in green; wrong guesses bounce back so you
+    can try again.</p>
+
+    <div class="term-grid">
+      <div>
+        <div class="term-col-label">Terms</div>
+        <div class="choices" id="term-col"></div>
+      </div>
+      <div>
+        <div class="term-col-label">Definitions</div>
+        <div class="choices" id="def-col"></div>
+      </div>
+    </div>
+    <div class="match-progress" id="matchProgress">Matched: 0 / 6</div>
+    <button class="nextbtn" id="next-warmup" onclick="goToStation(1)">Go to Station 2 &rarr;</button>
+  </section>
+
+  <!-- STATION 2: THE REFERRAL -->
+  <section class="card hidden" id="screen-1">
+    <span class="station-tag">Station 2 of 6 <span class="timer-badge">~5 min</span></span>
+    <h2>The Referral</h2>
+    <p>The clinic director slides a folder across the table: <em>"We track three things on every ACL patient at
+    their 12-week mark: quad strength symmetry (how their surgical-side quad compares to the uninvolved side, as a
+    %), age, and which graft was used &mdash; patellar tendon or hamstring. What we actually want to know is how many
+    more weeks a patient will need before we clear them for sport. Can you tell us which of these actually matters?"</em></p>
+    <p><strong>Before you see any data</strong> &mdash; as a group, predict: which factor(s) do you think will turn out
+    to be most related to weeks-until-RTS-clearance?</p>
+    <div class="choices" id="choices-1">
+      <button class="choice" onclick="answer(1,this,'a')">A. Quad strength symmetry only</button>
+      <button class="choice" onclick="answer(1,this,'b')">B. All three factors, combined</button>
+      <button class="choice" onclick="answer(1,this,'c')">C. Age only</button>
+      <button class="choice" onclick="answer(1,this,'d')">D. None &mdash; RTS timing is basically unpredictable</button>
+    </div>
+    <div class="feedback neutral" id="feedback-1"></div>
+    <div class="lo-note hidden" id="lonote-1">
+      <strong>The idea behind the guess:</strong> Regression is a statistical method for testing exactly this kind
+      of hunch &mdash; it models the relationship between an outcome (here, weeks to RTS) and one or more predictors,
+      so a clinic doesn't have to rely on gut feeling alone. Whichever factor(s) your group picked, you're about
+      to find out whether the data agrees.
+    </div>
+    <button class="nextbtn" id="next-1" onclick="goToStation(2)">See the Data &rarr;</button>
+  </section>
+
+  <!-- STATION 3: PLOT & PREDICT / BUILD YOUR OWN LINE -->
+  <section class="card hidden" id="screen-2">
+    <span class="station-tag">Station 3 of 6 <span class="timer-badge">~15 min</span></span>
+    <h2>Plot &amp; Predict: Build Your Own Line</h2>
+    <p>The clinic hands you a plot of 12 patients: <strong>quad symmetry index (%) at 12 weeks</strong> on the x-axis,
+    and <strong>weeks until RTS clearance</strong> on the y-axis. Your group's job: drag the sliders below to fit
+    your own line through the dots, before any "correct" answer is revealed.</p>
+
+    <svg viewBox="0 0 500 340" style="width:100%;max-width:520px;display:block;margin:10px auto;">
+      <line x1="60" y1="300" x2="460" y2="300" stroke="#1A2B33" stroke-width="1.5"/>
+      <line x1="60" y1="300" x2="60" y2="40" stroke="#1A2B33" stroke-width="1.5"/>
+      <text x="260" y="330" text-anchor="middle" font-size="13" fill="#1A2B33">Quad Symmetry Index at 12 Weeks (%)</text>
+      <text x="18" y="170" text-anchor="middle" font-size="13" fill="#1A2B33" transform="rotate(-90 18 170)">Weeks to RTS Clearance</text>
+      <text x="60" y="315" font-size="11" text-anchor="middle" fill="#1A2B33">60</text>
+      <text x="260" y="315" font-size="11" text-anchor="middle" fill="#1A2B33">77</text>
+      <text x="460" y="315" font-size="11" text-anchor="middle" fill="#1A2B33">95</text>
+      <text x="50" y="300" font-size="11" text-anchor="end" fill="#1A2B33">20</text>
+      <text x="50" y="170" font-size="11" text-anchor="end" fill="#1A2B33">32</text>
+      <text x="50" y="45" font-size="11" text-anchor="end" fill="#1A2B33">45</text>
+      <g id="residualGroup" stroke="#E4572E" stroke-width="1.5" stroke-dasharray="3,3"></g>
+      <g fill="#1C7293" id="dotGroup"></g>
+      <line id="fitLine" x1="60" y1="196" x2="460" y2="196" stroke="#0B3D5C" stroke-width="3"/>
+    </svg>
+
+    <div class="sim-controls">
+      <div class="slider-row">
+        <label for="slopeSlider">Slope: <span id="slopeVal">0.00</span></label>
+        <input type="range" id="slopeSlider" min="-1.5" max="0.5" step="0.01" value="0" oninput="updateFit()">
+      </div>
+      <div class="slider-row">
+        <label for="anchorSlider">Value at 60% Symmetry: <span id="anchorVal">30.5</span></label>
+        <input type="range" id="anchorSlider" min="15" max="50" step="0.5" value="30.5" oninput="updateFit()">
+      </div>
+    </div>
+    <div class="readout-row">
+      <div class="readout-box"><div class="num" id="r2Readout">0.00</div><div class="lbl">R&sup2; (your fit)</div></div>
+      <div class="readout-box"><div class="num" id="sseReadout">0</div><div class="lbl">Sum of Squared Error</div></div>
+    </div>
+    <p style="font-size:14px;color:var(--teal);">Dashed orange lines show each patient's residual (the gap between
+    their actual data point and your line) &mdash; regression is the search for the line that makes those gaps as
+    small as possible, squared and added together.</p>
+    <div class="sim-btn-row">
+      <button class="sim-btn secondary" onclick="checkFit()">Check My Fit</button>
+      <button class="sim-btn" onclick="revealBestFit()">Reveal the Actual Best-Fit Line</button>
+    </div>
+    <div class="feedback" id="feedback-fit"></div>
+
+    <div class="hidden" id="reveal-2b">
+      <h3>The fitted line</h3>
+      <div class="eq">Weeks to RTS&nbsp; = &nbsp;73.7 &minus; 0.55 &times; (Quad Symmetry %)</div>
+      <table>
+        <tr><th>Model</th><th>R</th><th>R&sup2;</th></tr>
+        <tr><td>Quad Symmetry only</td><td>0.94</td><td>0.88</td></tr>
+      </table>
+      <p>An R&sup2; of 0.88 falls in the <strong>"very strong fit"</strong> range &mdash; quad symmetry alone explains
+      about 88% of the variability in weeks-to-clearance across these 12 patients. Compare that to your group's
+      fit above &mdash; how close did you get by eye?</p>
+      <p><strong>Reading the equation as a group:</strong> the slope (&minus;0.55) means each 1-point increase in
+      quad symmetry is associated with about half a week less time needed before clearance. Using this model, two
+      patients compare like this:</p>
+      <div class="patient-card">
+        <div class="patient-stat"><div class="label">Patient at 80% symmetry</div><div class="val">~30 more weeks</div></div>
+        <div class="patient-stat"><div class="label">Patient at 90% symmetry</div><div class="val">~24 more weeks</div></div>
+      </div>
+      <p>Discuss as a group: what does the <strong>y-intercept</strong> (73.7 weeks, the predicted time at 0% symmetry)
+      actually mean here &mdash; and why might it not be clinically meaningful?</p>
+      <div class="lo-note">
+        This intercept describes a patient with 0% quad symmetry, which essentially never happens in this
+        population. The intercept anchors the math of the line, but not every point on a regression line
+        represents a realistic clinical scenario &mdash; interpreting a line requires judgment about the
+        range of data it was built from.
+      </div>
+      <button class="nextbtn show" onclick="goToStation(3)">Go to the Output Table &rarr;</button>
+    </div>
+  </section>
+
+  <!-- STATION 4: READ THE OUTPUT -->
+  <section class="card hidden" id="screen-3">
+    <span class="station-tag">Station 4 of 6 <span class="timer-badge">~16 min</span></span>
+    <h2>Read the Output</h2>
+    <p>Back at the clinic, the data analyst ran a fuller model &mdash; adding <strong>age</strong> and
+    <strong>graft type</strong> alongside quad symmetry &mdash; and hands you this printout.</p>
+
+    <h3>Model Summary</h3>
+    <table>
+      <tr><th>Model</th><th>R</th><th>R&sup2;</th><th>Adjusted R&sup2;</th></tr>
+      <tr><td>Symmetry + Age + Graft Type</td><td>0.954</td><td>0.910</td><td>0.880</td></tr>
+    </table>
+
+    <h3>Coefficients</h3>
+    <table>
+      <tr><th>Predictor</th><th>B</th><th>SE</th><th>t</th><th>p</th></tr>
+      <tr><td>Intercept</td><td>69.0</td><td>4.5</td><td>15.3</td><td>&lt;0.001</td></tr>
+      <tr><td>Quad Symmetry (%)</td><td>&minus;0.60</td><td>0.08</td><td>&minus;7.5</td><td>&lt;0.001</td></tr>
+      <tr><td>Age (years)</td><td>0.35</td><td>0.15</td><td>2.3</td><td>0.03</td></tr>
+      <tr><td>Graft Type (Hamstring = 1)</td><td>4.2</td><td>1.8</td><td>2.3</td><td>0.04</td></tr>
+    </table>
+
+    <div class="lo-note">
+      <strong>How to read this table, term by term:</strong>
+      <ul class="lo-list" style="margin-top:8px;">
+        <li><strong>R:</strong> the overall correlation between the model's predictions and the actual weeks-to-RTS values. Closer to 1 (or &minus;1) means a stronger relationship.</li>
+        <li><strong>R&sup2;:</strong> the proportion of variability in weeks-to-RTS that the model explains, from 0 to 1. An R&sup2; of 0.910 means this model accounts for about 91% of the differences between patients' actual clearance times.</li>
+        <li><strong>Adjusted R&sup2;:</strong> a version of R&sup2; that applies a small penalty for the number of predictors in the model. Plain R&sup2; can only go up (or stay flat) every time you add a new predictor, even a useless one &mdash; Adjusted R&sup2; corrects for that so you're not fooled into thinking a bigger model is automatically a better one.</li>
+        <li><strong>B (coefficient):</strong> how much the predicted outcome changes for each one-unit increase in that predictor, holding all other predictors constant. For example, Age's B of 0.35 means each additional year of age is associated with about 0.35 more weeks to clearance, once symmetry and graft type are accounted for.</li>
+        <li><strong>SE (standard error):</strong> how much the estimated B would be expected to bounce around if the study were repeated on a new sample &mdash; think of it as the "margin of uncertainty" around the coefficient. A small SE relative to B means a precisely estimated effect; a large SE relative to B means the true effect could plausibly be much smaller (or even zero).</li>
+        <li><strong>t (t-statistic):</strong> essentially B divided by its SE. A larger t (in either direction) means the coefficient is many standard errors away from zero &mdash; stronger evidence that the effect is real rather than noise.</li>
+        <li><strong>p (p-value):</strong> the probability of seeing a t this large (or larger) by chance alone if the predictor actually had no real effect. Smaller p-values mean more confidence the effect is real; by convention, p &lt; 0.05 is usually called "statistically significant."</li>
+      </ul>
+    </div>
+
+    <p><strong>Question 1:</strong> Which R&sup2; value below would indicate the strongest model fit?</p>
+    <div class="choices" id="choices-3a">
+      <button class="choice" onclick="answer3a(this,'0.15')">0.15</button>
+      <button class="choice" onclick="answer3a(this,'0.45')">0.45</button>
+      <button class="choice" onclick="answer3a(this,'0.91')">0.91</button>
+      <button class="choice" onclick="answer3a(this,'cant')">Can't tell without more information</button>
+    </div>
+    <div class="feedback" id="feedback-3a"></div>
+
+    <div class="hidden" id="q3b-block">
+      <p><strong>Question 2:</strong> Which predictor is the analyst most confident actually contributes to the model
+      (lowest p-value)?</p>
+      <div class="choices" id="choices-3b">
+        <button class="choice" onclick="answer3b(this,'symm')">Quad Symmetry</button>
+        <button class="choice" onclick="answer3b(this,'age')">Age</button>
+        <button class="choice" onclick="answer3b(this,'graft')">Graft Type</button>
+      </div>
+      <div class="feedback" id="feedback-3b"></div>
+    </div>
+
+    <div class="hidden" id="q3c-block">
+      <p><strong>Question 3:</strong> The clinic director says: <em>"Let's just drop age and graft type &mdash; quad
+      symmetry has such a low p-value, the others barely matter."</em> Does your group agree?</p>
+      <div class="choices" id="choices-3c">
+        <button class="choice" onclick="answer3c(this,'yes')">Yes &mdash; simplify the model to just symmetry</button>
+        <button class="choice" onclick="answer3c(this,'no')">No &mdash; they're still statistically significant and add explanatory value</button>
+        <button class="choice" onclick="answer3c(this,'unsure')">Not enough information to say</button>
+      </div>
+      <div class="feedback" id="feedback-3c"></div>
+    </div>
+
+    <div class="hidden" id="q3d-block">
+      <p><strong>Question 4:</strong> Graft Type is coded so Hamstring = 1 and Patellar Tendon = 0, with B = 4.2.
+      Holding quad symmetry and age constant, what does this coefficient actually mean clinically?</p>
+      <div class="choices" id="choices-3d">
+        <button class="choice" onclick="answer3d(this,'a')">A. Patients with hamstring grafts are predicted to need about 4.2 more weeks than patellar tendon patients with the same symmetry and age</button>
+        <button class="choice" onclick="answer3d(this,'b')">B. Hamstring grafts make recovery 4.2% slower overall</button>
+        <button class="choice" onclick="answer3d(this,'c')">C. Graft type doesn't really matter, since it has the highest p-value in the table</button>
+      </div>
+      <div class="feedback" id="feedback-3d"></div>
+    </div>
+
+    <div class="hidden" id="q3e-block">
+      <p><strong>Question 5:</strong> R&sup2; is 0.910, but Adjusted R&sup2; is a bit lower at 0.880. Why does the
+      adjustment pull the number down?</p>
+      <div class="choices" id="choices-3e">
+        <button class="choice" onclick="answer3e(this,'a')">A. Adjusted R&sup2; corrects for the number of predictors in the model, since plain R&sup2; keeps rising as you add more predictors, even unhelpful ones</button>
+        <button class="choice" onclick="answer3e(this,'b')">B. It's a rounding error and doesn't mean anything</button>
+        <button class="choice" onclick="answer3e(this,'c')">C. Adjusted R&sup2; measures something unrelated to how well the model fits the data</button>
+      </div>
+      <div class="feedback" id="feedback-3e"></div>
+    </div>
+
+    <div class="hidden" id="q3f-block">
+      <p><strong>Question 6:</strong> Compare each predictor's SE to the size of its own B. Which predictor's effect
+      is estimated most precisely (smallest uncertainty relative to its own effect size)?</p>
+      <div class="choices" id="choices-3f">
+        <button class="choice" onclick="answer3f(this,'symm')">Quad Symmetry (B = &minus;0.60, SE = 0.08)</button>
+        <button class="choice" onclick="answer3f(this,'age')">Age (B = 0.35, SE = 0.15)</button>
+        <button class="choice" onclick="answer3f(this,'graft')">Graft Type (B = 4.2, SE = 1.8)</button>
+      </div>
+      <div class="feedback" id="feedback-3f"></div>
+    </div>
+
+    <button class="nextbtn" id="next-3" onclick="goToStation('triage')">Go to Patient Triage &rarr;</button>
+  </section>
+
+  <!-- STATION 5: MULTI-PATIENT TRIAGE -->
+  <section class="card hidden" id="screen-triage">
+    <span class="station-tag">Station 5 of 6 <span class="timer-badge">~10 min</span></span>
+    <h2>Patient Triage</h2>
+    <p>Five new patients just came in. You know their quad symmetry, age, and graft type &mdash; but not yet how
+    long each will need before RTS clearance.</p>
+
+    <div class="calc-banner">Weeks to RTS &approx; 69.0 &minus; 0.60 &times; (LSI %) + 0.35 &times; (Age) + 4.2 &times; (Graft: Hamstring = 1, Patellar Tendon = 0)</div>
+    <p style="font-size:14px;color:var(--teal);">Each patient's numbers are color-coded below. Drag <strong>one
+    patient's</strong> three chips into the shared calculator, hit Calculate, then write the result down in that
+    patient's box. Click <strong>Clear / Next Patient</strong> before dragging in a different patient's chips.
+    Once every patient has an estimate, rank them as a group from <strong>1 (soonest cleared)</strong> to
+    <strong>5 (latest cleared)</strong>. The calculator stays pinned in place as you scroll, so you shouldn't need
+    to scroll and drag at the same time.</p>
+
+    <div class="triage-layout">
+      <div class="triage-sidebar">
+        <div class="calc-panel" id="shared-calc">
+          <p style="font-size:13px;color:var(--navy);font-weight:bold;margin:0 0 10px;">Shared Calculator</p>
+          <div class="calc-eq-row">
+            <span>Weeks &asymp; 69.0 &minus; 0.60 &times;</span>
+            <div class="calc-slot" id="slot-lsi" ondragover="event.preventDefault()" ondrop="chipDrop(event,'lsi')">LSI</div>
+            <span>+ 0.35 &times;</span>
+            <div class="calc-slot" id="slot-age" ondragover="event.preventDefault()" ondrop="chipDrop(event,'age')">Age</div>
+            <span>+ 4.2 &times;</span>
+            <div class="calc-slot" id="slot-graft" ondragover="event.preventDefault()" ondrop="chipDrop(event,'graft')">Graft</div>
+          </div>
+          <div class="sim-btn-row">
+            <button class="sim-btn secondary" id="calc-btn" onclick="calculateShared()" disabled>Calculate</button>
+            <button class="sim-btn secondary" onclick="resetCalculator()">Clear / Next Patient</button>
+          </div>
+          <div class="calc-result" id="calc-result"></div>
+        </div>
+      </div>
+
+      <div class="triage-main">
+        <div id="triage-list"></div>
+
+        <div class="sim-btn-row">
+          <button class="sim-btn" onclick="checkTriage()">Check Our Ranking</button>
+        </div>
+        <div class="feedback" id="feedback-triage"></div>
+
+        <div class="hidden" id="stress-block">
+          <h3>Bonus: Stress Test</h3>
+          <p>One more patient just walked in with the same three factors &mdash; but look closely at their numbers
+          before you calculate anything.</p>
+          <div class="patient-card">
+            <div class="patient-stat"><div class="label">Quad Symmetry</div><div class="val">97%</div></div>
+            <div class="patient-stat"><div class="label">Age</div><div class="val">48</div></div>
+            <div class="patient-stat"><div class="label">Graft</div><div class="val">Hamstring</div></div>
+          </div>
+          <div class="warn-note">This patient's age (48) and quad symmetry (97%) both sit at or beyond the edges of
+          the patients used to build this model &mdash; roughly ages 16&ndash;32 and symmetry up to the low-to-mid 90s.
+          Clear the shared calculator if it's still holding another patient, then drag this patient's chips in
+          and calculate an estimate anyway &mdash; discuss as a group how much you'd actually trust it.</div>
+
+          <div class="calc-tray">
+            <div class="calc-chip" id="chip-lsi-stress" style="background:#495464;" draggable="true" ondragstart="chipDragStart(event,'stress','lsi',97,'97%')">97%</div>
+            <div class="calc-chip" id="chip-age-stress" style="background:#495464;" draggable="true" ondragstart="chipDragStart(event,'stress','age',48,'48')">48</div>
+            <div class="calc-chip" id="chip-graft-stress" style="background:#495464;" draggable="true" ondragstart="chipDragStart(event,'stress','graft',1,'Hamstring (1)')">Hamstring (1)</div>
+          </div>
+
+          <div class="hidden" id="stress-question-block">
+            <p><strong>How confident is your group in this estimate?</strong></p>
+            <div class="choices" id="choices-stress">
+              <button class="choice" onclick="answerStress(this,'a')">A. Very confident &mdash; the equation gave us a specific number, so it must be accurate</button>
+              <button class="choice" onclick="answerStress(this,'b')">B. Not very confident &mdash; this patient falls outside the range of data the model was built on</button>
+              <button class="choice" onclick="answerStress(this,'c')">C. Somewhat confident &mdash; the symmetry value is a little unusual, but age shouldn't matter for this concern</button>
+            </div>
+            <div class="feedback" id="feedback-stress"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button class="nextbtn" id="next-triage" onclick="goToStation(4)">Go to Clinical Stakes &rarr;</button>
+  </section>
+
+  <!-- STATION 6: CLINICAL STAKES -->
+  <section class="card hidden" id="screen-4">
+    <span class="station-tag">Station 6 of 6 <span class="timer-badge">~12 min</span></span>
+    <h2>Clinical Stakes</h2>
+    <p>Now it gets real. Three scenario cards &mdash; discuss each as a group before choosing.</p>
+
+    <h3>Scenario A</h3>
+    <div class="patient-card">
+      <div class="patient-stat"><div class="label">Quad Symmetry</div><div class="val">78%</div></div>
+      <div class="patient-stat"><div class="label">Age</div><div class="val">22</div></div>
+      <div class="patient-stat"><div class="label">Graft</div><div class="val">Patellar Tendon</div></div>
+      <div class="patient-stat"><div class="label">Model Prediction</div><div class="val">~30 more weeks</div></div>
+    </div>
+    <p>This patient has a tournament in 20 weeks and is pushing hard to be cleared early. What should guide the
+    clinic's decision?</p>
+    <div class="choices" id="choices-4a">
+      <button class="choice" onclick="answer4a(this,'a')">A. Follow the model exactly &mdash; the data says 30 weeks, so 30 weeks it is</button>
+      <button class="choice" onclick="answer4a(this,'b')">B. Use the model as one input alongside clinical exam, patient-reported outcomes, and risk tolerance</button>
+      <button class="choice" onclick="answer4a(this,'c')">C. Ignore the model &mdash; every patient is different, so statistics don't apply here</button>
+    </div>
+    <div class="feedback" id="feedback-4a"></div>
+
+    <div class="hidden" id="scenario-b">
+      <h3>Scenario B</h3>
+      <p>A researcher on the team wants to publish this regression model as guidance for RTS decisions at other
+      clinics nationally. What's the biggest limitation your group would flag?</p>
+      <div class="choices" id="choices-4b">
+        <button class="choice" onclick="answer4b(this,'a')">A. The sample is only 12 patients from one clinic &mdash; it may not generalize elsewhere</button>
+        <button class="choice" onclick="answer4b(this,'b')">B. The math must be wrong somewhere</button>
+        <button class="choice" onclick="answer4b(this,'c')">C. There's no limitation &mdash; an R&sup2; of 0.91 proves it works everywhere</button>
+      </div>
+      <div class="feedback" id="feedback-4b"></div>
+    </div>
+
+    <div class="hidden" id="scenario-c">
+      <h3>Scenario C</h3>
+      <p>A clinic that only treats NCAA Division I athletes (ages 18&ndash;22) wants to plug a <strong>45-year-old
+      recreational soccer player</strong> recovering from ACL reconstruction into this exact equation to plan her
+      RTS timeline. What's the concern?</p>
+      <div class="choices" id="choices-4c">
+        <button class="choice" onclick="answer4c(this,'a')">A. No concern &mdash; the equation works for any age you plug in</button>
+        <button class="choice" onclick="answer4c(this,'b')">B. Concern: this patient falls far outside the age range the model was built on, so the prediction would be an unreliable extrapolation</button>
+        <button class="choice" onclick="answer4c(this,'c')">C. Concern: the equation is simply too complicated for an older patient</button>
+      </div>
+      <div class="feedback" id="feedback-4c"></div>
+    </div>
+
+    <button class="nextbtn" id="next-4" onclick="goToStation(5)">Finish &amp; Debrief &rarr;</button>
+  </section>
+
+  <!-- FINAL -->
+  <section class="card hidden final-screen" id="screen-5">
+    <span class="station-tag">Debrief</span>
+    <div class="big">🎉</div>
+    <h2>Consult complete</h2>
+    <p style="text-align:left;">Your group worked through a regression model end to end: building vocabulary,
+    forming a hypothesis, fitting your own line by hand, reading a full statistical output, applying the model to
+    a caseload of new patients, and weighing what a model can and can't tell a clinician.</p>
+    <div class="lo-note" style="text-align:left;">
+      <strong>Where this connects to today's objectives:</strong>
+      <ul class="lo-list">
+        <li>Regression models the relationship between an outcome and one or more predictors, and is the line that
+        minimizes squared error across the data (Stations 1&ndash;3).</li>
+        <li>Tools like R&sup2;, coefficients, and p-values tell us how well a model fits and which predictors matter
+        in analyzing a data set (Station 4).</li>
+        <li>In PT research and practice, regression informs but does not replace clinical judgment &mdash; and small,
+        single-site, or narrow-range samples limit how far results can be generalized (Stations 5&ndash;6).</li>
+      </ul>
+    </div>
+    <p style="text-align:left;"><strong>Whole-class discussion:</strong> In your own words &mdash; how does regression
+    change the way physical therapists can use data to guide decisions?</p>
+  </section>
+
+</div>
+
+<footer class="credit">DPTD 712 &middot; Regression Active Learning &middot; Fictional data for teaching purposes only</footer>
+<div class="instructor-link-row">
+  <a onclick="openInstructorGate();return false;" href="#">Instructor Guide (password required)</a>
+</div>
+
+<!-- INSTRUCTOR PASSWORD GATE -->
+<div class="modal-overlay hidden" id="instructor-gate">
+  <div class="modal-card">
+    <h2>Instructor Access</h2>
+    <p>Enter the instructor password to view the facilitation guide.</p>
+    <input type="password" id="instructor-password-input" placeholder="Password" onkeydown="if(event.key==='Enter')checkInstructorPassword()">
+    <div class="feedback corrective" id="instructor-password-error">Incorrect password &mdash; try again.</div>
+    <div class="sim-btn-row">
+      <button class="sim-btn" onclick="checkInstructorPassword()">Unlock</button>
+      <button class="sim-btn secondary" onclick="closeInstructorGate()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- INSTRUCTOR GUIDE MODAL -->
+<div class="modal-overlay hidden" id="instructor-guide-modal">
+  <div class="modal-card wide guide-content">
+    <button class="sim-btn secondary" onclick="closeInstructorGuide()" style="float:right;">Close</button>
+    <h2>The RTS Consult &mdash; Instructor Facilitation Guide</h2>
+    <p style="color:var(--teal);"><em>A small-group, choose-your-path regression activity built around an ACL return-to-sport (RTS) case, expanded to six interactive stations plus an optional clinical primer.</em></p>
+
+    <h3>Learning Objectives</h3>
+    <ul class="lo-list">
+      <li>Describe the concept of regression in statistics</li>
+      <li>Identify the role regression plays in the analysis and interpretation of data sets</li>
+      <li>Describe the implications of regression for data analysis in physical therapy research</li>
+    </ul>
+
+    <h3>Setup</h3>
+    <ul class="lo-list">
+      <li>Groups of 3&ndash;4 students, one laptop/tablet per group sharing the HTML file.</li>
+      <li>No installation needed &mdash; open the HTML file directly in any browser.</li>
+      <li>Optional: project the final debrief screen or write the wrap-up question on the board for whole-class discussion.</li>
+      <li>All patient data in the activity is fictional, built for teaching purposes only.</li>
+      <li>Students have no prior instruction on regression or ACL rehab going in &mdash; a clinical primer screen opens the activity to orient them before Station 1.</li>
+    </ul>
+
+    <h3>Timing at a Glance</h3>
+    <table>
+      <tr><th>Segment</th><th>Time</th></tr>
+      <tr><td>Clinical primer (orientation)</td><td>5 min</td></tr>
+      <tr><td>Station 1 &mdash; Warm-Up: Match the Terms</td><td>6 min</td></tr>
+      <tr><td>Station 2 &mdash; The Referral</td><td>5 min</td></tr>
+      <tr><td>Station 3 &mdash; Plot &amp; Predict: Build Your Own Line</td><td>15 min</td></tr>
+      <tr><td>Station 4 &mdash; Read the Output</td><td>16 min</td></tr>
+      <tr><td>Station 5 &mdash; Patient Triage (+ bonus stress test)</td><td>13 min</td></tr>
+      <tr><td>Station 6 &mdash; Clinical Stakes</td><td>12 min</td></tr>
+      <tr><td>Whole-class debrief</td><td>4 min</td></tr>
+      <tr><td><strong>Total</strong></td><td><strong>~76 min</strong></td></tr>
+    </table>
+    <p><em>These are minimum estimates for the clicking/reading itself &mdash; real elapsed time with genuine group discussion typically runs longer, especially at Station 3 (the line-fitting simulator) and Station 6 (three debated scenarios). Plan on a 75&ndash;90 minute block if possible, or split the activity across two class sessions (e.g., Primer through Station 3 on day one; Station 4 through debrief on day two). If time is very tight, the clinical primer can be assigned as pre-class reading instead, and Station 1's warm-up can be skipped for classes that already have the vocabulary down.</em></p>
+
+    <h3>Orientation: Clinical Primer (before Station 1)</h3>
+    <p>Since students haven't had prior instruction on this topic, the activity opens with a short reading screen covering: what ACL reconstruction is and why it's needed, what &ldquo;return to sport&rdquo; (RTS) clearance means and why the timing matters clinically, and plain-language definitions of the three predictors used throughout the case &mdash; quad strength symmetry index (LSI), age, and graft type (patellar tendon vs. hamstring).</p>
+    <div class="lo-note"><strong>Facilitation tip:</strong> Have groups read this section aloud together rather than silently &mdash; it sets up vocabulary they'll need for every station that follows.</div>
+
+    <h3>Station 1: Warm-Up &mdash; Match the Terms (LO1)</h3>
+    <p>A click-to-match game: students select a term, then select the definition they think matches it. Correct pairs lock in green and disable; incorrect pairs flash red and reset after a moment, letting the group retry. The &ldquo;Go to Station 2&rdquo; button only appears once all 6 pairs are matched.</p>
+    <p><strong>Answer key (term &rarr; definition):</strong></p>
+    <ul class="lo-list">
+      <li>Regression &rarr; models the relationship between an outcome and one or more predictors.</li>
+      <li>Slope &rarr; how much the predicted outcome changes per one-unit increase in a predictor.</li>
+      <li>Intercept &rarr; the predicted outcome when all predictors equal zero.</li>
+      <li>R&sup2; &rarr; the proportion of variability in the outcome explained by the model (0 to 1).</li>
+      <li>p-value &rarr; confidence that a predictor's effect isn't just due to chance.</li>
+      <li>LSI &rarr; percentage comparing surgical-limb strength to the uninvolved limb.</li>
+    </ul>
+    <div class="lo-note"><strong>Facilitation tip:</strong> This is a fast warm-up, not a graded checkpoint &mdash; if a group is stuck on one pair, it's fine to just tell them the answer and move on so it doesn't eat into Station 3's time.</div>
+
+    <h3>Station 2: The Referral (LO1)</h3>
+    <p>Groups predict, before seeing data, which of three factors (quad symmetry, age, graft type) will relate to weeks-until-RTS-clearance. There is no single &ldquo;correct&rdquo; choice here &mdash; every option gets tailored feedback that reinforces the same idea: regression is how we test a hunch against data rather than relying on guesswork.</p>
+    <div class="lo-note"><strong>Facilitation tip:</strong> If a group finishes early, ask them to justify their pick out loud before moving on &mdash; the discussion matters more than the click.</div>
+
+    <h3>Station 3: Plot &amp; Predict &mdash; Build Your Own Line (LO1 / LO2)</h3>
+    <p>The centerpiece of the activity. Groups use two sliders &mdash; slope, and a &ldquo;value at 60% symmetry&rdquo; anchor &mdash; to manually fit a line through the 12-patient scatterplot. As they adjust, dashed residual lines and a live R&sup2; / sum-of-squared-error readout update in real time &mdash; this makes the abstract idea of &ldquo;the line that minimizes error&rdquo; tangible. A &ldquo;Check My Fit&rdquo; button gives tiered feedback based on their current R&sup2;; &ldquo;Reveal the Actual Best-Fit Line&rdquo; snaps the sliders to the true coefficients and locks them, then unlocks the original interpretation content below.</p>
+    <p><strong>Notes on the simulator:</strong></p>
+    <ul class="lo-list">
+      <li>The second slider deliberately reads the line's value at 60% symmetry (the visible left edge of the chart) rather than the true y-intercept at 0% symmetry, which sits far off-screen. This is the same line mathematically &mdash; just anchored somewhere students can actually see it move &mdash; and keeps the line on-chart while they explore slope.</li>
+      <li>Starting position (slope = 0, anchor &asymp; 30.5, the sample mean) deliberately gives R&sup2; &asymp; 0 &mdash; this is the &ldquo;just guessing the average for everyone&rdquo; baseline groups are trying to beat.</li>
+      <li>R&sup2; can display as negative if a group's line is worse than the mean-only baseline &mdash; this is mathematically correct and worth pointing out as a teaching moment if a group asks about it.</li>
+      <li>True best fit: Weeks to RTS = 73.7 &minus; 0.55 &times; (Quad Symmetry %), R&sup2; = 0.88 (&ldquo;very strong fit&rdquo;). On the simulator's sliders, this reveals as slope = &minus;0.55 and anchor = 40.7 (the line's value at 60% symmetry) &mdash; mathematically identical to the 73.7 y-intercept, just expressed at a visible point on the chart.</li>
+      <li>Discussion prompt embedded in the activity: what does the true y-intercept (73.7 weeks at 0% symmetry &mdash; not the on-chart anchor value) mean, and why is it not clinically meaningful? Expected answer: no real patient is near 0% symmetry, so the intercept anchors the math but doesn't describe a realistic case.</li>
+    </ul>
+    <div class="lo-note"><strong>Facilitation tip:</strong> Let groups genuinely struggle with the sliders for a few minutes before they click &ldquo;Reveal&rdquo; &mdash; the productive frustration of hunting for the right slope is the point. Circulate and ask groups to narrate what they're seeing in the residual lines as they adjust.</div>
+
+    <h3>Station 4: Read the Output (LO2)</h3>
+    <p>Groups read a full model summary and coefficients table (quad symmetry + age + graft type predicting weeks-to-RTS) and answer six branching questions. A &ldquo;How to read this table&rdquo; glossary panel sits between the tables and Question 1, defining R, R&sup2;, Adjusted R&sup2;, B (coefficient), SE (standard error), t-statistic, and p-value in plain language before students are asked to reason with any of them &mdash; this was added so students engage with the table itself rather than pattern-matching to &ldquo;smallest p-value wins.&rdquo;</p>
+    <p><strong>Answer key:</strong></p>
+    <ul class="lo-list">
+      <li>Q1 &mdash; Strongest fit: R&sup2; = 0.91 (closest to 1).</li>
+      <li>Q2 &mdash; Most confident predictor: Quad Symmetry (p &lt; 0.001, smallest p-value).</li>
+      <li>Q3 &mdash; Should age/graft type be dropped? No &mdash; both remain statistically significant (p = 0.03 and p = 0.04, both &lt; 0.05) and multiple regression is specifically used to account for several predictors' contributions simultaneously.</li>
+      <li>Q4 &mdash; What does the Graft Type coefficient (B = 4.2, Hamstring = 1) mean? Correct: hamstring-graft patients are predicted to need about 4.2 more weeks than patellar-tendon patients with the same symmetry and age &mdash; reinforces that a coefficient is a &ldquo;holding everything else constant&rdquo; comparison, which is easy to gloss over with a 0/1-coded predictor.</li>
+      <li>Q5 &mdash; Why is Adjusted R&sup2; (0.880) lower than R&sup2; (0.910)? Correct: Adjusted R&sup2; penalizes for the number of predictors, since plain R&sup2; can only rise (never fall) as predictors are added, even useless ones &mdash; Adjusted R&sup2; is the more honest number when comparing models of different sizes.</li>
+      <li>Q6 &mdash; Which predictor's effect is most precisely estimated (smallest SE relative to its own B)? Correct: Quad Symmetry &mdash; its SE is about 13% of its own B, versus roughly 43% for both Age and Graft Type. This ties the abstract idea of &ldquo;standard error&rdquo; back to something concrete groups can compute themselves, and lines up with the p-value ordering already established in Q2.</li>
+    </ul>
+    <div class="lo-note"><strong>Watch for:</strong> students conflating a smaller coefficient/effect size with &ldquo;not significant&rdquo; (Q3), assuming a 0/1-coded coefficient means something other than a group difference (Q4), and treating Adjusted R&sup2; as an error or unrelated statistic rather than a deliberate correction (Q5). For Q6, some groups may want to compare raw SE values directly across predictors rather than each SE relative to its own B &mdash; worth prompting them to notice that Graft Type's raw SE (1.8) looks large only because its coefficient (4.2) is also large in absolute terms.</div>
+
+    <h3>Station 5: Patient Triage (LO2 / LO3)</h3>
+    <p>There is a single shared drag-and-drop calculator for the whole station, not one per patient. The multiple regression equation sits at the top with three empty slots (LSI, age, graft code). Each of the five patient cards below has its own set of three number chips, color-coded to that patient (a different color per patient) so it's visually obvious which chips belong together. Students drag one patient's three chips into the shared calculator, click &ldquo;Calculate&rdquo; to reveal the estimated weeks to RTS, write that number into the small input box on that patient's card, then click &ldquo;Clear / Next Patient&rdquo; to empty the calculator before moving on to the next patient's chips. The calculator now sits in a sticky sidebar so it stays visible while scrolling through the patient list.</p>
+    <p>The calculator enforces one patient at a time: if a group tries to drop a chip from a different patient before clearing, the drop is rejected and a message prompts them to clear first. This prevents accidentally mixing one patient's LSI with another patient's age. Once all five patients have a written estimate, groups rank them from soonest (1) to latest (5) cleared. &ldquo;Check Our Ranking&rdquo; validates that all five ranks are assigned uniquely, then reveals each patient's true model-predicted weeks and marks each card green (correct position) or red (incorrect).</p>
+    <p>This keeps the exercise hands-on without requiring arithmetic by hand &mdash; the tool does the multiplication, but students still have to know which number goes with which term in the equation and manage one patient's data at a time, which reinforces how a multiple regression equation is actually used to generate a prediction.</p>
+    <div class="lo-note"><strong>Facilitation tip:</strong> The color-coding is the main defense against mixing up patients, but circulate early to make sure groups are clearing the calculator between patients rather than assuming old chip values carry over.</div>
+
+    <h3>Bonus: Stress Test (also Station 5)</h3>
+    <p>After the ranking is checked, a sixth &ldquo;bonus&rdquo; patient appears with its own distinctly colored (slate gray) chip set, using the same shared calculator: LSI 97%, age 48, hamstring graft. These values are deliberately chosen to sit at or beyond the edges of the model's original data (roughly ages 16&ndash;32, symmetry up to the low-to-mid 90s). The calculator still produces a specific-looking number (&asymp;31.8 weeks), which is exactly the point &mdash; the equation will always output something, but that doesn't make the output trustworthy once the inputs fall outside the range of data the model was built on.</p>
+    <p>This patient is intentionally excluded from the main 5-patient ranking (no &ldquo;correct rank&rdquo; is assigned) so it doesn't disrupt that puzzle. After calculating, groups answer a confidence question; the &ldquo;Go to Clinical Stakes&rdquo; button only appears once that question is answered, which adds a required discussion beat and slows down groups who might otherwise race through the station.</p>
+    <p><strong>Answer key:</strong> &ldquo;Not very confident &mdash; this patient falls outside the range of data the model was built on&rdquo; (extrapolation).</p>
+    <div class="lo-note"><strong>Facilitation tip:</strong> This is a good moment to connect back to Scenario C in Station 6, which raises the same extrapolation concern with a 45-year-old patient &mdash; consider flagging that connection explicitly for students.</div>
+    <p><strong>Answer key (soonest to latest):</strong></p>
+    <table>
+      <tr><th>Patient</th><th>Model Prediction</th></tr>
+      <tr><td>Patient C &mdash; LSI 95%, age 16, patellar tendon</td><td>~18 weeks (rank 1)</td></tr>
+      <tr><td>Patient A &mdash; LSI 88%, age 19, patellar tendon</td><td>~23 weeks (rank 2)</td></tr>
+      <tr><td>Patient E &mdash; LSI 82%, age 23, patellar tendon</td><td>~28 weeks (rank 3)</td></tr>
+      <tr><td>Patient D &mdash; LSI 75%, age 32, hamstring</td><td>~39 weeks (rank 4)</td></tr>
+      <tr><td>Patient B &mdash; LSI 70%, age 27, hamstring</td><td>~41 weeks (rank 5)</td></tr>
+    </table>
+    <div class="lo-note"><strong>Facilitation tip:</strong> Patient D is the instructive trap: their symmetry (75%) isn't the lowest in the group, but combined with older age and a hamstring graft, they end up ranked near the back &mdash; a good moment to point out that no single factor dominates in a multiple regression model. Ask groups which patient surprised them most.</div>
+
+    <h3>Station 6: Clinical Stakes (LO3)</h3>
+    <p>Three scenario cards push groups to grapple with what a regression model can and can't do for an individual patient and for the broader field.</p>
+    <p><strong>Answer key:</strong></p>
+    <ul class="lo-list">
+      <li>Scenario A: Use the model as one input alongside clinical exam, patient-reported outcomes, and risk tolerance &mdash; not as a rigid rule, and not something to ignore outright.</li>
+      <li>Scenario B: The biggest limitation is sample size/generalizability &mdash; 12 patients from one clinic may not represent other populations or protocols, regardless of how high R&sup2; is.</li>
+      <li>Scenario C: The concern is extrapolation &mdash; a 45-year-old recreational athlete falls far outside the model's original age range (roughly late teens to early 30s), so applying the equation to her is unreliable regardless of how well the model fits its original sample.</li>
+    </ul>
+    <p>This station is the best place to connect back to evidence-based practice broadly: statistical models are one leg of the three-legged stool (evidence, clinical expertise, patient values), and Scenario C reinforces the earlier lesson from Station 3 about not over-trusting a line outside the range of its data.</p>
+
+    <h3>Whole-Class Debrief</h3>
+    <p>Closing discussion question (also shown on the final screen of the activity):</p>
+    <p><em>&ldquo;In your own words &mdash; how does regression change the way physical therapists can use data to guide decisions?&rdquo;</em></p>
+    <p>Listen for: understanding relationships between variables, making predictions, quantifying confidence (R&sup2;, p-values), and appropriately bounding claims to the population/sample a model was built on.</p>
+
+    <h3>Quick Reference: All Answer Keys</h3>
+    <table>
+      <tr><th>Question</th><th>Correct Answer</th></tr>
+      <tr><td>St. 3 &mdash; line-fit simulator best fit</td><td>Slope &minus;0.55, Intercept 73.7, R&sup2; = 0.88</td></tr>
+      <tr><td>St. 4, Q1 &mdash; strongest R&sup2;</td><td>0.91</td></tr>
+      <tr><td>St. 4, Q2 &mdash; most confident predictor</td><td>Quad Symmetry (p &lt; 0.001)</td></tr>
+      <tr><td>St. 4, Q3 &mdash; drop age/graft type?</td><td>No &mdash; both still significant (p &lt; 0.05)</td></tr>
+      <tr><td>St. 4, Q4 &mdash; graft type coefficient meaning</td><td>~4.2 more weeks for hamstring vs. patellar tendon, holding symmetry/age constant</td></tr>
+      <tr><td>St. 4, Q5 &mdash; why Adjusted R&sup2; &lt; R&sup2;</td><td>Penalizes for number of predictors</td></tr>
+      <tr><td>St. 4, Q6 &mdash; most precisely estimated predictor</td><td>Quad Symmetry (smallest SE/B ratio)</td></tr>
+      <tr><td>St. 5 &mdash; triage ranking</td><td>C, A, E, D, B (soonest to latest)</td></tr>
+      <tr><td>St. 5 &mdash; bonus stress test</td><td>Not very confident (extrapolation beyond model's range)</td></tr>
+      <tr><td>St. 6, Scenario A</td><td>Use model + clinical judgment + patient values</td></tr>
+      <tr><td>St. 6, Scenario B</td><td>Small sample / limited generalizability</td></tr>
+      <tr><td>St. 6, Scenario C</td><td>Extrapolation beyond the model's age range</td></tr>
+    </table>
+
+    <button class="sim-btn secondary" onclick="closeInstructorGuide()" style="margin-top:20px;">Close</button>
+  </div>
+</div>
+
+<script>
+  /* ---------- Navigation ---------- */
+  const screenMap = {
+    intro:'screen-intro', primer:'screen-primer', warmup:'screen-warmup',
+    1:'screen-1', 2:'screen-2', 3:'screen-3', triage:'screen-triage', 4:'screen-4', 5:'screen-5'
+  };
+  const progressIndex = { intro:0, primer:0, warmup:1, 1:2, 2:3, 3:4, triage:5, 4:6, 5:6 };
+
+  function updateProgress(key){
+    const bar = document.getElementById('progressBar');
+    bar.innerHTML = '';
+    const current = progressIndex[key] || 0;
+    for(let i=1;i<=6;i++){
+      const seg = document.createElement('div');
+      seg.className = 'seg' + (i < current ? ' done' : (i === current ? ' active' : ''));
+      bar.appendChild(seg);
+    }
+  }
+  updateProgress('intro');
+
+  function goToStation(key){
+    document.querySelectorAll('.card').forEach(c => c.classList.add('hidden'));
+    document.getElementById(screenMap[key]).classList.remove('hidden');
+    updateProgress(key);
+    window.scrollTo({top:0, behavior:'smooth'});
+  }
+
+  /* ---------- Station 1: Terminology matching game ---------- */
+  const termPairs = [
+    { term:"Regression", def:"A statistical method that models the relationship between an outcome variable and one or more predictors." },
+    { term:"Slope", def:"How much the predicted outcome changes for each one-unit increase in a predictor." },
+    { term:"Intercept", def:"The predicted value of the outcome when all predictors equal zero." },
+    { term:"R² (coefficient of determination)", def:"The proportion of variability in the outcome that is explained by the model, on a scale from 0 to 1." },
+    { term:"p-value", def:"A measure of how confident we can be that a predictor's effect isn't just due to chance." },
+    { term:"LSI (Limb Symmetry Index)", def:"A percentage comparing the strength of the surgical limb to the uninvolved limb." }
+  ];
+  let selectedTerm = null;
+  let matchedCount = 0;
+
+  function shuffle(arr){
+    const a = arr.slice();
+    for(let i=a.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [a[i],a[j]] = [a[j],a[i]];
+    }
+    return a;
+  }
+
+  function buildWarmup(){
+    const termCol = document.getElementById('term-col');
+    const defCol = document.getElementById('def-col');
+    termPairs.forEach((pair, idx) => {
+      const b = document.createElement('button');
+      b.className = 'choice';
+      b.textContent = pair.term;
+      b.dataset.idx = idx;
+      b.onclick = () => selectTerm(b, idx);
+      termCol.appendChild(b);
+    });
+    const shuffledDefs = shuffle(termPairs.map((p, idx) => ({ text:p.def, idx })));
+    shuffledDefs.forEach(d => {
+      const b = document.createElement('button');
+      b.className = 'choice';
+      b.textContent = d.text;
+      b.dataset.idx = d.idx;
+      b.onclick = () => selectDef(b, d.idx);
+      defCol.appendChild(b);
+    });
+  }
+
+  function selectTerm(btn, idx){
+    if(btn.classList.contains('matched')) return;
+    document.querySelectorAll('#term-col .choice').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    selectedTerm = { btn, idx };
+  }
+
+  function selectDef(btn, idx){
+    if(btn.classList.contains('matched')) return;
+    if(!selectedTerm){
+      btn.classList.add('incorrect');
+      setTimeout(() => btn.classList.remove('incorrect'), 500);
+      return;
+    }
+    if(selectedTerm.idx === idx){
+      selectedTerm.btn.classList.remove('selected');
+      selectedTerm.btn.classList.add('matched','correct');
+      selectedTerm.btn.disabled = true;
+      btn.classList.add('matched','correct');
+      btn.disabled = true;
+      matchedCount++;
+      document.getElementById('matchProgress').textContent = 'Matched: ' + matchedCount + ' / 6';
+      selectedTerm = null;
+      if(matchedCount === 6){
+        document.getElementById('next-warmup').classList.add('show');
+      }
+    } else {
+      selectedTerm.btn.classList.add('incorrect');
+      btn.classList.add('incorrect');
+      setTimeout(() => {
+        selectedTerm.btn.classList.remove('selected','incorrect');
+        btn.classList.remove('incorrect');
+        selectedTerm = null;
+      }, 600);
+    }
+  }
+  buildWarmup();
+
+  /* ---------- Station 2: Referral ---------- */
+  function answer(station, btn, choice){
+    document.querySelectorAll('#choices-'+station+' .choice').forEach(b=>b.disabled=true);
+    btn.classList.add('correct');
+    const fb = document.getElementById('feedback-'+station);
+    const msgs = {
+      a:"Good instinct — quad strength symmetry is often the single strongest predictor in ACL RTS research. Let's see if it holds up, and whether the other factors add anything once we look closer.",
+      b:"Strong thinking — real PT research often combines multiple predictors rather than relying on just one. Hang onto that idea for Station 4.",
+      c:"Age might matter, but let's check how strong that relationship actually is compared to the others once we see the data.",
+      d:"Fair to be skeptical — that's exactly why regression exists: to test whether a relationship is real, or just noise, using data instead of a guess."
+    };
+    fb.textContent = msgs[choice];
+    fb.classList.add('show');
+    document.getElementById('lonote-1').classList.remove('hidden');
+    document.getElementById('next-1').classList.add('show');
+  }
+
+  /* ---------- Station 3: Line-fitting simulator ---------- */
+  const trainX = [62,65,70,72,75,78,80,82,85,88,90,93];
+  const trainY = [41,36,38,33,30,32,28,31,25,27,22,24];
+  const nPts = trainX.length;
+  const meanY = trainY.reduce((s,v)=>s+v,0) / nPts;
+  const SST = trainY.reduce((s,v)=>s+(v-meanY)*(v-meanY), 0);
+
+  function xToPx(x){ return 60 + (x-60)/35*400; }
+  function yToPx(y){ return 300 - (y-20)/25*260; }
+
+  function buildScatter(){
+    const dotGroup = document.getElementById('dotGroup');
+    const residualGroup = document.getElementById('residualGroup');
+    trainX.forEach((x,i) => {
+      const c = document.createElementNS('http://www.w3.org/2000/svg','circle');
+      c.setAttribute('cx', xToPx(x));
+      c.setAttribute('cy', yToPx(trainY[i]));
+      c.setAttribute('r', 5);
+      dotGroup.appendChild(c);
+
+      const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+      line.setAttribute('id','resid-'+i);
+      residualGroup.appendChild(line);
+    });
+  }
+  buildScatter();
+
+  function updateFit(){
+    // The second slider anchors the line at X=60 (the left edge of the visible chart), not at X=0.
+    // This keeps the line intuitively on-screen as students adjust slope, instead of requiring a
+    // huge, invisible-to-them intercept value defined way off-chart at 0% symmetry.
+    const b = parseFloat(document.getElementById('slopeSlider').value);
+    const anchor = parseFloat(document.getElementById('anchorSlider').value);
+    document.getElementById('slopeVal').textContent = b.toFixed(2);
+    document.getElementById('anchorVal').textContent = anchor.toFixed(1);
+
+    let sse = 0;
+    trainX.forEach((x,i) => {
+      const pred = anchor + b*(x - 60);
+      const resid = trainY[i] - pred;
+      sse += resid*resid;
+      const residLine = document.getElementById('resid-'+i);
+      residLine.setAttribute('x1', xToPx(x));
+      residLine.setAttribute('y1', yToPx(trainY[i]));
+      residLine.setAttribute('x2', xToPx(x));
+      residLine.setAttribute('y2', yToPx(pred));
+    });
+    const r2 = 1 - sse/SST;
+
+    document.getElementById('fitLine').setAttribute('x1', xToPx(60));
+    document.getElementById('fitLine').setAttribute('y1', yToPx(anchor));
+    document.getElementById('fitLine').setAttribute('x2', xToPx(95));
+    document.getElementById('fitLine').setAttribute('y2', yToPx(anchor + b*35));
+
+    document.getElementById('r2Readout').textContent = r2.toFixed(2);
+    document.getElementById('sseReadout').textContent = Math.round(sse);
+    return r2;
+  }
+
+  function checkFit(){
+    const r2 = updateFit();
+    const fb = document.getElementById('feedback-fit');
+    fb.classList.add('show');
+    if(r2 < 0){
+      fb.className = 'feedback corrective show';
+      fb.textContent = "Right now your line does worse than just guessing the average weeks-to-RTS for every patient. Try tilting the line downward — remember, patients with higher symmetry tend to need less additional time.";
+    } else if(r2 < 0.5){
+      fb.className = 'feedback corrective show';
+      fb.textContent = "Better than the average-only guess, but there's a clearer downward pattern to capture. Keep adjusting slope and intercept.";
+    } else if(r2 < 0.8){
+      fb.className = 'feedback neutral show';
+      fb.textContent = "Good progress — you're picking up on the real relationship. Fine-tune a bit more to shrink those residual gaps further.";
+    } else {
+      fb.className = 'feedback good show';
+      fb.textContent = "Excellent — you're very close to the best possible line for this data. Compare against the actual best fit when you're ready.";
+    }
+  }
+
+  function revealBestFit(){
+    // True equation is Weeks = 73.7 - 0.55X (intercept at X=0). Converted to the anchor-at-X=60
+    // parameterization used by the sliders: anchor = 73.7 + (-0.55 * 60) = 40.7.
+    document.getElementById('slopeSlider').value = -0.55;
+    document.getElementById('anchorSlider').value = 40.7;
+    document.getElementById('slopeSlider').disabled = true;
+    document.getElementById('anchorSlider').disabled = true;
+    updateFit();
+    const fb = document.getElementById('feedback-fit');
+    fb.className = 'feedback good show';
+    fb.textContent = "This is the actual least-squares best-fit line for these 12 patients — the one line that makes the sum of squared residuals as small as mathematically possible.";
+    document.getElementById('reveal-2b').classList.remove('hidden');
+  }
+  updateFit();
+
+  /* ---------- Station 4: Read the Output ---------- */
+  function answer3a(btn, choice){
+    document.querySelectorAll('#choices-3a .choice').forEach(b=>b.disabled=true);
+    const fb = document.getElementById('feedback-3a');
+    if(choice === '0.91'){
+      btn.classList.add('correct');
+      fb.className = 'feedback good show';
+      fb.textContent = "Right — R² of 0.91 is closest to 1, meaning this model explains about 91% of the variance in weeks-to-clearance. That's a 'very strong fit' on the interpretation scale.";
+    } else {
+      btn.classList.add('incorrect');
+      fb.className = 'feedback corrective show';
+      fb.textContent = "R² ranges from 0 to 1, with values closer to 1 meaning the model explains more of the variance in the outcome. Of the options given, 0.91 (the value in this printout) is the strongest fit.";
+    }
+    document.getElementById('q3b-block').classList.remove('hidden');
+  }
+
+  function answer3b(btn, choice){
+    document.querySelectorAll('#choices-3b .choice').forEach(b=>b.disabled=true);
+    const fb = document.getElementById('feedback-3b');
+    if(choice === 'symm'){
+      btn.classList.add('correct');
+      fb.className = 'feedback good show';
+      fb.textContent = "Right — quad symmetry has p < 0.001, the smallest p-value in the table, meaning the analyst is most confident this predictor's effect isn't just due to chance.";
+    } else {
+      btn.classList.add('incorrect');
+      fb.className = 'feedback corrective show';
+      fb.textContent = "Smaller p-values indicate more confidence a predictor's effect is real. Quad symmetry's p < 0.001 is the smallest in the table — smaller than age (0.03) or graft type (0.04).";
+    }
+    document.getElementById('q3c-block').classList.remove('hidden');
+  }
+
+  function answer3c(btn, choice){
+    document.querySelectorAll('#choices-3c .choice').forEach(b=>b.disabled=true);
+    const fb = document.getElementById('feedback-3c');
+    if(choice === 'no'){
+      btn.classList.add('correct');
+      fb.className = 'feedback good show';
+      fb.textContent = "Agreed — age (p=0.03) and graft type (p=0.04) are both still statistically significant at the 0.05 level. Multiple regression exists precisely to control for factors like this simultaneously; dropping significant predictors would throw away real explanatory power, even if their effects are smaller than symmetry's.";
+    } else {
+      btn.classList.add('incorrect');
+      fb.className = 'feedback corrective show';
+      fb.textContent = "Worth reconsidering: age and graft type both have p-values below 0.05, meaning they're still statistically significant contributors — just smaller in effect than quad symmetry. A low p-value on one predictor doesn't erase the significance of the others.";
+    }
+    document.getElementById('q3d-block').classList.remove('hidden');
+  }
+
+  function answer3d(btn, choice){
+    document.querySelectorAll('#choices-3d .choice').forEach(b=>b.disabled=true);
+    const fb = document.getElementById('feedback-3d');
+    if(choice === 'a'){
+      btn.classList.add('correct');
+      fb.className = 'feedback good show';
+      fb.textContent = "Right — a regression coefficient describes the predicted change in the outcome per one-unit increase in that predictor, with every other predictor in the model held constant. Since Hamstring is coded 1 and Patellar Tendon is coded 0, the 'one-unit increase' is simply switching graft types — so B = 4.2 means about 4.2 more weeks for a hamstring graft patient versus an otherwise identical patellar tendon patient.";
+    } else {
+      btn.classList.add('incorrect');
+      fb.className = 'feedback corrective show';
+      fb.textContent = "Worth reconsidering: for a 0/1-coded predictor like graft type, B is simply the predicted difference between the two groups (holding symmetry and age constant) — here, about 4.2 additional weeks for hamstring grafts. And a higher p-value (0.04) than symmetry's doesn't mean 'no effect' — it's still below the 0.05 significance threshold.";
+    }
+    document.getElementById('q3e-block').classList.remove('hidden');
+  }
+
+  function answer3e(btn, choice){
+    document.querySelectorAll('#choices-3e .choice').forEach(b=>b.disabled=true);
+    const fb = document.getElementById('feedback-3e');
+    if(choice === 'a'){
+      btn.classList.add('correct');
+      fb.className = 'feedback good show';
+      fb.textContent = "Right — plain R² mechanically increases (or at worst stays flat) every time you add another predictor, whether or not that predictor actually helps. Adjusted R² builds in a penalty for the number of predictors relative to sample size, so it only rises if a new predictor adds more explanatory power than you'd expect from chance alone. That's why it's the more honest number to trust when comparing models with different numbers of predictors.";
+    } else {
+      btn.classList.add('incorrect');
+      fb.className = 'feedback corrective show';
+      fb.textContent = "Worth reconsidering: Adjusted R² is still measuring model fit, but with a built-in penalty for the number of predictors used. Plain R² alone can be misleadingly optimistic because it always goes up as you add predictors — Adjusted R² corrects for that inflation.";
+    }
+    document.getElementById('q3f-block').classList.remove('hidden');
+  }
+
+  function answer3f(btn, choice){
+    document.querySelectorAll('#choices-3f .choice').forEach(b=>b.disabled=true);
+    const fb = document.getElementById('feedback-3f');
+    if(choice === 'symm'){
+      btn.classList.add('correct');
+      fb.className = 'feedback good show';
+      fb.textContent = "Right — quad symmetry's SE (0.08) is small relative to its B (−0.60), roughly 13% of the coefficient's size. Age and graft type both have an SE that's about 43% of their own coefficient — a much wider margin of uncertainty relative to the effect itself. This lines up with what the p-values already suggested: symmetry's effect is the most precisely pinned down of the three.";
+    } else {
+      btn.classList.add('incorrect');
+      fb.className = 'feedback corrective show';
+      fb.textContent = "Worth reconsidering: compare each SE to its own B as a ratio. Quad symmetry's SE (0.08) is only about 13% of its B (−0.60), while age's SE (0.15) and graft type's SE (1.8) are each roughly 43% of their own coefficients — a proportionally wider margin of uncertainty. Smaller SE relative to B means a more precisely estimated effect.";
+    }
+    document.getElementById('next-3').classList.add('show');
+  }
+
+  /* ---------- Station 5: Multi-patient triage ---------- */
+  const triagePatients = [
+    { id:'Patient A', lsi:88, age:19, graft:'Patellar Tendon', graftVal:0, weeks:23, correctRank:2, color:'#1C7293' },
+    { id:'Patient B', lsi:70, age:27, graft:'Hamstring',      graftVal:1, weeks:41, correctRank:5, color:'#E4572E' },
+    { id:'Patient C', lsi:95, age:16, graft:'Patellar Tendon', graftVal:0, weeks:18, correctRank:1, color:'#2E7D5B' },
+    { id:'Patient D', lsi:75, age:32, graft:'Hamstring',      graftVal:1, weeks:39, correctRank:4, color:'#8E44AD' },
+    { id:'Patient E', lsi:82, age:23, graft:'Patellar Tendon', graftVal:0, weeks:28, correctRank:3, color:'#B8860B' }
+  ];
+
+  function buildTriage(){
+    const list = document.getElementById('triage-list');
+    triagePatients.forEach((p, idx) => {
+      const card = document.createElement('div');
+      card.className = 'patient-rank-card';
+      card.id = 'triage-card-'+idx;
+      card.innerHTML =
+        '<div class="pr-id" style="color:'+p.color+';">' + p.id + '</div>' +
+        '<div class="pr-stats">LSI: <strong>' + p.lsi + '%</strong> &middot; Age: <strong>' + p.age +
+        '</strong> &middot; Graft: <strong>' + p.graft + '</strong></div>' +
+        '<div class="calc-tray">' +
+          '<div class="calc-chip" id="chip-lsi-'+idx+'" style="background:'+p.color+';" draggable="true" ondragstart="chipDragStart(event,'+idx+',\'lsi\','+p.lsi+',\''+p.lsi+'%\')">'+p.lsi+'%</div>' +
+          '<div class="calc-chip" id="chip-age-'+idx+'" style="background:'+p.color+';" draggable="true" ondragstart="chipDragStart(event,'+idx+',\'age\','+p.age+',\''+p.age+'\')">'+p.age+'</div>' +
+          '<div class="calc-chip" id="chip-graft-'+idx+'" style="background:'+p.color+';" draggable="true" ondragstart="chipDragStart(event,'+idx+',\'graft\','+p.graftVal+',\''+p.graft+' ('+p.graftVal+')\')">'+p.graft+' ('+p.graftVal+')</div>' +
+        '</div>' +
+        '<div class="calc-write"><label>Write down your group\'s estimate: ' +
+        '<input type="number" step="0.1" id="calc-write-'+idx+'" placeholder="weeks"></label></div>' +
+        '<div><label style="font-size:13px;font-weight:bold;color:var(--navy);">Your rank: </label>' +
+        '<select id="rank-select-'+idx+'"><option value="">--</option>' +
+        '<option value="1">1 (soonest)</option><option value="2">2</option><option value="3">3</option>' +
+        '<option value="4">4</option><option value="5">5 (latest)</option></select></div>' +
+        '<div class="pr-reveal" id="pr-reveal-'+idx+'"></div>';
+      list.appendChild(card);
+    });
+  }
+  buildTriage();
+
+  let calcCurrentIdx = null;
+  const calcSlotLabels = { lsi:'LSI', age:'Age', graft:'Graft' };
+
+  function chipDragStart(e, idx, slot, value, label){
+    e.dataTransfer.setData('text/plain', JSON.stringify({ idx, slot, value, label }));
+  }
+
+  function chipDrop(e, expectedSlot){
+    e.preventDefault();
+    let data;
+    try { data = JSON.parse(e.dataTransfer.getData('text/plain')); } catch(err) { return; }
+    const slotEl = document.getElementById('slot-'+expectedSlot);
+    if(data.slot !== expectedSlot){
+      slotEl.classList.add('rejected');
+      setTimeout(() => slotEl.classList.remove('rejected'), 400);
+      return;
+    }
+    if(calcCurrentIdx !== null && calcCurrentIdx !== data.idx){
+      slotEl.classList.add('rejected');
+      setTimeout(() => slotEl.classList.remove('rejected'), 400);
+      const result = document.getElementById('calc-result');
+      result.textContent = "That chip belongs to a different patient — click Clear / Next Patient first.";
+      return;
+    }
+    calcCurrentIdx = data.idx;
+    slotEl.textContent = data.label;
+    slotEl.classList.add('filled');
+    slotEl.dataset.filledValue = data.value;
+    const chipEl = document.getElementById('chip-'+expectedSlot+'-'+data.idx);
+    if(chipEl) chipEl.classList.add('used');
+    checkCalcReady();
+  }
+
+  function checkCalcReady(){
+    const lsiFilled = document.getElementById('slot-lsi').classList.contains('filled');
+    const ageFilled = document.getElementById('slot-age').classList.contains('filled');
+    const graftFilled = document.getElementById('slot-graft').classList.contains('filled');
+    document.getElementById('calc-btn').disabled = !(lsiFilled && ageFilled && graftFilled);
+  }
+
+  function calculateShared(){
+    const lsi = parseFloat(document.getElementById('slot-lsi').dataset.filledValue);
+    const age = parseFloat(document.getElementById('slot-age').dataset.filledValue);
+    const graft = parseFloat(document.getElementById('slot-graft').dataset.filledValue);
+    const weeks = 69.0 - 0.60*lsi + 0.35*age + 4.2*graft;
+    document.getElementById('calc-result').textContent = 'Estimated: ' + weeks.toFixed(1) + ' weeks';
+    if(calcCurrentIdx === 'stress'){
+      showStressQuestion();
+    }
+  }
+
+  function resetCalculator(){
+    ['lsi','age','graft'].forEach(slot => {
+      const slotEl = document.getElementById('slot-'+slot);
+      slotEl.textContent = calcSlotLabels[slot];
+      slotEl.classList.remove('filled','rejected');
+      delete slotEl.dataset.filledValue;
+    });
+    document.querySelectorAll('.calc-chip.used').forEach(c => c.classList.remove('used'));
+    document.getElementById('calc-btn').disabled = true;
+    document.getElementById('calc-result').textContent = '';
+    calcCurrentIdx = null;
+  }
+
+  function checkTriage(){
+    const usedRanks = [];
+    let allFilled = true;
+    triagePatients.forEach((p, idx) => {
+      const val = document.getElementById('rank-select-'+idx).value;
+      if(val === ''){ allFilled = false; }
+      usedRanks.push(val);
+    });
+    const fb = document.getElementById('feedback-triage');
+    fb.classList.add('show');
+    if(!allFilled){
+      fb.className = 'feedback corrective show';
+      fb.textContent = "Assign a rank (1-5) to every patient before checking — each rank should be used exactly once.";
+      return;
+    }
+    const uniqueRanks = new Set(usedRanks);
+    if(uniqueRanks.size !== 5){
+      fb.className = 'feedback corrective show';
+      fb.textContent = "Each rank from 1 to 5 should be used exactly once — check for duplicates.";
+      return;
+    }
+
+    let numCorrect = 0;
+    triagePatients.forEach((p, idx) => {
+      const card = document.getElementById('triage-card-'+idx);
+      const selected = parseInt(document.getElementById('rank-select-'+idx).value, 10);
+      card.classList.add('revealed');
+      const revealEl = document.getElementById('pr-reveal-'+idx);
+      revealEl.textContent = 'Model predicts: ~' + p.weeks + ' weeks (actual rank ' + p.correctRank + ')';
+      if(selected === p.correctRank){
+        numCorrect++;
+        card.classList.add('correct');
+        card.classList.remove('incorrect');
+      } else {
+        card.classList.add('incorrect');
+        card.classList.remove('correct');
+      }
+    });
+
+    if(numCorrect === 5){
+      fb.className = 'feedback good show';
+      fb.textContent = "Perfect ranking! Notice how age and graft type shifted the order — Patient A's high symmetry (88%) put them ahead, but Patient D's lower symmetry, older age, and hamstring graft combined to push them near the back, even though no single factor alone looks extreme.";
+    } else {
+      fb.className = 'feedback neutral show';
+      fb.textContent = "You got " + numCorrect + " of 5 in the correct position. Discuss as a group: which patient surprised you most, and which single factor (symmetry, age, or graft type) seemed to matter most in the actual model?";
+    }
+    document.getElementById('stress-block').classList.remove('hidden');
+  }
+
+  function showStressQuestion(){
+    document.getElementById('stress-question-block').classList.remove('hidden');
+  }
+
+  function answerStress(btn, choice){
+    document.querySelectorAll('#choices-stress .choice').forEach(b=>b.disabled=true);
+    const fb = document.getElementById('feedback-stress');
+    fb.classList.add('show');
+    if(choice === 'b'){
+      btn.classList.add('correct');
+      fb.className = 'feedback good show';
+      fb.textContent = "Right — extrapolating beyond the range of the original sample (roughly ages 16–32, symmetry up to the low-to-mid 90s) means there's no evidence the same relationship still holds out here. The equation will always compute a number, but that doesn't make the number trustworthy once you're off the map the model was actually built from.";
+    } else if(choice === 'a'){
+      btn.classList.add('incorrect');
+      fb.className = 'feedback corrective show';
+      fb.textContent = "Worth reconsidering — the equation can compute a number for any input you give it, but that doesn't guarantee accuracy. This patient's age (48) and symmetry (97%) both fall outside the range of patients used to build the model, so this is extrapolation, not solid prediction.";
+    } else {
+      btn.classList.add('incorrect');
+      fb.className = 'feedback corrective show';
+      fb.textContent = "Age is actually the bigger concern here — 48 is well outside the roughly 16–32 age range in the original sample, and 97% symmetry is also right at the edge. Both push this patient beyond where the model has real evidence to stand on.";
+    }
+    document.getElementById('next-triage').classList.add('show');
+  }
+
+  /* ---------- Station 6: Clinical Stakes ---------- */
+  function answer4a(btn, choice){
+    document.querySelectorAll('#choices-4a .choice').forEach(b=>b.disabled=true);
+    const fb = document.getElementById('feedback-4a');
+    if(choice === 'b'){
+      btn.classList.add('correct');
+      fb.className = 'feedback good show';
+      fb.textContent = "Right — this is evidence-based practice in action: the model is one piece of evidence, weighed alongside clinical exam findings, the patient's own values, and expert judgment. A model built on 12 patients also carries real uncertainty for any single new patient.";
+    } else {
+      btn.classList.add('incorrect');
+      fb.className = 'feedback corrective show';
+      fb.textContent = "Both extremes are risky: treating the model as gospel ignores its uncertainty and small sample size, while ignoring it entirely throws away real evidence. The middle path — model plus clinical judgment plus patient values — is the core of evidence-based practice.";
+    }
+    document.getElementById('scenario-b').classList.remove('hidden');
+  }
+
+  function answer4b(btn, choice){
+    document.querySelectorAll('#choices-4b .choice').forEach(b=>b.disabled=true);
+    const fb = document.getElementById('feedback-4b');
+    if(choice === 'a'){
+      btn.classList.add('correct');
+      fb.className = 'feedback good show';
+      fb.textContent = "Exactly — a strong R² doesn't fix a small, single-site sample. Twelve patients from one clinic may not reflect other populations, surgeons, or rehab protocols. Good models still need replication in larger, more diverse samples before guiding practice broadly.";
+    } else {
+      btn.classList.add('incorrect');
+      fb.className = 'feedback corrective show';
+      fb.textContent = "The math isn't the issue here, and a high R² describes fit to this sample only — it says nothing about whether the sample represents other clinics or patients. The real limitation is generalizability: only 12 patients from one site.";
+    }
+    document.getElementById('scenario-c').classList.remove('hidden');
+  }
+
+  function answer4c(btn, choice){
+    document.querySelectorAll('#choices-4c .choice').forEach(b=>b.disabled=true);
+    const fb = document.getElementById('feedback-4c');
+    if(choice === 'b'){
+      btn.classList.add('correct');
+      fb.className = 'feedback good show';
+      fb.textContent = "Right — this patient is far outside the age range (roughly late teens to early 30s) the model was built on. Plugging in values well beyond the original data is extrapolation, and the relationship the model captured may simply not hold true out there.";
+    } else {
+      btn.classList.add('incorrect');
+      fb.className = 'feedback corrective show';
+      fb.textContent = "The math itself plugs in fine either way, and complexity isn't the issue — the real concern is extrapolation: this patient's age falls well outside the range the model was built on, so there's no guarantee the same relationship applies.";
+    }
+    document.getElementById('next-4').classList.add('show');
+  }
+
+  /* ---------- Instructor guide password gate ---------- */
+  // SHA-256 hash of the instructor password ("progress") — the plaintext password is never stored in the file.
+  const INSTRUCTOR_HASH = 'b5f90a96e680140d51e2ba945461716e44cc385940aee21f66020e66193647b7';
+
+  async function sha256Hex(text){
+    const enc = new TextEncoder().encode(text);
+    const buf = await crypto.subtle.digest('SHA-256', enc);
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+  }
+
+  function openInstructorGate(){
+    document.getElementById('instructor-password-input').value = '';
+    document.getElementById('instructor-password-error').classList.remove('show');
+    document.getElementById('instructor-gate').classList.remove('hidden');
+    document.getElementById('instructor-password-input').focus();
+  }
+
+  function closeInstructorGate(){
+    document.getElementById('instructor-gate').classList.add('hidden');
+  }
+
+  async function checkInstructorPassword(){
+    const val = document.getElementById('instructor-password-input').value;
+    const hash = await sha256Hex(val);
+    const err = document.getElementById('instructor-password-error');
+    if(hash === INSTRUCTOR_HASH){
+      err.classList.remove('show');
+      closeInstructorGate();
+      document.getElementById('instructor-guide-modal').classList.remove('hidden');
+    } else {
+      err.classList.add('show');
+    }
+  }
+
+  function closeInstructorGuide(){
+    document.getElementById('instructor-guide-modal').classList.add('hidden');
+  }
+</script>
+
+</body>
+</html>
