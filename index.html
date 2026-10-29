@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Clinical Statistics Activities — DPTD 712</title>
+<meta name="description" content="Interactive clinical statistics activities for DPT students: research interpretation, study design, regression, and diagnostic accuracy.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fcfcfb;
+    --card: #ffffff;
+    --ink: #1a2b33;
+    --muted: #55656e;
+    --line: #dde3e7;
+    --accent: #cb182f;
+    --accent-soft: #fbe9eb;
+    --t-found: #1f7a78;
+    --t-design: #a66f00;
+    --t-reg: #4b5fa8;
+    --t-dx: #cb182f;
+    --shadow: 0 1px 2px rgba(26,43,51,.06), 0 4px 14px rgba(26,43,51,.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12191d;
+      --card: #1a2429;
+      --ink: #e8eef1;
+      --muted: #9eadb5;
+      --line: #2c3a41;
+      --accent: #ff5a6e;
+      --accent-soft: #3a1f25;
+      --t-found: #4fc1bd;
+      --t-design: #e2a73a;
+      --t-reg: #8fa2ec;
+      --t-dx: #ff5a6e;
+      --shadow: 0 1px 2px rgba(0,0,0,.3);
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Source Sans 3", system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 17px;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 0 16px; }
+
+  header { border-top: 6px solid var(--accent); padding: 48px 0 28px; }
+  .eyebrow {
+    font-size: 13px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--accent); margin: 0 0 8px;
+  }
+  h1 {
+    font-family: "Source Serif 4", Georgia, serif;
+    font-size: clamp(30px, 5vw, 44px); line-height: 1.12; margin: 0 0 12px;
+  }
+  .lede { color: var(--muted); max-width: 62ch; margin: 0; }
+
+  .filters { display: flex; flex-wrap: wrap; gap: 8px; margin: 28px 0 24px; }
+  .filters button {
+    font: inherit; font-size: 15px; cursor: pointer;
+    padding: 6px 14px; border-radius: 999px;
+    border: 1px solid var(--line); background: var(--card); color: var(--ink);
+  }
+  .filters button:hover { border-color: var(--muted); }
+  .filters button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 18px; padding-bottom: 56px; }
+  .card {
+    display: flex; flex-direction: column;
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+    padding: 20px 20px 18px; box-shadow: var(--shadow);
+    color: inherit; text-decoration: none;
+    border-top: 4px solid var(--topic);
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  .card:hover, .card:focus-visible { transform: translateY(-2px); box-shadow: 0 6px 22px rgba(26,43,51,.12); }
+  .card:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .card[hidden] { display: none; }
+  .tag { font-size: 13px; font-weight: 600; color: var(--topic); margin: 0 0 6px; }
+  .card h2 { font-family: "Source Serif 4", Georgia, serif; font-size: 21px; line-height: 1.25; margin: 0 0 8px; }
+  .card p.desc { margin: 0 0 16px; color: var(--muted); font-size: 16px; flex: 1; }
+  .meta { display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 14px; color: var(--muted); }
+  .go { font-weight: 600; color: var(--accent); white-space: nowrap; }
+
+  [data-topic="foundations"] { --topic: var(--t-found); }
+  [data-topic="design"]      { --topic: var(--t-design); }
+  [data-topic="regression"]  { --topic: var(--t-reg); }
+  [data-topic="diagnostic"]  { --topic: var(--t-dx); }
+
+  footer { border-top: 1px solid var(--line); padding: 20px 0 32px; font-size: 14px; color: var(--muted); }
+  @media (prefers-reduced-motion: reduce) { .card { transition: none; } }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <p class="eyebrow">DPTD 712 · Doctor of Physical Therapy</p>
+    <h1>Clinical Statistics Activities</h1>
+    <p class="lede">Interactive practice for reading research and applying statistics to clinical decisions. Pick an activity below. Most work best in a group, and nothing you enter is saved, so finish in one sitting or use each activity's print/copy option.</p>
+  </div>
+</header>
+
+<main class="wrap">
+  <nav class="filters" aria-label="Filter activities by topic">
+    <button type="button" data-filter="all" aria-pressed="true">All</button>
+    <button type="button" data-filter="foundations" aria-pressed="false">Foundations</button>
+    <button type="button" data-filter="design" aria-pressed="false">Study design</button>
+    <button type="button" data-filter="regression" aria-pressed="false">Correlation &amp; regression</button>
+    <button type="button" data-filter="diagnostic" aria-pressed="false">Diagnostic accuracy</button>
+  </nav>
+
+  <div class="grid">
+    <!--
+      TO ADD AN ACTIVITY: copy one <a class="card"> ... </a> block, paste it where you
+      want it, then change the href to the activity's full address:
+      https://docdochoggarth.github.io/Clinical_Stats/ followed by the file name,
+      spelled exactly as in the repo (capital letters matter). Also change
+      the data-topic (foundations, design, regression, or diagnostic), the tag,
+      the title, the description, and the meta line.
+    -->
+
+    <a class="card" href="https://docdochoggarth.github.io/Clinical_Stats/IntroToStats.html" data-topic="foundations">
+      <p class="tag">Foundations</p>
+      <h2>Interpreting PT Research</h2>
+      <p class="desc">A visual statistics review built on one balance-training study: hypotheses, choosing a test, p-values, confidence intervals, sample size, and what the result means for practice.</p>
+      <div class="meta"><span>Individual or group · 8 stages</span><span class="go">Open →</span></div>
+    </a>
+
+    <a class="card" href="https://docdochoggarth.github.io/Clinical_Stats/Design_Your_Own_RCT_Lab.html" data-topic="design">
+      <p class="tag">Study design</p>
+      <h2>Design Your Own RCT</h2>
+      <p class="desc">Each group gets a clinical scenario and builds a trial step by step: PICO question, selection criteria, group assignment, outcome measures, and sample size. Ends with a printable protocol summary.</p>
+      <div class="meta"><span>Group lab · 8 steps</span><span class="go">Open →</span></div>
+    </a>
+
+    <a class="card" href="https://docdochoggarth.github.io/Clinical_Stats/grip_strength_explorer.html" data-topic="regression">
+      <p class="tag">Correlation &amp; regression</p>
+      <h2>Grip Strength Explorer</h2>
+      <p class="desc">An interactive scatterplot of forearm circumference and peak grip strength in 40 participants. Hover and adjust the controls to see how the relationship looks.</p>
+      <div class="meta"><span>Individual · Quick explore</span><span class="go">Open →</span></div>
+    </a>
+
+    <a class="card" href="https://docdochoggarth.github.io/Clinical_Stats/acl_regression_activity.html" data-topic="regression">
+      <p class="tag">Correlation &amp; regression</p>
+      <h2>The RTS Consult</h2>
+      <p class="desc">A choose-your-path regression case on return to sport after ACL reconstruction. Fit a line yourself, read real statistical output, apply the model to a caseload, and weigh its limits.</p>
+      <div class="meta"><span>Group case study · 6 stops</span><span class="go">Open →</span></div>
+    </a>
+
+    <a class="card" href="https://docdochoggarth.github.io/Clinical_Stats/clinical-statistics-review.html" data-topic="diagnostic">
+      <p class="tag">Diagnostic accuracy</p>
+      <h2>Clinical Statistics Review</h2>
+      <p class="desc">Review sensitivity, specificity, predictive values, likelihood ratios, odds and risk ratios with a 2×2 calculator, calculation practice, clinical scenarios, and a matching game.</p>
+      <div class="meta"><span>Individual · 4 activities</span><span class="go">Open →</span></div>
+    </a>
+
+    <a class="card" href="https://docdochoggarth.github.io/Clinical_Stats/Clinical_Stats_Escape_Room.html" data-topic="diagnostic">
+      <p class="tag">Diagnostic accuracy</p>
+      <h2>Diagnose Before Discharge</h2>
+      <p class="desc">A clinical stats escape room. Work through five stations, from building a Lachman 2×2 table to prevalence, likelihood ratios, and OR/RR, then crack the final diagnosis.</p>
+      <div class="meta"><span>Team game · 5 stations</span><span class="go">Open →</span></div>
+    </a>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">Teaching data in these activities are for practice and may be invented for illustration.</div>
+</footer>
+
+<script>
+  (function () {
+    var buttons = document.querySelectorAll('.filters button');
+    var cards = document.querySelectorAll('.card');
+    buttons.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var f = btn.getAttribute('data-filter');
+        buttons.forEach(function (b) { b.setAttribute('aria-pressed', b === btn ? 'true' : 'false'); });
+        cards.forEach(function (c) { c.hidden = !(f === 'all' || c.getAttribute('data-topic') === f); });
+      });
+    });
+  })();
+</script>
+</body>
+</html>
